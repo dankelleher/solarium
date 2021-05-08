@@ -15,4 +15,4 @@ export const DEFAULT_CLUSTER = ClusterType.development(); // TODO
 
 // must match
 export const MESSAGE_SIZE_BYTES = 1024;
-export const DEFAULT_MAX_MESSAGE_COUNT = 10;
+export const DEFAULT_MAX_MESSAGE_COUNT = 8;

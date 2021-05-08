@@ -90,25 +90,21 @@ describe('E2E', () => {
     expect(messages[0].content).toEqual('This is message 1');
   }, 20000);
 
-  it.skip('blocks sending a large message to an inbox', async () => {
+  it('blocks sending a large message to an inbox', async () => {
     inbox = await create({
       owner: owner.publicKey.toBase58(),
       payer: payer.secretKey
     });
 
     const message = repeat('This is a long message.', 50).join('');
-    await post({
+    const shouldFail = post({
       payer: payer.secretKey,
       ownerDID: inbox.owner,
       senderDID: inbox.owner,
       signer: owner.secretKey,
       message
     })
-
-    const messages = await read({ ownerDID: inbox.owner, ownerKey: owner.secretKey });
-
-    expect(messages).toHaveLength(1);
-    expect(messages[0].content).toEqual(message);
-    expect(messages[0].sender).toEqual(inbox.owner);
+    
+    return expect(shouldFail).rejects.toThrow(/Message too long/);
   });
 });

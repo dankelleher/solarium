@@ -25,7 +25,7 @@ pub struct InboxData {
 
 impl InboxData {
     /// Default size of struct
-    pub const DEFAULT_SIZE: u8 = 10;
+    pub const DEFAULT_SIZE: u8 = 8;
 
     /// Max message size
     pub const MESSAGE_SIZE: u32 = 1024;

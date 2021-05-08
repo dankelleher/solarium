@@ -47,12 +47,16 @@ export async function getKeyFromOwner(
 }
 
 export function initialize(
+  payer: PublicKey,
   inboxAddress: PublicKey,
   owner: PublicKey,
 ): TransactionInstruction {
   const keys: AccountMeta[] = [
+    { pubkey: payer, isSigner: true, isWritable: true },
     { pubkey: inboxAddress, isSigner: false, isWritable: true },
     { pubkey: owner, isSigner: false, isWritable: false },
+    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ];
   const data = SolariumInstruction.initialize().encode();
   return new TransactionInstruction({

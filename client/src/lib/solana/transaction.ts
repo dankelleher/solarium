@@ -7,11 +7,11 @@ import {
 } from './instruction';
 import {Account, Connection, PublicKey, SystemProgram, Transaction} from '@solana/web3.js';
 import {InboxData} from "./InboxData";
-import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES, PROGRAM_ID} from "../constants";
+// import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES, PROGRAM_ID} from "../constants";
 
-const messageSizeOnChain = 1 + 32 + MESSAGE_SIZE_BYTES // Timestamp + sender + message size (TODO encode sender in message sig)
-const inboxHeader = 32 + 16 // owner + alias (TODO remove alias?)
-const inboxSize = inboxHeader + (messageSizeOnChain * DEFAULT_MAX_MESSAGE_COUNT)
+// const messageSizeOnChain = 1 + 32 + MESSAGE_SIZE_BYTES // Timestamp + sender + message size (TODO encode sender in message sig)
+// const inboxHeader = 32 + 16 // owner + alias (TODO remove alias?)
+// const inboxSize = inboxHeader + (messageSizeOnChain * DEFAULT_MAX_MESSAGE_COUNT)
 
 export class SolariumTransaction {
   static async createInbox(
@@ -21,22 +21,10 @@ export class SolariumTransaction {
   ): Promise<PublicKey> {
     const address = await getKeyFromOwner(owner);
     console.log(`Inbox address: ${address}`);
-    
-    const a = new Account()
 
     // Allocate memory for the account
-    const accountBalanceNeeded = await connection.getMinimumBalanceForRentExemption(inboxSize);
-    const createAccountInstruction = SystemProgram.createAccount({
-      fromPubkey: payer.publicKey,
-      newAccountPubkey: a.publicKey,//address,
-      lamports: accountBalanceNeeded,
-      space: inboxSize,
-      programId: PROGRAM_ID
-    })
-    const initializeInstruction = initialize(address, owner);
     const transaction = new Transaction().add(
-      createAccountInstruction,
-      // initializeInstruction
+      initialize(payer.publicKey, address, owner)
     );
 
     // Send the instructions

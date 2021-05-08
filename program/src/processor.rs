@@ -52,16 +52,16 @@ pub fn process_instruction(
     match instruction {
         SolariumInstruction::Initialize { } => { //size, alias } => {
             msg!("SolariumInstruction::Initialize");
-            // let message_content_size = u64::from(InboxData::MESSAGE_SIZE);
-            // let message_size = 1 + 32 + message_content_size;
-            // let size: u64 = (u64::from(InboxData::DEFAULT_SIZE) * message_size) + 32 + 16;
+            let message_content_size = u64::from(InboxData::MESSAGE_SIZE);
+            let message_size = 1 + 32 + message_content_size;
+            let size: u64 = (u64::from(InboxData::DEFAULT_SIZE) * message_size) + 32 + 16;
 
-            // let funder_info = next_account_info(account_info_iter)?;
+            let funder_info = next_account_info(account_info_iter)?;
             let data_info = next_account_info(account_info_iter)?;
             let owner_did_info = next_account_info(account_info_iter)?;
-            // let rent_info = next_account_info(account_info_iter)?;
-            // let system_program_info = next_account_info(account_info_iter)?;
-            // let rent = &Rent::from_account_info(rent_info)?;
+            let rent_info = next_account_info(account_info_iter)?;
+            let system_program_info = next_account_info(account_info_iter)?;
+            let rent = &Rent::from_account_info(rent_info)?;
             
             let (inbox_address, inbox_bump_seed) = get_inbox_address_with_seed(owner_did_info.key);
             if inbox_address != *data_info.key {
@@ -69,31 +69,31 @@ pub fn process_instruction(
                 return Err(ProgramError::InvalidArgument);
             }
             
-            // let data_len = data_info.data.borrow().len();
-            // if data_len > 0 {
-            //     msg!("Inbox account already initialized");
-            //     return Err(ProgramError::AccountAlreadyInitialized);
-            // }
+            let data_len = data_info.data.borrow().len();
+            if data_len > 0 {
+                msg!("Inbox account already initialized");
+                return Err(ProgramError::AccountAlreadyInitialized);
+            }
             
-            // let inbox_signer_seeds: &[&[_]] =
-            //     &[&owner_did_info.key.to_bytes(), ADDRESS_SEED, &[inbox_bump_seed]];
+            let inbox_signer_seeds: &[&[_]] =
+                &[&owner_did_info.key.to_bytes(), ADDRESS_SEED, &[inbox_bump_seed]];
             
-            // msg!("Creating data account with size {}", size);
-            // invoke_signed(
-            //     &system_instruction::create_account(
-            //         funder_info.key,
-            //         data_info.key,
-            //         1.max(rent.minimum_balance(size as usize)),
-            //         size,
-            //         &id(),
-            //     ),
-            //     &[
-            //         funder_info.clone(),
-            //         data_info.clone(),
-            //         system_program_info.clone(),
-            //     ],
-            //     &[&inbox_signer_seeds],
-            // )?;
+            msg!("Creating data account with size {}", size);
+            invoke_signed(
+                &system_instruction::create_account(
+                    funder_info.key,
+                    data_info.key,
+                    1.max(rent.minimum_balance(size as usize)),
+                    size,
+                    &id(),
+                ),
+                &[
+                    funder_info.clone(),
+                    data_info.clone(),
+                    system_program_info.clone(),
+                ],
+                &[&inbox_signer_seeds],
+            )?;
             
             let inbox = InboxData::new(*owner_did_info.key);
             inbox.serialize(&mut *data_info.data.borrow_mut())

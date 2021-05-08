@@ -67,11 +67,11 @@ pub fn initialize(
         id(),
         &SolariumInstruction::Initialize { },//size, alias },
         vec![
-            // AccountMeta::new(*funder_account, true),
+            AccountMeta::new(*funder_account, true),
             AccountMeta::new(inbox_account, false),
             AccountMeta::new_readonly(*owner_did, false),
-            // AccountMeta::new_readonly(sysvar::rent::id(), false),
-            // AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+            AccountMeta::new_readonly(system_program::id(), false),
         ],
     )
 }

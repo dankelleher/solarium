@@ -1,0 +1,69 @@
+{
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why",
+    "start-validator": "solana-test-validator --bpf-program boxndjnzQZEWbBku3YipL4pchYRc1zi4nNSrFUwawWo ../program/target/deploy/solarium.so  --bpf-program ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV ../../../Projects/sol-did/program/target/deploy/sol_did.so --reset"
+  },
+  "peerDependencies": {},
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "solarium",
+  "author": "Daniel Kelleher <danielbkelleher@gmail.com",
+  "module": "dist/client.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/client.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/client.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^4.10.2",
+    "husky": "^6.0.0",
+    "jest-when": "^3.3.1",
+    "size-limit": "^4.10.2",
+    "ts-jest": "^26.5.5",
+    "ts-node": "^9.1.1",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.2.0",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "@identity.com/sol-did-client": "^0.1.3",
+    "@solana/web3.js": "^1.5.0",
+    "borsh": "^0.3.1",
+    "bs58": "^4.0.1",
+    "cbor": "^7.0.5",
+    "did-jwt": "^5.2.0",
+    "did-resolver": "^3.1.0",
+    "ed2curve-esm": "^0.3.0-alpha-1",
+    "ramda": "^0.27.1"
+  }
+}

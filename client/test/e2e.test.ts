@@ -1,23 +1,23 @@
 import {create, close, post, read} from "../src";
 import {create as createDID} from "../src/lib/did/create";
 import {SolanaUtil} from "../src/lib/solana/solanaUtil";
-import {Account} from "@solana/web3.js";
+import {Keypair} from "@solana/web3.js";
 import {Inbox} from "../src/lib/Inbox";
 import {repeat} from 'ramda';
 import {DEFAULT_MAX_MESSAGE_COUNT} from "../src/lib/constants";
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
-  let payer: Account;
-  let owner: Account;
+  let payer: Keypair;
+  let owner: Keypair;
   let inbox: Inbox;
 
   beforeAll(async () => {
-    payer = await SolanaUtil.newAccountWithLamports(connection, 100000000)
+    payer = await SolanaUtil.newWalletWithLamports(connection, 100000000)
   })
 
   beforeEach(() => {
-    owner = new Account();
+    owner = Keypair.generate();
   })
 
   // Clean up after each test

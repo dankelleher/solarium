@@ -1,4 +1,4 @@
-import {Connection, PublicKey, Account} from '@solana/web3.js';
+import {Connection, PublicKey, Keypair} from '@solana/web3.js';
 import {didToPublicKey} from "../lib/util";
 import {SolariumTransaction} from "../lib/solana/transaction";
 import {get as getDID} from "../lib/did/get";
@@ -12,7 +12,7 @@ import {get} from "./get";
  * @param owner
  * @param payer
  */
-const getOrCreateDID = async (owner: PublicKey, payer: Account): Promise<DIDDocument> => {
+const getOrCreateDID = async (owner: PublicKey, payer: Keypair): Promise<DIDDocument> => {
   try {
     console.log(`Looking for a DID owned by ${owner.toBase58()}`);
     return await getDID(owner);
@@ -31,7 +31,7 @@ const getOrCreateDID = async (owner: PublicKey, payer: Account): Promise<DIDDocu
  * @param payer
  * @param connection
  */
-export const create = async (owner: PublicKey, payer: Account, connection: Connection): Promise<Inbox> => {
+export const create = async (owner: PublicKey, payer: Keypair, connection: Connection): Promise<Inbox> => {
   const didForOwner = await getOrCreateDID(owner, payer)
   const didKey = didToPublicKey(didForOwner.id)
 

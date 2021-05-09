@@ -1,4 +1,3 @@
-import {PublicKey} from '@solana/web3.js';
 import {PublicKeyBase58, ReadRequest} from "../lib/util";
 import * as service from "../service/get";
 import {SolanaUtil} from "../lib/solana/solanaUtil";

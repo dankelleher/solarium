@@ -1,6 +1,6 @@
 import didJWT, { JWE, JWTVerified } from 'did-jwt';
 import {resolve as resolveToDocument } from '@identity.com/sol-did-client';
-import {makeAccount, PrivateKey} from "../util";
+import {makeKeypair, PrivateKey} from "../util";
 import {convertPublicKey, convertSecretKey} from 'ed2curve-esm'
 import {DIDResolutionResult} from "did-resolver/src/resolver";
 import {DIDDocument} from "did-resolver";
@@ -77,7 +77,7 @@ export class SolariumCrypto {
 
   async decrypt(jwe: JWE): Promise<string> {
     // normalise the key into an uint array
-    const ed25519Key = makeAccount(this.key).secretKey;
+    const ed25519Key = makeKeypair(this.key).secretKey;
     
     // The key is used both for Ed25519 signing and x25519 ECDH encryption
     // the two different protocols use the same curve (Curve25519) but

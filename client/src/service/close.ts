@@ -1,4 +1,4 @@
-import {Connection, Account} from '@solana/web3.js';
+import {Connection, Keypair} from '@solana/web3.js';
 import {didToPublicKey} from "../lib/util";
 import {SolariumTransaction} from "../lib/solana/transaction";
 import {getKeyFromOwner} from "../lib/solana/instruction";
@@ -10,7 +10,7 @@ import {getKeyFromOwner} from "../lib/solana/instruction";
  * @param signer
  * @param connection
  */
-export const close = async (ownerDID: string, payer: Account, signer: Account, connection: Connection): Promise<void> => {
+export const close = async (ownerDID: string, payer: Keypair, signer: Keypair, connection: Connection): Promise<void> => {
   const ownerDIDKey = didToPublicKey(ownerDID);
   const inbox = await getKeyFromOwner(ownerDIDKey);
   

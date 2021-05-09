@@ -1,11 +1,9 @@
 import { SolariumCrypto } from "../../../../src/lib/crypto/SolariumCrypto";
 import {Account, PublicKey} from "@solana/web3.js";
 import * as solDID from '@identity.com/sol-did-client';
-import {mocked} from "ts-jest";
+import {mocked} from "ts-jest/utils";
 import {when} from "jest-when";
 import {DIDDocument} from "did-resolver";
-import { convertPublicKey } from 'ed2curve-esm'
-import {encode} from 'bs58'
 
 jest.mock('@identity.com/sol-did-client');
 const mockedResolve = mocked(solDID.resolve, true);

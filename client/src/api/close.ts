@@ -1,4 +1,4 @@
-import {CloseRequest, makeAccount} from "../lib/util";
+import {CloseRequest, makeKeypair} from "../lib/util";
 import * as service from "../service/close";
 import {SolanaUtil} from "../lib/solana/solanaUtil";
 
@@ -7,9 +7,9 @@ import {SolanaUtil} from "../lib/solana/solanaUtil";
  * @param request
  */
 export const close = async (request: CloseRequest): Promise<void> => {
-  const payer = makeAccount(request.payer);
+  const payer = makeKeypair(request.payer);
   const signer = request.signer
-    ? makeAccount(request.signer)
+    ? makeKeypair(request.signer)
     : payer
   const connection = SolanaUtil.getConnection();
   

@@ -1,4 +1,4 @@
-import {Account, Cluster, clusterApiUrl, PublicKey} from '@solana/web3.js';
+import {Keypair, Cluster, clusterApiUrl, PublicKey} from '@solana/web3.js';
 import { decode, encode } from 'bs58';
 import {DecentralizedIdentifier} from "@identity.com/sol-did-client";
 import {DEFAULT_CLUSTER} from "./constants";
@@ -22,19 +22,17 @@ export const privateKeyIsUint8Array = (
 ): privateKey is Uint8Array => privateKey instanceof Uint8Array;
 
 /**
- * Create a Solana account object from an x25519 private key
+ * Create a Solana keypair object from an x25519 private key
  * @param privateKey
  */
-export const makeAccount = (privateKey: PrivateKey): Account => {
-  if (
-    privateKeyIsArray(privateKey) ||
-    privateKeyIsBuffer(privateKey) ||
-    privateKeyIsUint8Array(privateKey)
-  )
-    return new Account(privateKey);
+export const makeKeypair = (privateKey: PrivateKey): Keypair => {
+  if (privateKeyIsArray(privateKey)) return Keypair.fromSecretKey(Buffer.from(privateKey));
+  
+  if (privateKeyIsUint8Array(privateKey) || privateKeyIsBuffer(privateKey)) return Keypair.fromSecretKey(privateKey);
+  
   if (privateKeyIsString(privateKey)) {
     const privateKeyHex = decode(privateKey);
-    return new Account(privateKeyHex);
+    return Keypair.fromSecretKey(privateKeyHex);
   }
 
   throw new Error('Incompatible private key format');
@@ -45,17 +43,17 @@ export const makeAccount = (privateKey: PrivateKey): Account => {
  * @param privateKey
  */
 export const getPublicKey = (privateKey: PrivateKey): PublicKey =>
-  makeAccount(privateKey).publicKey;
+  makeKeypair(privateKey).publicKey;
 
 type EncodedKeyPair = {
   secretKey: string;
   publicKey: string;
 };
 export const generateKeypair = (): EncodedKeyPair => {
-  const account = new Account();
+  const keypair = Keypair.generate();
   return {
-    secretKey: encode(account.secretKey),
-    publicKey: account.publicKey.toBase58(),
+    secretKey: encode(keypair.secretKey),
+    publicKey: keypair.publicKey.toBase58(),
   };
 };
 

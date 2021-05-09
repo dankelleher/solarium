@@ -1,5 +1,5 @@
 import {PublicKey} from '@solana/web3.js';
-import {CreateRequest, makeAccount} from "../lib/util";
+import {CreateRequest, makeKeypair} from "../lib/util";
 import {Inbox} from "../lib/Inbox";
 import * as service from "../service/create";
 import {SolanaUtil} from "../lib/solana/solanaUtil";
@@ -9,7 +9,7 @@ import {SolanaUtil} from "../lib/solana/solanaUtil";
  * @param request
  */
 export const create = async (request: CreateRequest): Promise<Inbox> => {
-  const payer = makeAccount(request.payer);
+  const payer = makeKeypair(request.payer);
   const owner = request.owner
     ? new PublicKey(request.owner)
     : payer.publicKey

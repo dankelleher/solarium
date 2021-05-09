@@ -1,4 +1,4 @@
-import {Account, PublicKey} from '@solana/web3.js';
+import {Keypair, PublicKey} from '@solana/web3.js';
 import {Assignable, SCHEMA} from './solanaBorsh';
 import {encode} from 'bs58';
 
@@ -28,7 +28,7 @@ export class InboxData extends Assignable {
   static empty(owner?: PublicKey): InboxData {
     return new InboxData({
       owner: AssignablePublicKey.fromPublicKey(
-        owner || new Account().publicKey
+        owner || Keypair.generate().publicKey
       ),
 
       alias: '',

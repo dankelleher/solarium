@@ -5,7 +5,7 @@ import {
   initialize,
   post,
 } from './instruction';
-import {Account, Connection, PublicKey, SystemProgram, Transaction} from '@solana/web3.js';
+import {Keypair, Connection, PublicKey, Transaction} from '@solana/web3.js';
 import {InboxData} from "./InboxData";
 // import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES, PROGRAM_ID} from "../constants";
 
@@ -16,7 +16,7 @@ import {InboxData} from "./InboxData";
 export class SolariumTransaction {
   static async createInbox(
     connection: Connection,
-    payer: Account,
+    payer: Keypair,
     owner: PublicKey,
   ): Promise<PublicKey> {
     const address = await getKeyFromOwner(owner);
@@ -55,10 +55,10 @@ export class SolariumTransaction {
   static async closeInbox(
     connection: Connection,
     inboxAddress: PublicKey,
-    payer: Account,
+    payer: Keypair,
     ownerDID: PublicKey,
-    owner: Account = payer,
-    receiver: Account = payer,
+    owner: Keypair = payer,
+    receiver: Keypair = payer,
   ): Promise<string> {
     // Create the transaction to close the inbox
     const transaction = new Transaction().add(
@@ -76,9 +76,9 @@ export class SolariumTransaction {
 
   static async post(
     connection: Connection,
-    payer: Account,
+    payer: Keypair,
     senderDID: PublicKey,
-    signer: Account,
+    signer: Keypair,
     inboxAddress: PublicKey,
     message: string,
   ): Promise<string> {

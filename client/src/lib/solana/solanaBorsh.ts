@@ -1,4 +1,4 @@
-import { serialize, BinaryReader, Schema, BorshError } from 'borsh';
+import {BinaryReader, BorshError, Schema, serialize} from 'borsh';
 
 // Class wrapping a plain object
 export abstract class Assignable {
@@ -9,9 +9,7 @@ export abstract class Assignable {
   }
 
   encode(): Buffer {
-    const serialized = Buffer.from(serialize(SCHEMA, this));
-    // console.log(serialized);
-    return serialized;
+    return Buffer.from(serialize(SCHEMA, this));
   }
 
   static decode<T extends Assignable>(data: Buffer): T {

@@ -1,5 +1,5 @@
 import {
-  Account,
+  Keypair,
   Connection,
   Transaction,
   TransactionSignature,
@@ -20,7 +20,7 @@ export class SolanaUtil {
   static sendAndConfirmTransaction(
     connection: Connection,
     transaction: Transaction,
-    ...signers: Array<Account>
+    ...signers: Array<Keypair>
   ): Promise<TransactionSignature> {
     return sendAndConfirmTransaction(connection, transaction, signers, {
       skipPreflight: false,
@@ -29,18 +29,18 @@ export class SolanaUtil {
     });
   }
 
-  static async newAccountWithLamports(
+  static async newWalletWithLamports(
     connection: Connection,
     lamports: number = 1000000
-  ): Promise<Account> {
-    const account = new Account();
+  ): Promise<Keypair> {
+    const keypair = Keypair.generate();
 
     let retries = 30;
-    await connection.requestAirdrop(account.publicKey, lamports);
+    await connection.requestAirdrop(keypair.publicKey, lamports);
     for (;;) {
       await this.sleep(500);
-      const balance = await connection.getBalance(account.publicKey);
-      if (lamports <= balance) return account;
+      const balance = await connection.getBalance(keypair.publicKey);
+      if (lamports <= balance) return keypair;
       if (--retries <= 0) break;
     }
     throw new Error(`Airdrop of ${lamports} failed`);

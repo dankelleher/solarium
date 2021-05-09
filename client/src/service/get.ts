@@ -1,5 +1,5 @@
-import {Account, Connection, PublicKey} from '@solana/web3.js';
-import {PrivateKey, PublicKeyBase58} from "../lib/util";
+import {Connection, PublicKey} from '@solana/web3.js';
+import {PrivateKey} from "../lib/util";
 import {SolariumTransaction} from "../lib/solana/transaction";
 import {Inbox} from "../lib/Inbox";
 

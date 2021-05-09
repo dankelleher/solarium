@@ -1282,10 +1282,10 @@
     superstruct "^0.14.2"
     tweetnacl "^1.0.0"
 
-"@solana/web3.js@^1.5.0":
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.5.0.tgz#4819ecad0408ec55f3d47a227627856002a7358b"
-  integrity sha512-o9Md2wDRKcI7uQksOp6yW6llhfCEm2QyblvM1qTjIbmaxuJn2ID2p0hIsJM7p+p88I/neFt+rodi58kVvk98Cg==
+"@solana/web3.js@^1.10.0":
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.10.0.tgz#1e542d5d206e3c89b0e0d8168a881dec3e9882f4"
+  integrity sha512-N+MlMxfDyNrz3u1eAJRwRGhDmPQQc1iysiDBS1ofAYCYeehfU/KHttM1GIy4mST1BynYO1n555PHZL3qDBzcCg==
   dependencies:
     "@babel/runtime" "^7.12.5"
     bn.js "^5.0.0"

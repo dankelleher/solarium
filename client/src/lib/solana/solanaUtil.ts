@@ -10,7 +10,6 @@ import {getClusterEndpoint} from "../util";
 import { memoizeWith, identity } from 'ramda';
 
 const memoizedGetConnection = memoizeWith(identity, () => {
-  console.log("Creating a new connection");
   return new Connection(getClusterEndpoint(), SOLANA_COMMITMENT);
 })
 

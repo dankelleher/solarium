@@ -36,11 +36,11 @@ export class SolariumTransaction {
     connection: Connection,
     inboxAddress: PublicKey
   ): Promise<InboxData| null> {
-    const data = await connection.getAccountInfo(inboxAddress);
+    const accountInfo = await connection.getAccountInfo(inboxAddress);
 
-    if (!data) return null;
+    if (!accountInfo) return null;
 
-    return InboxData.fromAccount(data.data);
+    return InboxData.fromAccount(accountInfo.data);
   }
 
   /**

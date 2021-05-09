@@ -1,6 +1,8 @@
 import {makeKeypair, PostRequest} from "../lib/util";
 import * as service from "../service/post";
 import {SolanaUtil} from "../lib/solana/solanaUtil";
+import {keyToIdentifier} from "@identity.com/sol-did-client";
+import {DEFAULT_CLUSTER} from "../lib/constants";
 
 /**
  * Post a message to an inbox
@@ -12,5 +14,6 @@ export const post = async (request: PostRequest): Promise<void> => {
     ? makeKeypair(request.signer)
     : payer
   const connection = SolanaUtil.getConnection();
-  return service.post(request.ownerDID, request.senderDID, signer, payer, request.message, connection)
+  const senderDID = request.senderDID || await keyToIdentifier(makeKeypair(request.payer).publicKey, DEFAULT_CLUSTER);
+  return service.post(request.ownerDID, senderDID, signer, payer, request.message, connection)
 };

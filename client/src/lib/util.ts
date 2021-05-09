@@ -81,14 +81,14 @@ export type CloseRequest = {
 
 export type PostRequest = {
   payer: PrivateKey,
-  senderDID: string, 
+  senderDID?: string, 
   signer?: PrivateKey,
   ownerDID: string,
   message: string
 }
 
 export type ReadRequest = {
-  ownerDID: string,
+  ownerDID?: string,
   ownerKey: PrivateKey
 }
 

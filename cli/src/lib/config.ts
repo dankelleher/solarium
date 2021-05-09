@@ -12,8 +12,7 @@ const parseConfig = (configString:string):Config => {
     return JSON.parse(configString)
   } catch {
     const lines = configString.split('\n')
-
-    const findLine = (name:string) => ((lines.find((l) => l.startsWith(name)) || "").split(";")[1] || '').trim()
+    const findLine = (name:string) => ((lines.find((l) => l.startsWith(name)) || "").split(":")[1] || '').trim()
 
     return {
       keypairPath: findLine('Keypair Path')
@@ -24,9 +23,7 @@ const parseConfig = (configString:string):Config => {
 export const getWallet = ():Keypair => {
   const solanaConfig = execSync('solana config get --output json', { encoding: 'utf-8' });
   const parsedConfig = parseConfig(solanaConfig.toString('utf-8'))
-  console.log(parsedConfig);
-
   const secretKey = require(parsedConfig.keypairPath);
 
-  return Keypair.fromSecretKey(secretKey);
+  return Keypair.fromSecretKey(Buffer.from(secretKey));
 }

@@ -21,7 +21,9 @@ export class Inbox {
     const decrypt = async (message: Message):Promise<Message> => {
       if (!ownerKey) return message;  // only decrypt if a key is provided
       const crypto = new SolariumCrypto(ownerDID, ownerKey)
-      const decoded = decode(Buffer.from(message.content, 'base64'));
+      const compressedBytes = Buffer.from(message.content, 'base64');  // TODO change program to accept byte arrays
+      console.log("CompressedBytes " + compressedBytes.length);
+      const decoded = decode(compressedBytes);
       const decrypted = await crypto.decrypt(decoded)
       return {
         ...message,

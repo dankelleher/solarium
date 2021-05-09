@@ -25,6 +25,8 @@ export const post = async (ownerDID: string, senderDID: string, signer: Account,
   const encodedBytes = encode(encryptedMessage);
   const encodedMessage = encodedBytes.toString('base64')  // TODO change program to accept byte arrays
   
+  console.log(`Encoded message length ${encodedMessage.length} bytes ${encodedBytes.length}`);
+  
   if (encodedMessage.length > MESSAGE_SIZE_BYTES) {
     throw Error(
       `Message too long - encoded size ${encodedMessage.length}, max length ${MESSAGE_SIZE_BYTES}, (raw bytes ${encodedBytes.length})`

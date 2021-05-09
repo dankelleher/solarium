@@ -11,7 +11,7 @@ export const NONCE_SEED_STRING = 'solarium';  // must match get_inbox_address_wi
 // The cluster reference for the sol-did client - used to generate
 // DIDs that can be unambiguously resolved to any solana cluster
 // e.g. did:sol:devnet:abcde
-export const DEFAULT_CLUSTER = ClusterType.development(); // TODO
+export const DEFAULT_CLUSTER = ClusterType.development(); // localhost - override with process.env.CLUSTER
 
 // must match
 export const MESSAGE_SIZE_BYTES = 1024;

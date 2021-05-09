@@ -32,7 +32,7 @@
     "typescript": "^3.3"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=14.0.0"
   },
   "files": [
     "/bin",
@@ -51,13 +51,17 @@
     "bin": "solarium",
     "plugins": [
       "@oclif/plugin-help"
-    ]
+    ],
+    "hooks": {
+      "init": "./src/lib/hooks/init"
+    }
   },
   "repository": "dankelleher/solarium",
   "scripts": {
+    "build": "rm -rf lib && tsc -b && oclif-dev readme",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
-    "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
+    "prepack": "yarn build && ocliv-dev manifest",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "version": "oclif-dev readme && git add README.md"
   },

@@ -1,9 +1,8 @@
-import {makeKeypair, PublicKeyBase58, ReadRequest} from "../lib/util";
+import {currentCluster, makeKeypair, PublicKeyBase58, ReadRequest} from "../lib/util";
 import * as service from "../service/get";
 import {SolanaUtil} from "../lib/solana/solanaUtil";
 import {DecentralizedIdentifier, keyToIdentifier} from "@identity.com/sol-did-client";
 import {getKeyFromOwner} from "../lib/solana/instruction";
-import {DEFAULT_CLUSTER} from "../lib/constants";
 import {distinct, switchMap} from "rxjs/operators";
 import {from, Observable} from "rxjs";
 import {PublicKey} from "@solana/web3.js";
@@ -15,7 +14,7 @@ type Message = {
 }
 
 async function getInboxAddress(request: ReadRequest):Promise<PublicKey> {
-  const did = request.ownerDID || await keyToIdentifier(makeKeypair(request.ownerKey).publicKey, DEFAULT_CLUSTER);
+  const did = request.ownerDID || await keyToIdentifier(makeKeypair(request.ownerKey).publicKey, currentCluster());
   const ownerAddress = DecentralizedIdentifier.parse(did).pubkey.toPublicKey();
   return getKeyFromOwner(ownerAddress);
 }

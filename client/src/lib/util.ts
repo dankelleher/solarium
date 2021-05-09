@@ -1,6 +1,6 @@
 import {Keypair, Cluster, clusterApiUrl, PublicKey} from '@solana/web3.js';
 import { decode, encode } from 'bs58';
-import {DecentralizedIdentifier} from "@identity.com/sol-did-client";
+import {ClusterType, DecentralizedIdentifier} from "@identity.com/sol-did-client";
 import {DEFAULT_CLUSTER} from "./constants";
 
 // a 64-byte private key on the X25519 curve.
@@ -57,13 +57,12 @@ export const generateKeypair = (): EncodedKeyPair => {
   };
 };
 
-type ExtendedCluster = Cluster | 'localnet' | 'civic'
+type ExtendedCluster = Cluster | 'localnet';
 export const getClusterEndpoint = (cluster?: ExtendedCluster) => {
-  if (!cluster) return DEFAULT_CLUSTER.solanaUrl();
+  if (!cluster) return currentCluster().solanaUrl();
   
   switch (cluster) {
     case 'localnet': return 'http://localhost:8899';
-    case 'civic': return 'http://ec2-3-238-152-85.compute-1.amazonaws.com:8899';
     default: return clusterApiUrl(cluster);
   } 
 }
@@ -93,3 +92,5 @@ export type ReadRequest = {
 }
 
 export const didToPublicKey = (did: string) => DecentralizedIdentifier.parse(did).pubkey.toPublicKey()
+
+export const currentCluster = () => process.env.CLUSTER ? ClusterType.parse(process.env.CLUSTER) : DEFAULT_CLUSTER

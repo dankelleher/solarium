@@ -27,32 +27,31 @@ const EMPTY_DID_RESOLUTION_RESULT: DIDResolutionResult = {
 const augmentDIDDocument = (didDocument: DIDDocument):DIDDocument => {
   // key agreement key already exists, so we cann use it
   if (didDocument.keyAgreement && didDocument.keyAgreement.length) return didDocument;
-  
+
   if (!didDocument.publicKey || !didDocument.publicKey.length) {
     throw Error('Cannot augment DID document for x25519. The document has no keys')
   }
 
-  const defaultKey = didDocument.publicKey[0];
-  const keyAgreementKey = {
-    ...defaultKey,
-    id: defaultKey.id + '_keyAgreement',
+  const keyAgreementKeys = didDocument.publicKey.map(key => ({
+    ...key,
+    id: key.id + '_keyAgreement',
     type: 'X25519KeyAgreementKey2019',
-    publicKeyBase58: encode(convertPublicKey(decode(defaultKey.publicKeyBase58)))
-  }
-  
+    publicKeyBase58: encode(convertPublicKey(decode(key.publicKeyBase58)))
+  }));
+
   // add the new key to the document
   return {
     ...didDocument,
-    publicKey: [...didDocument.publicKey, keyAgreementKey],
-    keyAgreement: [keyAgreementKey.id]
+    publicKey: [...didDocument.publicKey, ...keyAgreementKeys],
+    keyAgreement: keyAgreementKeys.map(key => key.id)
   }
 };
 
 const resolve = async (identifier: string): Promise<DIDResolutionResult> => {
   const didDocument = await resolveToDocument(identifier)
-  
+
   const augmentedDIDDocument = augmentDIDDocument(didDocument);
-  
+
   return {
     ...EMPTY_DID_RESOLUTION_RESULT,
     didResolutionMetadata: { contentType: 'application/did+ld+json' },
@@ -78,7 +77,7 @@ export class SolariumCrypto {
   async decrypt(jwe: JWE): Promise<string> {
     // normalise the key into an uint array
     const ed25519Key = makeKeypair(this.key).secretKey;
-    
+
     // The key is used both for Ed25519 signing and x25519 ECDH encryption
     // the two different protocols use the same curve (Curve25519) but
     // different key formats. Specifically Ed25519 uses a 64 byte secret key
@@ -87,7 +86,7 @@ export class SolariumCrypto {
     // secret key. In order to use the same key for both, we convert here
     // from Ed25519 to x25519 format.
     const curve25519Key = convertSecretKey(ed25519Key);
-    
+
     const decrypted = await didJWT.decryptJWE(
       jwe,
       didJWT.x25519Decrypter(curve25519Key)

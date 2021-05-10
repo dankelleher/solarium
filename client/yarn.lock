@@ -893,10 +893,10 @@
   resolved "https://registry.yarnpkg.com/@cto.af/textdecoder/-/textdecoder-0.0.0.tgz#e1e8d84c936c30a0f4619971f19ca41941af9fdc"
   integrity sha512-sJpx3F5xcVV/9jNYJQtvimo4Vfld/nD3ph+ZWtQzZ03Zo8rJC7QKQTRcIGS13Rcz80DwFNthCWMrd58vpY4ZAQ==
 
-"@identity.com/sol-did-client@^0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.3.tgz#933d0641681fb1b41ea16b292c49f6ef272e6293"
-  integrity sha512-m7eKL9PwLshgRgayjYP/O1wmdVVC5sggEBpes09FrSOfco35HaE3/LgL7muRp1fdEvkoPj9LCLdtUMQwia4ylg==
+"@identity.com/sol-did-client@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.5.tgz#dd0ce3cd8d0818cc7b58d27e9461ab23d1262ac7"
+  integrity sha512-40NZ9APFSEv1aihRDA8/0+H39h35wXGZEPb2g2CX3XvgWECNQ7plLEsFvbecrvB4QBThavhdiFM4DE3bxSGGlQ==
   dependencies:
     "@solana/web3.js" "^0.93.0"
     bn.js "^4.12.0"
@@ -3430,10 +3430,9 @@ detect-newline@^3.0.0:
   resolved "https://registry.yarnpkg.com/detect-newline/-/detect-newline-3.1.0.tgz#576f5dfc63ae1a192ff192d8ad3af6308991b651"
   integrity sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==
 
-did-jwt@^5.2.0:
+"did-jwt@github:dankelleher/did-jwt#npm-to-yarn":
   version "5.2.0"
-  resolved "https://registry.yarnpkg.com/did-jwt/-/did-jwt-5.2.0.tgz#c8c662334663eeb53f7a6d241237c1e8633cd37d"
-  integrity sha512-5cyFUWdF/B7b7dJzih7XiPWavCUtThgzs00BXDzV8OemBHFlnXpZN7phq5aqy+k8vWWqp+ijxqVLQHRfgc609Q==
+  resolved "https://codeload.github.com/dankelleher/did-jwt/tar.gz/15d9a739ad90dfc09ced9edcf0a7339ea6aebc1a"
   dependencies:
     "@stablelib/ed25519" "^1.0.1"
     "@stablelib/random" "^1.0.0"

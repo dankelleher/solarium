@@ -91,6 +91,14 @@ export type ReadRequest = {
   ownerKey: PrivateKey
 }
 
+export type AddKeyRequest = {
+  ownerDID: string,
+  ownerKey?: PrivateKey,
+  payer: PrivateKey,
+  newKey: PublicKeyBase58,
+  keyIdentifier: string
+}
+
 export const didToPublicKey = (did: string) => DecentralizedIdentifier.parse(did).pubkey.toPublicKey()
 
 export const currentCluster = () => process.env.CLUSTER ? ClusterType.parse(process.env.CLUSTER) : DEFAULT_CLUSTER

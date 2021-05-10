@@ -1,7 +1,6 @@
 import {Command, flags} from '@oclif/command'
 import * as service from "../service/read";
 
-
 export default class Read extends Command {
   static description = 'describe the command here'
 

@@ -112,10 +112,10 @@
   resolved "https://registry.yarnpkg.com/@cto.af/textdecoder/-/textdecoder-0.0.0.tgz#e1e8d84c936c30a0f4619971f19ca41941af9fdc"
   integrity sha512-sJpx3F5xcVV/9jNYJQtvimo4Vfld/nD3ph+ZWtQzZ03Zo8rJC7QKQTRcIGS13Rcz80DwFNthCWMrd58vpY4ZAQ==
 
-"@identity.com/sol-did-client@^0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.3.tgz#933d0641681fb1b41ea16b292c49f6ef272e6293"
-  integrity sha512-m7eKL9PwLshgRgayjYP/O1wmdVVC5sggEBpes09FrSOfco35HaE3/LgL7muRp1fdEvkoPj9LCLdtUMQwia4ylg==
+"@identity.com/sol-did-client@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.5.tgz#dd0ce3cd8d0818cc7b58d27e9461ab23d1262ac7"
+  integrity sha512-40NZ9APFSEv1aihRDA8/0+H39h35wXGZEPb2g2CX3XvgWECNQ7plLEsFvbecrvB4QBThavhdiFM4DE3bxSGGlQ==
   dependencies:
     "@solana/web3.js" "^0.93.0"
     bn.js "^4.12.0"
@@ -439,13 +439,6 @@
   version "4.11.6"
   resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-4.11.6.tgz#c306c70d9358aaea33cd4eda092a742b9505967c"
   integrity sha512-pqr857jrp2kPuO9uRjZ3PwnJTjoQy+fcdxvBTvHm6dkmEL9q+hDD/2j/0ELOBPtPnS8LjCX0gI9nbl8lVkadpg==
-  dependencies:
-    "@types/node" "*"
-
-"@types/bn.js@^5.1.0":
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-5.1.0.tgz#32c5d271503a12653c62cf4d2b45e6eab8cebc68"
-  integrity sha512-QSSVYj7pYFN49kW77o2s9xTCwZ8F2xLbjLLSEVh8D2F4JUhZtPAGOFLTD+ffqksBx/u4cE/KImFjyhqCjn/LIA==
   dependencies:
     "@types/node" "*"
 
@@ -1144,10 +1137,9 @@ detect-indent@^6.0.0:
   resolved "https://registry.yarnpkg.com/detect-indent/-/detect-indent-6.0.0.tgz#0abd0f549f69fc6659a254fe96786186b6f528fd"
   integrity sha512-oSyFlqaTHCItVRGK5RmrmjB+CmaMOW7IaNA/kdxqhoa6d17j/5ce9O9eWXmV/KEdRwqpQA+Vqe8a8Bsybu4YnA==
 
-did-jwt@^5.2.0:
+"did-jwt@github:dankelleher/did-jwt#npm-to-yarn":
   version "5.2.0"
-  resolved "https://registry.yarnpkg.com/did-jwt/-/did-jwt-5.2.0.tgz#c8c662334663eeb53f7a6d241237c1e8633cd37d"
-  integrity sha512-5cyFUWdF/B7b7dJzih7XiPWavCUtThgzs00BXDzV8OemBHFlnXpZN7phq5aqy+k8vWWqp+ijxqVLQHRfgc609Q==
+  resolved "https://codeload.github.com/dankelleher/did-jwt/tar.gz/15d9a739ad90dfc09ced9edcf0a7339ea6aebc1a"
   dependencies:
     "@stablelib/ed25519" "^1.0.1"
     "@stablelib/random" "^1.0.0"
@@ -3029,14 +3021,13 @@ slice-ansi@^2.1.0:
 solarium@../client/:
   version "0.1.0"
   dependencies:
-    "@identity.com/sol-did-client" "^0.1.3"
+    "@identity.com/sol-did-client" "^0.1.5"
     "@solana/web3.js" "^1.10.0"
-    "@types/bn.js" "^5.1.0"
     borsh "^0.3.1"
     browserify-zlib "^0.2.0"
     bs58 "^4.0.1"
     cbor "^7.0.5"
-    did-jwt "^5.2.0"
+    did-jwt "github:dankelleher/did-jwt#npm-to-yarn"
     did-resolver "^3.1.0"
     ed2curve-esm "^0.3.0-alpha-1"
     ramda "^0.27.1"
@@ -3394,10 +3385,10 @@ typedarray-to-buffer@^3.1.5:
   dependencies:
     is-typedarray "^1.0.0"
 
-typescript@^3.3:
-  version "3.9.9"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.9.tgz#e69905c54bc0681d0518bd4d587cc6f2d0b1a674"
-  integrity sha512-kdMjTiekY+z/ubJCATUPlRDl39vXYiMV9iyeMuEuXZh2we6zz80uovNN2WlAxmmdE/Z/YQe+EbOEXB5RHEED3w==
+typescript@^4.2.4:
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.2.4.tgz#8610b59747de028fda898a8aef0e103f156d0961"
+  integrity sha512-V+evlYHZnQkaz8TRBuxTA92yZBPotr5H+WhQ7bD3hZUndx5tGOa1fuCgeSjxAzM1RiN5IzvadIXTVefuuwZCRg==
 
 uint8arrays@^2.1.3:
   version "2.1.5"

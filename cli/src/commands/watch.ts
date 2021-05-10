@@ -1,6 +1,7 @@
 import {Command, flags} from '@oclif/command'
 import * as service from "../service/read";
 import {Message} from "solarium";
+import {Observable} from "rxjs";
 
 export default class Watch extends Command {
   static description = 'describe the command here'

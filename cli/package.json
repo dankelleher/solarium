@@ -1,7 +1,7 @@
 {
   "name": "solarium-cli",
   "description": "CLI for Solarium: The E2E-encrypted messenger on Solana",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "dankelleher @dankelleher",
   "bin": {
     "solarium": "./bin/run"
@@ -13,11 +13,11 @@
     "@oclif/plugin-help": "^3",
     "@solana/web3.js": "^1.10.0",
     "rxjs": "^7.0.0",
-    "solarium": "../client/",
+    "solarium-js": "file:../client",
     "tslib": "^1"
   },
   "devDependencies": {
-    "@oclif/dev-cli": "^1",
+    "@oclif/dev-cli": "^1.26.0",
     "@oclif/test": "^1",
     "@types/chai": "^4",
     "@types/mocha": "^5",
@@ -54,7 +54,7 @@
       "@oclif/plugin-help"
     ],
     "hooks": {
-      "init": "./src/lib/hooks/init"
+      "init": "./lib/lib/hooks/init"
     }
   },
   "repository": "dankelleher/solarium",
@@ -62,7 +62,7 @@
     "build": "rm -rf lib && tsc -b && oclif-dev readme",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
-    "prepack": "yarn build && ocliv-dev manifest",
+    "prepack": "yarn build && oclif-dev manifest",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "version": "oclif-dev readme && git add README.md"
   },

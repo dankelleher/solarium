@@ -19,7 +19,7 @@ $ npm install -g solarium-cli
 $ solarium COMMAND
 running command...
 $ solarium (-v|--version|version)
-solarium-cli/0.0.0 darwin-x64 node-v16.0.0
+solarium-cli/0.0.1 darwin-x64 node-v16.0.0
 $ solarium --help [COMMAND]
 USAGE
   $ solarium COMMAND
@@ -48,7 +48,7 @@ OPTIONS
   -n, --name=name  name to print
 ```
 
-_See code: [src/commands/create.ts](https://github.com/dankelleher/solarium/blob/v0.0.0/src/commands/create.ts)_
+_See code: [src/commands/create.ts](https://github.com/dankelleher/solarium/blob/v0.0.1/src/commands/create.ts)_
 
 ## `solarium help [COMMAND]`
 
@@ -81,7 +81,7 @@ OPTIONS
   -r, --recipient=recipient  (required) Recipient DID
 ```
 
-_See code: [src/commands/post.ts](https://github.com/dankelleher/solarium/blob/v0.0.0/src/commands/post.ts)_
+_See code: [src/commands/post.ts](https://github.com/dankelleher/solarium/blob/v0.0.1/src/commands/post.ts)_
 
 ## `solarium read [FILE]`
 
@@ -101,7 +101,7 @@ ALIASES
   $ solarium
 ```
 
-_See code: [src/commands/read.ts](https://github.com/dankelleher/solarium/blob/v0.0.0/src/commands/read.ts)_
+_See code: [src/commands/read.ts](https://github.com/dankelleher/solarium/blob/v0.0.1/src/commands/read.ts)_
 
 ## `solarium watch [FILE]`
 
@@ -117,5 +117,5 @@ OPTIONS
   -n, --name=name  name to print
 ```
 
-_See code: [src/commands/watch.ts](https://github.com/dankelleher/solarium/blob/v0.0.0/src/commands/watch.ts)_
+_See code: [src/commands/watch.ts](https://github.com/dankelleher/solarium/blob/v0.0.1/src/commands/watch.ts)_
 <!-- commandsstop -->

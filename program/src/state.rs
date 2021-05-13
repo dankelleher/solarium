@@ -17,7 +17,7 @@ use {
 pub struct InboxData {
     /// The public key of the owner of the inbox  
     pub owner: Pubkey,
-    /// Thee owner's alias or username
+    /// The owner's alias or username
     pub alias: String,
     /// All of the messages in the inbox
     pub messages: Vec<Message>

@@ -1,5 +1,5 @@
 import {getWallet} from "../lib/config";
-import * as solarium from 'solarium';
+import * as solarium from 'solarium-js';
 
 export const post = async (message: string, to: string) => {
   const wallet = await getWallet();

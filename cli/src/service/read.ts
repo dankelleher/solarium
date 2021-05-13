@@ -1,6 +1,6 @@
 import {getWallet} from "../lib/config";
-import * as solarium from 'solarium';
-import {Message} from "solarium";
+import * as solarium from 'solarium-js';
+import {Message} from "solarium-js";
 import {Keypair} from "@solana/web3.js";
 import {switchMap} from "rxjs/operators";
 import {from, Observable} from "rxjs";

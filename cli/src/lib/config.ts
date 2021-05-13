@@ -1,6 +1,6 @@
 import {execSync} from "child_process";
 import {Keypair} from "@solana/web3.js";
-import {createWallet} from "solarium";
+import {createWallet} from "solarium-js";
 import {mkdirSync, writeFileSync} from 'fs';
 import path from "path";
 import {homedir} from "os";

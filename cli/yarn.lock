@@ -174,7 +174,7 @@
     is-wsl "^2.1.1"
     tslib "^2.0.0"
 
-"@oclif/dev-cli@^1":
+"@oclif/dev-cli@^1.26.0":
   version "1.26.0"
   resolved "https://registry.yarnpkg.com/@oclif/dev-cli/-/dev-cli-1.26.0.tgz#e3ec294b362c010ffc8948003d3770955c7951fd"
   integrity sha512-272udZP+bG4qahoAcpWcMTJKiA+V42kRMqQM7n4tgW35brYb2UP5kK+p08PpF8sgSfRTV8MoJVJG9ax5kY82PA==
@@ -281,9 +281,9 @@
     tweetnacl "^1.0.0"
 
 "@solana/web3.js@^1.10.0":
-  version "1.10.0"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.10.0.tgz#1e542d5d206e3c89b0e0d8168a881dec3e9882f4"
-  integrity sha512-N+MlMxfDyNrz3u1eAJRwRGhDmPQQc1iysiDBS1ofAYCYeehfU/KHttM1GIy4mST1BynYO1n555PHZL3qDBzcCg==
+  version "1.10.1"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.10.1.tgz#b3e7197a2628c26c54227963741b1788bb67f7ff"
+  integrity sha512-5zepm+AaVfC6uao/WxKT7SlemqgGEp+x7XUv+018RURIx+XEcF+G2ZgjrIbjy5OoXJyfz+wGw8Or2fxsypderA==
   dependencies:
     "@babel/runtime" "^7.12.5"
     bn.js "^5.0.0"
@@ -1056,6 +1056,11 @@ cp-file@^6.2.0:
     pify "^4.0.1"
     safe-buffer "^5.0.1"
 
+create-require@^1.1.0:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/create-require/-/create-require-1.1.1.tgz#c1d7e8f1e5f6cfc9ff65f9cd352d37348756c333"
+  integrity sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==
+
 cross-spawn@^4:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/cross-spawn/-/cross-spawn-4.0.2.tgz#7b9247621c23adfdd3856004a823cbe397424d41"
@@ -1137,9 +1142,10 @@ detect-indent@^6.0.0:
   resolved "https://registry.yarnpkg.com/detect-indent/-/detect-indent-6.0.0.tgz#0abd0f549f69fc6659a254fe96786186b6f528fd"
   integrity sha512-oSyFlqaTHCItVRGK5RmrmjB+CmaMOW7IaNA/kdxqhoa6d17j/5ce9O9eWXmV/KEdRwqpQA+Vqe8a8Bsybu4YnA==
 
-"did-jwt@github:dankelleher/did-jwt#npm-to-yarn":
+"did-jwt@npm:did-jwt-multikey@^5.2.0":
   version "5.2.0"
-  resolved "https://codeload.github.com/dankelleher/did-jwt/tar.gz/15d9a739ad90dfc09ced9edcf0a7339ea6aebc1a"
+  resolved "https://registry.yarnpkg.com/did-jwt-multikey/-/did-jwt-multikey-5.2.0.tgz#33a9b9364638defee01d41e35a774c184041baf4"
+  integrity sha512-caHDNL3yMlSt18rPazyG4CauoX92bLrTzyVOqMc7LBR1wnwFld7ZY1dzedMoOvcMV11cFc82ovlncBg0a3X7gA==
   dependencies:
     "@stablelib/ed25519" "^1.0.1"
     "@stablelib/random" "^1.0.0"
@@ -1264,20 +1270,19 @@ eslint-ast-utils@^1.0.0:
     lodash.get "^4.4.2"
     lodash.zip "^4.2.0"
 
-eslint-config-oclif-typescript@^0.1:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/eslint-config-oclif-typescript/-/eslint-config-oclif-typescript-0.1.0.tgz#c310767c5ee8916ea5d08cf027d0317dd52ed8ba"
-  integrity sha512-BjXNJcH2F02MdaSFml9vJskviUFVkLHbTPGM5tinIt98H6klFNKP7/lQ+fB/Goc2wB45usEuuw6+l/fwAv9i7g==
+eslint-config-oclif-typescript@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/eslint-config-oclif-typescript/-/eslint-config-oclif-typescript-0.2.0.tgz#8e2a1c788ce47af73d5bf8a3a0b5b2b6a80f05d6"
+  integrity sha512-BdP5FgjxwqV9LmVnfd4TaxhwdQipY7GJVVuP2AKm+EkKoupSCflSiRqnd2cj8qvVq/IXYPK2eHpRDk5ts8hP9g==
   dependencies:
     "@typescript-eslint/eslint-plugin" "^2.6.1"
     "@typescript-eslint/parser" "^2.6.1"
-    eslint-config-oclif "^3.1.0"
     eslint-config-xo-space "^0.20.0"
     eslint-plugin-mocha "^5.2.0"
     eslint-plugin-node "^7.0.1"
     eslint-plugin-unicorn "^6.0.1"
 
-eslint-config-oclif@^3.1, eslint-config-oclif@^3.1.0:
+eslint-config-oclif@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/eslint-config-oclif/-/eslint-config-oclif-3.1.0.tgz#cbc207ced09e31676dcee2f724fc509cd20eb0bd"
   integrity sha512-Tqgy43cNXsSdhTLWW4RuDYGFhV240sC4ISSv/ZiUEg/zFxExSEUpRE6J+AGnkKY9dYwIW4C9b2YSUVv8z/miMA==
@@ -1936,9 +1941,9 @@ is-class@0.0.4:
   integrity sha1-4FdFFwW7NOOePjNZjJOpg3KWtzY=
 
 is-core-module@^2.2.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/is-core-module/-/is-core-module-2.3.0.tgz#d341652e3408bca69c4671b79a0954a3d349f887"
-  integrity sha512-xSphU2KG9867tsYdLD4RWQ1VqdFl4HTO9Thf3I/3dLEfr0dbPTWKsuCKrgqMljg4nPE+Gq0VCnzT3gr0CyBmsw==
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/is-core-module/-/is-core-module-2.4.0.tgz#8e9fc8e15027b011418026e98f0e6f4d86305cc1"
+  integrity sha512-6A2fkfq1rfeQZjxrZJGerpLCTHRNEBiSgnu0+obeJpEPZRUooHgsizvzv0ZjJwOz3iWIHdJtVWJ/tmPr3D21/A==
   dependencies:
     has "^1.0.3"
 
@@ -3018,8 +3023,10 @@ slice-ansi@^2.1.0:
     astral-regex "^1.0.0"
     is-fullwidth-code-point "^2.0.0"
 
-solarium@../client/:
-  version "0.1.0"
+solarium-js@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.0.3.tgz#ef32f086d1d01ccba4e8fc78c2dd24edfc32dce0"
+  integrity sha512-Z6KZlOUKuV05USTG43Sry0eYewvKdNA2DC2372IHLaGeaeNJeFYoYOnoB254vEggdcpyjb7XEoLYr0tXe/s0dg==
   dependencies:
     "@identity.com/sol-did-client" "^0.1.5"
     "@solana/web3.js" "^1.10.0"
@@ -3027,7 +3034,7 @@ solarium@../client/:
     browserify-zlib "^0.2.0"
     bs58 "^4.0.1"
     cbor "^7.0.5"
-    did-jwt "github:dankelleher/did-jwt#npm-to-yarn"
+    did-jwt "npm:did-jwt-multikey@^5.2.0"
     did-resolver "^3.1.0"
     ed2curve-esm "^0.3.0-alpha-1"
     ramda "^0.27.1"
@@ -3306,12 +3313,13 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
-ts-node@^8:
-  version "8.10.2"
-  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-8.10.2.tgz#eee03764633b1234ddd37f8db9ec10b75ec7fb8d"
-  integrity sha512-ISJJGgkIpDdBhWVu3jufsWpK3Rzo7bdiIXJjQc0ynKxVOVcg2oIrf2H2cejminGrptVc6q6/uynAHNCuWGbpVA==
+ts-node@^9.1.1:
+  version "9.1.1"
+  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-9.1.1.tgz#51a9a450a3e959401bda5f004a72d54b936d376d"
+  integrity sha512-hPlt7ZACERQGf03M253ytLY3dHbGNGrAq9qIHWUY9XHYl1z7wYngSr3OQ5xmui8o2AaxsONxIzjafLUiWBo1Fg==
   dependencies:
     arg "^4.1.0"
+    create-require "^1.1.0"
     diff "^4.0.1"
     make-error "^1.1.1"
     source-map-support "^0.5.17"

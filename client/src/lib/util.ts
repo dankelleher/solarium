@@ -2,6 +2,7 @@ import {Keypair, Cluster, clusterApiUrl, PublicKey} from '@solana/web3.js';
 import { decode, encode } from 'bs58';
 import {ClusterType, DecentralizedIdentifier} from "@identity.com/sol-did-client";
 import {DEFAULT_CLUSTER} from "./constants";
+import {SignCallback} from "./wallet";
 
 // a 64-byte private key on the X25519 curve.
 // In string form it is base58-encoded
@@ -57,7 +58,7 @@ export const generateKeypair = (): EncodedKeyPair => {
   };
 };
 
-type ExtendedCluster = Cluster | 'localnet';
+export type ExtendedCluster = Cluster | 'localnet';
 export const getClusterEndpoint = (cluster?: ExtendedCluster) => {
   if (!cluster) return currentCluster().solanaUrl();
   
@@ -69,13 +70,15 @@ export const getClusterEndpoint = (cluster?: ExtendedCluster) => {
 
 export type CreateRequest = {
   owner?: PublicKeyBase58,
-  payer: PrivateKey
+  payer: PrivateKey,
+  signCallback?: SignCallback
 }
 
 export type CloseRequest = {
   payer: PrivateKey,
   ownerDID: string,
-  signer?: PrivateKey
+  signer?: PrivateKey,
+  signCallback?: SignCallback
 }
 
 export type PostRequest = {
@@ -83,7 +86,8 @@ export type PostRequest = {
   senderDID?: string, 
   signer?: PrivateKey,
   ownerDID: string,
-  message: string
+  message: string,
+  signCallback?: SignCallback
 }
 
 export type ReadRequest = {
@@ -96,7 +100,8 @@ export type AddKeyRequest = {
   ownerKey?: PrivateKey,
   payer: PrivateKey,
   newKey: PublicKeyBase58,
-  keyIdentifier: string
+  keyIdentifier: string,
+  signCallback?: SignCallback
 }
 
 export const didToPublicKey = (did: string) => DecentralizedIdentifier.parse(did).pubkey.toPublicKey()

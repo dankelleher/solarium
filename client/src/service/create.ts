@@ -6,6 +6,7 @@ import {create as createDID} from "../lib/did/create";
 import {DIDDocument} from "did-resolver";
 import {Inbox} from "../lib/Inbox";
 import {get} from "./get";
+import {SignCallback} from "../lib/wallet";
 
 /**
  * If a DID was already registered for this owner, return its document. Else create one
@@ -30,14 +31,15 @@ const getOrCreateDID = async (owner: PublicKey, payer: Keypair): Promise<DIDDocu
  * @param owner
  * @param payer
  * @param connection
+ * @param signCallback
  */
-export const create = async (owner: PublicKey, payer: Keypair, connection: Connection): Promise<Inbox> => {
+export const create = async (owner: PublicKey, payer: Keypair, connection: Connection, signCallback?: SignCallback): Promise<Inbox> => {
   const didForOwner = await getOrCreateDID(owner, payer)
   const didKey = didToPublicKey(didForOwner.id)
 
   console.log(`Creating inbox for DID: ${didForOwner.id}`);
 
-  const inboxAddress = await SolariumTransaction.createInbox(connection, payer, didKey);
+  const inboxAddress = await SolariumTransaction.createInbox(connection, payer, didKey, signCallback);
   const inbox = await get(inboxAddress, connection);
   
   if (!inbox) {

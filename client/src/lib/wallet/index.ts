@@ -1,4 +1,4 @@
-import {Keypair} from "@solana/web3.js";
+import {Keypair, TransactionCtorFields, TransactionInstruction} from "@solana/web3.js";
 import {currentCluster} from "../util";
 import {ClusterType} from "@identity.com/sol-did-client";
 import {SolanaUtil} from "../solana/solanaUtil";
@@ -11,3 +11,9 @@ export const create = async ():Promise<Keypair> => {
   
   return Keypair.generate();
 }
+
+export type SignCallback = (
+  instructions: TransactionInstruction[],
+  signers: Keypair[],
+  transactionOpts?: TransactionCtorFields
+) => Promise<string>

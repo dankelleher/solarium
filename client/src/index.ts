@@ -5,4 +5,5 @@ export {read, readStream} from "./api/read";
 export { addKey } from "./api/addKey";
 
 export { Inbox, Message } from './lib/Inbox'
-export { create as createWallet } from './lib/wallet'
+export { create as createWallet, SignCallback } from './lib/wallet'
+export { ExtendedCluster } from './lib/util'

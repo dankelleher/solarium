@@ -1,38 +1,28 @@
 import { useLocalStorageState } from "../storage";
 import {
   Keypair,
-  clusterApiUrl,
   Connection,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
 import React, { useContext, useEffect, useMemo } from "react";
 import { notify } from "../notification";
+import {DEFAULT_COMMITMENT, ENDPOINTS} from "../constants";
+import {ExtendedCluster} from "solarium-js";
 
-export type ENV = "mainnet-beta" | "testnet" | "devnet" | "localnet";
-
-export const ENDPOINTS = [
-  {
-    name: "mainnet-beta" as ENV,
-    endpoint: "https://solana-api.projectserum.com/",
-  },
-  { name: "testnet" as ENV, endpoint: clusterApiUrl("testnet") },
-  { name: "devnet" as ENV, endpoint: clusterApiUrl("devnet") },
-  { name: "localnet" as ENV, endpoint: "http://127.0.0.1:8899" },
-];
 const DEFAULT_ENDPOINT = ENDPOINTS[0].endpoint;
 
 interface ConnectionConfig {
   connection: Connection;
   endpoint: string;
-  env: ENV;
+  env: ExtendedCluster;
   setEndpoint: (val: string) => void;
 }
 
 const ConnectionContext = React.createContext<ConnectionConfig>({
   endpoint: DEFAULT_ENDPOINT,
   setEndpoint: () => {},
-  connection: new Connection(DEFAULT_ENDPOINT, "recent"),
+  connection: new Connection(DEFAULT_ENDPOINT, DEFAULT_COMMITMENT),
   env: ENDPOINTS[0].name,
 });
 
@@ -42,10 +32,7 @@ export function ConnectionProvider({ children = undefined as any }) {
     ENDPOINTS[0].endpoint
   );
 
-  const connection = useMemo(() => new Connection(endpoint, "recent"), [
-    endpoint,
-  ]);
-  const sendConnection = useMemo(() => new Connection(endpoint, "recent"), [
+  const connection = useMemo(() => new Connection(endpoint, DEFAULT_COMMITMENT), [
     endpoint,
   ]);
 
@@ -98,6 +85,8 @@ export function useConnectionConfig() {
   };
 }
 
+export const sign:SignCallback
+
 export const sendTransaction = async (
   connection: any,
   wallet: any,
@@ -105,32 +94,30 @@ export const sendTransaction = async (
   signers: Keypair[],
   awaitConfirmation = true
 ) => {
-  let transaction = new Transaction();
-  instructions.forEach((instruction) => transaction.add(instruction));
-  transaction.recentBlockhash = (
-    await connection.getRecentBlockhash("max")
-  ).blockhash;
-  transaction.setSigners(
-    // fee payied by the wallet owner
-    wallet.publicKey,
-    ...signers.map((s) => s.publicKey)
-  );
+  const { blockhash: recentBlockhash } = await connection.getRecentBlockhash("max");
+  const transaction = new Transaction(
+    { recentBlockhash,
+    feePayer: wallet.publicKey
+    })
+    .add(...instructions);
+  
+  // TODO remove
+  // transaction.setSigners(
+  //   // fee paid by the wallet owner
+  //   wallet.publicKey,
+  //   ...signers.map((s) => s.publicKey)
+  // );
+  
   if (signers.length > 0) {
     transaction.partialSign(...signers);
   }
-  transaction = await wallet.signTransaction(transaction);
-  const rawTransaction = transaction.serialize();
-  let options = {
-    skipPreflight: true,
-    commitment: "singleGossip",
-  };
+  const partiallySignedTransaction = await wallet.signTransaction(transaction);
+  const rawTransaction = partiallySignedTransaction.serialize();
 
-  const txid = await connection.sendRawTransaction(rawTransaction, options);
+  const txid = await connection.sendRawTransaction(rawTransaction);
 
   if (awaitConfirmation) {
-    const status = (
-      await connection.confirmTransaction(txid, options && options.commitment)
-    ).value;
+    const { value: status } = await connection.confirmTransaction(txid);
 
     if (status.err) {
       notify({

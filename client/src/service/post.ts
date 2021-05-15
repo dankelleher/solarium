@@ -1,10 +1,11 @@
-import {Keypair, Connection} from '@solana/web3.js';
-import {didToPublicKey} from "../lib/util";
+import {Keypair} from '@solana/web3.js';
+import {arrayOf, didToPublicKey} from "../lib/util";
 import {SolariumTransaction} from "../lib/solana/transaction";
 import {getKeyFromOwner} from "../lib/solana/instruction";
 import {SolariumCrypto} from "../lib/crypto/SolariumCrypto";
 import {MESSAGE_SIZE_BYTES} from "../lib/constants";
 import {encode} from "../lib/compression";
+import {defaultSignCallback, SignCallback} from "../lib/wallet";
 
 /**
  * Post a message to an inbox
@@ -13,12 +14,12 @@ import {encode} from "../lib/compression";
  * @param signer
  * @param payer
  * @param message
- * @param connection
+ * @param signCallback
  */
-export const post = async (ownerDID: string, senderDID: string, signer: Keypair, payer: Keypair, message: string, connection: Connection): Promise<void> => {
+export const post = async (ownerDID: string, senderDID: string, message: string, signer: Keypair, payer?: Keypair, signCallback?: SignCallback): Promise<void> => {
   const ownerDIDKey = didToPublicKey(ownerDID);
   const inbox = await getKeyFromOwner(ownerDIDKey);
-
+  
   const senderDIDKey = didToPublicKey(senderDID);
   const crypto = new SolariumCrypto(senderDID, signer.secretKey)
   const encryptedMessage = await crypto.encrypt(message, ownerDID)
@@ -32,5 +33,9 @@ export const post = async (ownerDID: string, senderDID: string, signer: Keypair,
       `Message too long - encoded size ${encodedMessage.length}, max length ${MESSAGE_SIZE_BYTES}, (raw bytes ${encodedBytes.length})`
     )
   }
-  await SolariumTransaction.post(connection, payer, senderDIDKey, signer, inbox, encodedMessage);
+  
+  const createSignedTx = signCallback || (payer && defaultSignCallback(payer, ...arrayOf(signer)));
+  if (!createSignedTx) throw new Error("No payer or sign callback specified")
+  
+  await SolariumTransaction.post(senderDIDKey, signer.publicKey, inbox, encodedMessage, createSignedTx);
 };

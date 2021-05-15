@@ -6,7 +6,9 @@ module.exports = {
     extend: {},
   },
   variants: {},
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+  ],
   purge: {
     // Filenames to scan for classes
     content: [

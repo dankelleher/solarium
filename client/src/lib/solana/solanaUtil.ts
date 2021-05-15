@@ -3,7 +3,7 @@ import {
   Connection,
   Transaction,
   TransactionSignature,
-  sendAndConfirmTransaction,
+  sendAndConfirmRawTransaction,
 } from '@solana/web3.js';
 import { SOLANA_COMMITMENT } from '../constants';
 import {getClusterEndpoint} from "../util";
@@ -16,12 +16,11 @@ const memoizedGetConnection = memoizeWith(identity, () => {
 export class SolanaUtil {
   static getConnection = memoizedGetConnection;
   
-  static sendAndConfirmTransaction(
+  static sendAndConfirmRawTransaction(
     connection: Connection,
     transaction: Transaction,
-    ...signers: Array<Keypair>
   ): Promise<TransactionSignature> {
-    return sendAndConfirmTransaction(connection, transaction, signers, {
+    return sendAndConfirmRawTransaction(connection, transaction.serialize(), {
       skipPreflight: false,
       commitment: SOLANA_COMMITMENT,
       preflightCommitment: SOLANA_COMMITMENT,

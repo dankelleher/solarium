@@ -13,11 +13,16 @@ type Message = {
   content: string;
 }
 
-async function getInboxAddress(request: ReadRequest):Promise<PublicKey> {
-  const did = request.ownerDID || await keyToIdentifier(makeKeypair(request.ownerKey).publicKey, currentCluster());
+const didFromKey = (request: ReadRequest): Promise<string> => {
+  if (request.owner) return keyToIdentifier(new PublicKey(request.owner), currentCluster());
+  return keyToIdentifier(makeKeypair(request.decryptionKey).publicKey, currentCluster());
+}
+
+const getInboxAddress = async (request: ReadRequest): Promise<PublicKey> => {
+  const did = request.ownerDID || await didFromKey(request);
   const ownerAddress = DecentralizedIdentifier.parse(did).pubkey.toPublicKey();
   return getKeyFromOwner(ownerAddress);
-}
+};
 
 /**
  * Reads an inbox
@@ -28,7 +33,7 @@ export const read = async (request: ReadRequest): Promise<Message[]> => {
 
   const inboxAddress = await getInboxAddress(request);
 
-  const inbox = await service.get(inboxAddress, connection, request.ownerKey)
+  const inbox = await service.get(inboxAddress, connection, request.decryptionKey)
 
   if (!inbox) throw new Error("No inbox found")
 
@@ -45,7 +50,7 @@ export const readStream = (request: ReadRequest): Observable<Message> => {
   const inboxAddress$ = from(getInboxAddress(request));
 
   return inboxAddress$.pipe(switchMap((inboxAddress:PublicKey) => {
-    const inbox$ = service.getStream(inboxAddress, connection, request.ownerKey)
+    const inbox$ = service.getStream(inboxAddress, connection, request.decryptionKey)
     const uniqueKey = (m:Message) => m.content + m.sender; // TODO add timestamp
     
     return inbox$

@@ -13,7 +13,7 @@
     "@oclif/plugin-help": "^3",
     "@solana/web3.js": "^1.10.0",
     "rxjs": "^7.0.0",
-    "solarium-js": "^0.0.3",
+    "solarium-js": "^0.0.4",
     "tslib": "^1"
   },
   "devDependencies": {

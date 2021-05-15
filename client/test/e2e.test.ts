@@ -58,7 +58,7 @@ describe('E2E', () => {
       message
     })
 
-    const messages = await read({ ownerDID: inbox.owner, ownerKey: owner.secretKey });
+    const messages = await read({ ownerDID: inbox.owner, decryptionKey: owner.secretKey });
     
     expect(messages).toHaveLength(1);
     expect(messages[0].content).toEqual(message);
@@ -85,7 +85,7 @@ describe('E2E', () => {
       })
     }
 
-    const messages = await read({ ownerDID: inbox.owner, ownerKey: owner.secretKey });
+    const messages = await read({ ownerDID: inbox.owner, decryptionKey: owner.secretKey });
 
     expect(messages).toHaveLength(inboxSize);
     expect(messages[0].content).toEqual('This is message 1');
@@ -136,11 +136,11 @@ describe('E2E', () => {
     })
 
     // read the message with the new key
-    const messagesForNewKey = await read({ ownerDID: inbox.owner, ownerKey: newKey.secretKey });
+    const messagesForNewKey = await read({ ownerDID: inbox.owner, decryptionKey: newKey.secretKey });
     expect(messagesForNewKey[0].content).toEqual(message);
 
     // check the old key still works
-    const messagesForOldKey = await read({ ownerDID: inbox.owner, ownerKey: owner.secretKey });
+    const messagesForOldKey = await read({ ownerDID: inbox.owner, decryptionKey: owner.secretKey });
     expect(messagesForOldKey[0].content).toEqual(message);
   });
 });

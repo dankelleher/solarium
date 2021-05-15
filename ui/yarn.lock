@@ -1844,6 +1844,13 @@
   dependencies:
     defer-to-connect "^2.0.0"
 
+"@tailwindcss/forms@^0.3.2":
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/forms/-/forms-0.3.2.tgz#e28c4514a53e69f725416a5a2a6d0f221683f069"
+  integrity sha512-aj2/rJsGb2whAZ/BQWHWWQRSbhH0r/l1ozOByiv+ZNjBD84GMvb5dhAyfpeasFky+EJrAwX5eaqft8NQMZFWvA==
+  dependencies:
+    mini-svg-data-uri "^1.2.3"
+
 "@testing-library/dom@^7.28.1":
   version "7.31.0"
   resolved "https://registry.yarnpkg.com/@testing-library/dom/-/dom-7.31.0.tgz#938451abd3ca27e1b69bb395d4a40759fd7f5b3b"
@@ -8974,6 +8981,11 @@ mini-css-extract-plugin@0.11.3:
     schema-utils "^1.0.0"
     webpack-sources "^1.1.0"
 
+mini-svg-data-uri@^1.2.3:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/mini-svg-data-uri/-/mini-svg-data-uri-1.3.3.tgz#91d2c09f45e056e5e1043340b8b37ba7b50f4fac"
+  integrity sha512-+fA2oRcR1dJI/7ITmeQJDrYWks0wodlOz0pAEhKYJ2IVc1z0AnwJUsKY2fzFmPAM3Jo9J0rBx8JAA9QQSJ5PuA==
+
 minimalistic-assert@^1.0.0, minimalistic-assert@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/minimalistic-assert/-/minimalistic-assert-1.0.1.tgz#2e194de044626d4a10e7f7fbc00ce73e83e4d5c7"
@@ -9346,6 +9358,11 @@ node-gyp-build@^4.2.0:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.2.3.tgz#ce6277f853835f718829efb47db20f3e4d9c4739"
   integrity sha512-MN6ZpzmfNCRM+3t57PTJHgHyw/h4OWnZ6mR8P5j/uZtqQr46RRuDE/P+g3n0YR/AiYXeWixZZzaip77gdICfRg==
+
+node-inspect-extracted@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/node-inspect-extracted/-/node-inspect-extracted-1.0.7.tgz#76ef4f6292453cccf6806c9a1dc3dc58c2b209a2"
+  integrity sha512-FDdIQtuAVzkmV8Qh/Z0MdUvj4p6rRHYl28PkwnlRzwXNGFMd5leouoLtqaAqvtG0RG0jj0/RzYOznNe5XZw1lg==
 
 node-int64@^0.4.0:
   version "0.4.0"
@@ -11896,7 +11913,7 @@ run-queue@^1.0.0, run-queue@^1.0.3:
   dependencies:
     aproba "^1.1.1"
 
-rxjs@^7.0.0:
+rxjs@^7.0.0, rxjs@^7.0.1:
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-7.0.1.tgz#5f41c4f991cea550471fc5d215727390103702c7"
   integrity sha512-wViQ4Vgps1xJwqWIBooMNN44usCSthL7wCUl4qWqrVjhGfWyVyXcxlYzfDKkJKACQvZMTOft/jJ3RkbwK1j9QQ==
@@ -12284,8 +12301,10 @@ sockjs@^0.3.21:
     uuid "^3.4.0"
     websocket-driver "^0.7.4"
 
-"solarium-js@file:../client":
-  version "0.0.3"
+solarium-js@^0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.0.4.tgz#9a4563e182b52708af008c2dab911649f7865e05"
+  integrity sha512-1irfvpbCHMdjFV8HN9YEoJAMcTqZ4ehlaei4EzwmpuSCIva1HixUFZrDUmEe0TyjVx+hMj00zZSRPhAK9yKCyA==
   dependencies:
     "@identity.com/sol-did-client" "^0.1.5"
     "@solana/web3.js" "^1.10.0"
@@ -12298,21 +12317,7 @@ sockjs@^0.3.21:
     ed2curve-esm "^0.3.0-alpha-1"
     ramda "^0.27.1"
     rxjs "^7.0.0"
-
-"solarium-js@file:../client/":
-  version "0.0.3"
-  dependencies:
-    "@identity.com/sol-did-client" "^0.1.5"
-    "@solana/web3.js" "^1.10.0"
-    borsh "^0.3.1"
-    browserify-zlib "^0.2.0"
-    bs58 "^4.0.1"
-    cbor "^7.0.5"
-    did-jwt "npm:did-jwt-multikey@^5.2.0"
-    did-resolver "^3.1.0"
-    ed2curve-esm "^0.3.0-alpha-1"
-    ramda "^0.27.1"
-    rxjs "^7.0.0"
+    tweetnacl "^1.0.3"
 
 sort-keys@^1.0.0:
   version "1.1.2"
@@ -13176,7 +13181,7 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
   integrity sha1-WuaBd/GS1EViadEIr6k/+HQ/T2Q=
 
-tweetnacl@^1.0.0, tweetnacl@^1.0.1:
+tweetnacl@^1.0.0, tweetnacl@^1.0.1, tweetnacl@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-1.0.3.tgz#ac0af71680458d8a6378d0d0d050ab1407d35596"
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==

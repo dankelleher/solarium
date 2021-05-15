@@ -1,7 +1,14 @@
-import {Keypair, TransactionCtorFields, TransactionInstruction} from "@solana/web3.js";
+import {
+  Keypair,
+  SignaturePubkeyPair,
+  Transaction,
+  TransactionCtorFields,
+  TransactionInstruction
+} from "@solana/web3.js";
 import {currentCluster} from "../util";
 import {ClusterType} from "@identity.com/sol-did-client";
 import {SolanaUtil} from "../solana/solanaUtil";
+import nacl from "tweetnacl";
 
 export const create = async ():Promise<Keypair> => {
   if (currentCluster() !== ClusterType.mainnetBeta()) {
@@ -14,6 +21,27 @@ export const create = async ():Promise<Keypair> => {
 
 export type SignCallback = (
   instructions: TransactionInstruction[],
-  signers: Keypair[],
   transactionOpts?: TransactionCtorFields
-) => Promise<string>
+) => Promise<Transaction>
+
+export const defaultSignCallback = (payer: Keypair, ...signers: Keypair[]):SignCallback => async (
+  instructions: TransactionInstruction[],
+  transactionOpts?: TransactionCtorFields
+) => {
+  const signerPubkeys: SignaturePubkeyPair[] = signers.map(s => ({
+    signature: null,
+    publicKey: s.publicKey
+  }))
+  const transaction = new Transaction({
+    ...transactionOpts,
+    signatures: signerPubkeys,
+    feePayer: payer.publicKey
+  }).add(...instructions)
+  transaction.partialSign(...signers)
+
+  const message = transaction.serializeMessage();
+  const myAccountSignature = nacl.sign.detached(message, payer.secretKey);
+  transaction.addSignature(payer.publicKey, Buffer.from(myAccountSignature));
+  
+  return transaction;
+}

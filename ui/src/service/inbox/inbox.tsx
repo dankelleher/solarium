@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useContext, useEffect, useMemo, useState} from "react";
 import {useConnectionConfig} from "../web3/connection";
 import {useLocalStorageState} from "../storage";
 import Wallet from "@project-serum/sol-wallet-adapter";
@@ -9,22 +9,25 @@ import {Keypair} from "@solana/web3.js";
 import {Subject} from "rxjs";
 import {Message} from "solarium-js";
 
-type Props = {
+type InboxProps = {
   messages: Message[]
 }
-const InboxContext = React.createContext<Props>({ messages: []});
+const InboxContext = React.createContext<InboxProps>({ messages: []});
 
 export function InboxProvider({ children = null as any }) {
-  const { wallet } = useWallet();
+  const {wallet, connected} = useWallet();
 
   // TODO this will need to be loaded from local storage
-  const [ decryptionKey, setDecryptionKey ] = useState<Keypair>(Keypair.generate());
+  const [decryptionKey, setDecryptionKey] = useState<Keypair>(Keypair.generate());
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
+    if (!wallet || !connected) return;
+    console.log("READING!");
     // subscribe to inbox messages
     const subscription = read(wallet, decryptionKey).subscribe(message => {
       if (message) {
+        console.log("Message received", message);
         // add message to local state if not empty
         setMessages(messages => [...messages, message]);
       } else {
@@ -35,12 +38,20 @@ export function InboxProvider({ children = null as any }) {
 
     // return unsubscribe method to execute when component unmounts
     return subscription.unsubscribe;
-  }, []);
+  }, [wallet, connected]);
 
   return (
     <InboxContext.Provider value={{
-    messages
-  }}>
-  {children}
-  </InboxContext.Provider>
-);
+      messages
+    }}>
+      {children}
+    </InboxContext.Provider>
+  );
+}
+
+export function useInbox():InboxProps {
+  const context = useContext(InboxContext);
+  return {
+    messages: context.messages,
+  };
+}

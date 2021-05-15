@@ -9,7 +9,7 @@ export const read = async ():Promise<Message[]> => {
   const wallet = await getWallet();
 
   return solarium.read({
-    ownerKey: wallet.secretKey,
+    decryptionKey: wallet.secretKey,
   });
 }
 
@@ -17,6 +17,6 @@ export const readStream = ():Observable<Message> => {
   const wallet$ = from(getWallet());
 
   return wallet$.pipe(switchMap((wallet:Keypair):Observable<Message> => solarium.readStream({
-    ownerKey: wallet.secretKey,
+    decryptionKey: wallet.secretKey,
   })));
 }

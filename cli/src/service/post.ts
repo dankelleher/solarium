@@ -7,6 +7,7 @@ export const post = async (message: string, to: string) => {
   return solarium.post({
     payer: wallet.secretKey,
     message,
+    signer: wallet.secretKey,
     ownerDID: to
   })
 }

@@ -1,17 +1,14 @@
-import {CloseRequest, makeKeypair} from "../lib/util";
+import {CloseRequest, makeKeypair, toSolanaKeyMaterial} from "../lib/util";
 import * as service from "../service/close";
-import {SolanaUtil} from "../lib/solana/solanaUtil";
+import {Keypair} from "@solana/web3.js";
 
 /**
  * Deletes an inbox
  * @param request
  */
 export const close = async (request: CloseRequest): Promise<void> => {
-  const payer = makeKeypair(request.payer);
-  const signer = request.signer
-    ? makeKeypair(request.signer)
-    : payer
-  const connection = SolanaUtil.getConnection();
+  const payer = toSolanaKeyMaterial(request.payer);
+  const signer = (request.signer && makeKeypair(request.signer)) as (Keypair | undefined);
   
-  await service.close(request.ownerDID, payer, signer, connection);
+  await service.close(request.ownerDID, payer, signer, undefined, request.signCallback);
 };

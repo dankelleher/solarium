@@ -20,7 +20,7 @@ use {
         pubkey::Pubkey,
         rent::Rent,
         system_instruction,
-        sysvar::Sysvar,
+        sysvar::Sysvar
     }
 };
 use crate::state::{ADDRESS_SEED, Message};

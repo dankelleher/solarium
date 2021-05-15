@@ -68,42 +68,63 @@ export const getClusterEndpoint = (cluster?: ExtendedCluster) => {
   } 
 }
 
-export type CreateRequest = {
-  owner?: PublicKeyBase58,
-  payer: PrivateKey,
+type KeyMaterial = Keypair | PrivateKey | PublicKeyBase58 | PublicKey;
+
+export const toSolanaKeyMaterial = (k: KeyMaterial): Keypair | PublicKey => {
+  if (isKeypair(k) || isPublicKey(k)) return k;
+  
+  try { 
+    return makeKeypair(k);
+  } catch {
+    return new PublicKey(k);
+  }
+}
+
+export type TransactionRequest = {
+  payer: KeyMaterial
   signCallback?: SignCallback
 }
 
-export type CloseRequest = {
-  payer: PrivateKey,
+export type CreateRequest = TransactionRequest & {
+  owner?: PublicKeyBase58,
+}
+
+export type CloseRequest = TransactionRequest & {
   ownerDID: string,
   signer?: PrivateKey,
-  signCallback?: SignCallback
 }
 
-export type PostRequest = {
-  payer: PrivateKey,
+export type PostRequest = TransactionRequest & {
   senderDID?: string, 
-  signer?: PrivateKey,
+  signer: PrivateKey,
   ownerDID: string,
   message: string,
-  signCallback?: SignCallback
 }
 
 export type ReadRequest = {
   ownerDID?: string,
-  ownerKey: PrivateKey
+  owner?: PublicKeyBase58,
+  decryptionKey: PrivateKey
 }
 
-export type AddKeyRequest = {
+export type AddKeyRequest = TransactionRequest & {
   ownerDID: string,
   ownerKey?: PrivateKey,
-  payer: PrivateKey,
   newKey: PublicKeyBase58,
   keyIdentifier: string,
-  signCallback?: SignCallback
 }
 
 export const didToPublicKey = (did: string) => DecentralizedIdentifier.parse(did).pubkey.toPublicKey()
 
 export const currentCluster = () => process.env.CLUSTER ? ClusterType.parse(process.env.CLUSTER) : DEFAULT_CLUSTER
+
+
+// Typescript does not allow you to pass a possibly undefined value into a spread parameter
+// and have it behave as if it is not there,
+// in other words, if you have ...a as a parameter, and you pass in (undefined), this function
+// will assign a to []
+export const arrayOf = <T>(...things: (T | undefined)[]):T[] => things.filter(t => t !== undefined) as T[]
+
+export const isKeypair = (k : KeyMaterial): k is Keypair => k instanceof Keypair;
+export const isPublicKey = (k : KeyMaterial): k is PublicKey => k instanceof PublicKey;
+export const pubkeyOf = (k : Keypair | PublicKey): PublicKey => isKeypair(k) ? k.publicKey : k;

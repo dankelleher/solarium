@@ -3,12 +3,13 @@ import {
   Keypair,
   Connection,
   Transaction,
-  TransactionInstruction,
+  TransactionInstruction, TransactionCtorFields,
 } from "@solana/web3.js";
 import React, { useContext, useEffect, useMemo } from "react";
 import { notify } from "../notification";
 import {DEFAULT_COMMITMENT, ENDPOINTS} from "../constants";
-import {ExtendedCluster} from "solarium-js";
+import {ExtendedCluster, SignCallback} from "solarium-js";
+import Wallet from "@project-serum/sol-wallet-adapter";
 
 const DEFAULT_ENDPOINT = ENDPOINTS[0].endpoint;
 
@@ -61,15 +62,15 @@ export function ConnectionProvider({ children = undefined as any }) {
   return (
     <ConnectionContext.Provider
       value={{
-    endpoint,
-      setEndpoint,
-      connection,
-      env,
-  }}
->
-  {children}
-  </ConnectionContext.Provider>
-);
+        endpoint,
+        setEndpoint,
+        connection,
+        env,
+      }}
+    >
+      {children}
+    </ConnectionContext.Provider>
+  );
 }
 
 export function useConnection() {
@@ -85,11 +86,31 @@ export function useConnectionConfig() {
   };
 }
 
-export const sign:SignCallback
+export const sign = (
+  connection: Connection,
+  wallet: Wallet,
+  ...signers: Keypair[]
+):SignCallback =>
+  async (instructions: TransactionInstruction[], transactionOpts?: TransactionCtorFields) => {
+    const transaction = new Transaction(transactionOpts)
+      .add(...instructions);
+
+    // TODO remove
+    // transaction.setSigners(
+    //   // fee paid by the wallet owner
+    //   wallet.publicKey,
+    //   ...signers.map((s) => s.publicKey)
+    // );
+
+    if (signers.length > 0) {
+      transaction.partialSign(...signers);
+    }
+    return wallet.signTransaction(transaction);
+  };
 
 export const sendTransaction = async (
-  connection: any,
-  wallet: any,
+  connection: Connection,
+  wallet: Wallet,
   instructions: TransactionInstruction[],
   signers: Keypair[],
   awaitConfirmation = true
@@ -97,17 +118,17 @@ export const sendTransaction = async (
   const { blockhash: recentBlockhash } = await connection.getRecentBlockhash("max");
   const transaction = new Transaction(
     { recentBlockhash,
-    feePayer: wallet.publicKey
+      feePayer: wallet.publicKey
     })
     .add(...instructions);
-  
+
   // TODO remove
   // transaction.setSigners(
   //   // fee paid by the wallet owner
   //   wallet.publicKey,
   //   ...signers.map((s) => s.publicKey)
   // );
-  
+
   if (signers.length > 0) {
     transaction.partialSign(...signers);
   }

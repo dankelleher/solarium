@@ -1,4 +1,3 @@
-
 export type Notification = {
   message: string,
   description: string,
@@ -6,5 +5,5 @@ export type Notification = {
 }
 export const notify = (notification:Notification) => {
   // TODO
-  alert(notification)
+  alert(JSON.stringify(notification))
 }

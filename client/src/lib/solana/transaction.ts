@@ -5,7 +5,7 @@ import {
   initialize,
   post,
 } from './instruction';
-import {Keypair, Connection, PublicKey, Transaction, TransactionInstruction} from '@solana/web3.js';
+import {Connection, PublicKey, TransactionInstruction} from '@solana/web3.js';
 import {InboxData} from "./InboxData";
 import {SignCallback} from "../wallet";
 // import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES, PROGRAM_ID} from "../constants";
@@ -16,24 +16,20 @@ import {SignCallback} from "../wallet";
 
 export class SolariumTransaction {
   static async createInbox(
-    connection: Connection,
-    payer: Keypair,
+    payer: PublicKey,
     owner: PublicKey,
-    signCallback?: SignCallback
+    signCallback: SignCallback
   ): Promise<PublicKey> {
     const address = await getKeyFromOwner(owner);
     console.log(`Inbox address: ${address}`);
 
-    const instruction = initialize(payer.publicKey, address, owner)
+    const instruction = initialize(payer, address, owner)
 
     await SolariumTransaction.signAndSendTransaction(
-      connection,
-      payer,
       [instruction],
-      [],
       signCallback
     )
-    
+
     return address;
   }
 
@@ -50,78 +46,57 @@ export class SolariumTransaction {
 
   /**
    * Create and send an instruction to close the inbox
-   * @param connection A connection to the blockchain
    * @param inboxAddress The inbox to close
-   * @param payer The payer of the transaction - by default, this account also receives the lamports stored
    * @param ownerDID The owner of the inbox
    * @param [owner] A signer of the owner DID (defaults to payer)
    * @param [receiver] The recipient of the lamports stored in the inbox (defaults to owner)
    * @param signCallback
    */
   static async closeInbox(
-    connection: Connection,
     inboxAddress: PublicKey,
-    payer: Keypair,
     ownerDID: PublicKey,
-    owner: Keypair = payer,
-    receiver: Keypair = payer,
-    signCallback?: SignCallback
+    owner: PublicKey,
+    receiver: PublicKey,
+    signCallback: SignCallback
   ): Promise<string> {
-    const instruction = closeAccount(inboxAddress, ownerDID, owner.publicKey, receiver.publicKey)
+    const instruction = closeAccount(inboxAddress, ownerDID, owner, receiver)
 
     return SolariumTransaction.signAndSendTransaction(
-      connection,
-      payer,
       [instruction],
-      [owner],
       signCallback
     )
   }
 
   static async post(
-    connection: Connection,
-    payer: Keypair,
     senderDID: PublicKey,
-    signer: Keypair,
+    signer: PublicKey,
     inboxAddress: PublicKey,
     message: string,
-    signCallback?: SignCallback
+    signCallback: SignCallback
   ): Promise<string> {
-    const instruction = post(inboxAddress, senderDID, signer.publicKey, message);
-    
+    const instruction = post(inboxAddress, senderDID, signer, message);
+
     return SolariumTransaction.signAndSendTransaction(
-      connection, 
-      payer,
       [instruction],
-      [signer],
       signCallback
     )
   }
-  
-  static async signAndSendTransaction(
-    connection: Connection,
-    payer: Keypair,
-    instructions: TransactionInstruction[],
-    signers: Keypair[],
-    signCallback?: SignCallback
-  ): Promise<string> {
-    if (signCallback) {
-      return signCallback(instructions,
-      signers,  
-        {
-        // TODO recentBlockhash?
-        feePayer: payer.publicKey
-      })
-    }
 
-    const transaction = new Transaction().add(...instructions);
+  static async signAndSendTransaction(
+    instructions: TransactionInstruction[],
+    createSignedTx: SignCallback
+  ): Promise<string> {
+    const connection = SolanaUtil.getConnection();
+    const { blockhash: recentBlockhash } = await connection.getRecentBlockhash();
+
+    const transaction = await createSignedTx(instructions,
+      { recentBlockhash }
+    )
 
     // Send the instructions
-    return SolanaUtil.sendAndConfirmTransaction(
+    return SolanaUtil.sendAndConfirmRawTransaction(
       connection,
-      transaction,
-      payer,
-      ...signers
+      transaction
     );
   }
 }

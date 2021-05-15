@@ -1,5 +1,5 @@
 {
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
@@ -67,7 +67,8 @@
     "did-resolver": "^3.1.0",
     "ed2curve-esm": "^0.3.0-alpha-1",
     "ramda": "^0.27.1",
-    "rxjs": "^7.0.0"
+    "rxjs": "^7.0.0",
+    "tweetnacl": "^1.0.3"
   },
   "resolutions": {
     "@types/bn.js": "5.1.0"

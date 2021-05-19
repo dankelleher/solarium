@@ -14,7 +14,7 @@ describe('E2E', () => {
   let inbox: Inbox;
 
   beforeAll(async () => {
-    payer = await SolanaUtil.newWalletWithLamports(connection, 100000000);
+    payer = await SolanaUtil.newWalletWithLamports(connection, 1000000000);
   });
 
   beforeEach(() => {

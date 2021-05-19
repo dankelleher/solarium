@@ -73,7 +73,7 @@ export class SolariumCrypto {
   }
 
   createToken(payload: Record<string, any>): Promise<JWT> {
-    const signer = didJWT.EdDSASigner(this.key.toString('hex'));
+    const signer = didJWT.EdDSASigner(makeKeypair(this.key).secretKey);
     return didJWT.createJWT(payload, {
       issuer: this.did,
       signer,

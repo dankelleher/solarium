@@ -1,4 +1,4 @@
-import {BinaryReader, BorshError, Schema, serialize} from 'borsh';
+import { BinaryReader, BorshError, Schema, serialize } from 'borsh';
 
 // Class wrapping a plain object
 export abstract class Assignable {
@@ -16,7 +16,6 @@ export abstract class Assignable {
     return deserializeExtraBytes(SCHEMA, this, data);
   }
 }
-
 
 // Class representing a Rust-compatible enum, since enums are only strings or
 // numbers in pure JS
@@ -39,7 +38,8 @@ export const SCHEMA: Schema = new Map();
 // TODO PR for leaving extra bytes, a lot of code copied from
 // https://github.com/near/borsh-js/blob/master/borsh-ts/index.ts
 
-const capitalizeFirstLetter = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const capitalizeFirstLetter = (s: string) =>
+  s.charAt(0).toUpperCase() + s.slice(1);
 
 function deserializeField(
   schema: Schema,

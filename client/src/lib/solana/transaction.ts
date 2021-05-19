@@ -1,14 +1,9 @@
 import { SolanaUtil } from './solanaUtil';
-import {
-  closeAccount,
-  getKeyFromOwner,
-  initialize,
-  post,
-} from './instruction';
-import {Connection, PublicKey, TransactionInstruction} from '@solana/web3.js';
-import {InboxData} from "./InboxData";
-import {SignCallback} from "../wallet";
-import {ExtendedCluster} from "../util";
+import { closeAccount, getKeyFromOwner, initialize, post } from './instruction';
+import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { InboxData } from './InboxData';
+import { SignCallback } from '../wallet';
+import { ExtendedCluster } from '../util';
 // import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES, PROGRAM_ID} from "../constants";
 
 // const messageSizeOnChain = 1 + 32 + MESSAGE_SIZE_BYTES // Timestamp + sender + message size (TODO encode sender in message sig)
@@ -25,13 +20,13 @@ export class SolariumTransaction {
     const address = await getKeyFromOwner(owner);
     console.log(`Inbox address: ${address}`);
 
-    const instruction = initialize(payer, address, owner)
+    const instruction = initialize(payer, address, owner);
 
     await SolariumTransaction.signAndSendTransaction(
       [instruction],
       signCallback,
       cluster
-    )
+    );
 
     return address;
   }
@@ -39,7 +34,7 @@ export class SolariumTransaction {
   static async getInboxData(
     connection: Connection,
     inboxAddress: PublicKey
-  ): Promise<InboxData| null> {
+  ): Promise<InboxData | null> {
     const accountInfo = await connection.getAccountInfo(inboxAddress);
 
     if (!accountInfo) return null;
@@ -64,13 +59,13 @@ export class SolariumTransaction {
     signCallback: SignCallback,
     cluster?: ExtendedCluster
   ): Promise<string> {
-    const instruction = closeAccount(inboxAddress, ownerDID, owner, receiver)
+    const instruction = closeAccount(inboxAddress, ownerDID, owner, receiver);
 
     return SolariumTransaction.signAndSendTransaction(
       [instruction],
       signCallback,
       cluster
-    )
+    );
   }
 
   static async post(
@@ -87,7 +82,7 @@ export class SolariumTransaction {
       [instruction],
       signCallback,
       cluster
-    )
+    );
   }
 
   static async signAndSendTransaction(
@@ -96,16 +91,13 @@ export class SolariumTransaction {
     cluster?: ExtendedCluster
   ): Promise<string> {
     const connection = SolanaUtil.getConnection(cluster);
-    const { blockhash: recentBlockhash } = await connection.getRecentBlockhash();
+    const {
+      blockhash: recentBlockhash,
+    } = await connection.getRecentBlockhash();
 
-    const transaction = await createSignedTx(instructions,
-      { recentBlockhash }
-    )
+    const transaction = await createSignedTx(instructions, { recentBlockhash });
 
     // Send the instructions
-    return SolanaUtil.sendAndConfirmRawTransaction(
-      connection,
-      transaction
-    );
+    return SolanaUtil.sendAndConfirmRawTransaction(connection, transaction);
   }
 }

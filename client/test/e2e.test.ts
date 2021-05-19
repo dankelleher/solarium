@@ -1,11 +1,11 @@
-import {create, close, post, read, addKey} from "../src";
-import {create as createDID} from "../src/lib/did/create";
-import {SolanaUtil} from "../src/lib/solana/solanaUtil";
-import {Keypair} from "@solana/web3.js";
-import {Inbox} from "../src/lib/Inbox";
-import {repeat} from 'ramda';
-import {DEFAULT_MAX_MESSAGE_COUNT} from "../src/lib/constants";
-import {defaultSignCallback} from "../src/lib/wallet";
+import { create, close, post, read, addKey } from '../src';
+import { create as createDID } from '../src/lib/did/create';
+import { SolanaUtil } from '../src/lib/solana/solanaUtil';
+import { Keypair } from '@solana/web3.js';
+import { Inbox } from '../src/lib/Inbox';
+import { repeat } from 'ramda';
+import { DEFAULT_MAX_MESSAGE_COUNT } from '../src/lib/constants';
+import { defaultSignCallback } from '../src/lib/wallet';
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
@@ -14,40 +14,46 @@ describe('E2E', () => {
   let inbox: Inbox;
 
   beforeAll(async () => {
-    payer = await SolanaUtil.newWalletWithLamports(connection, 100000000)
-  })
+    payer = await SolanaUtil.newWalletWithLamports(connection, 100000000);
+  });
 
   beforeEach(() => {
     owner = Keypair.generate();
-  })
+  });
 
   // Clean up after each test
-  afterEach(async ()  => {
+  afterEach(async () => {
     await close({
       ownerDID: inbox.owner,
       signer: owner.secretKey,
-      payer: payer.secretKey
-    })
-  })
-
-  it('creates a DID and inbox', async () => {
-    inbox = await create({ payer: payer.secretKey, owner: owner.publicKey.toBase58() });
-  });
-
-  it('creates an inbox for an existing DID', async () => {
-    await createDID(owner.publicKey, payer.publicKey, defaultSignCallback(payer));
-
-    inbox = await create({
       payer: payer.secretKey,
-      owner: owner.publicKey.toBase58()
     });
   });
 
+  it('creates a DID and inbox', async () => {
+    inbox = await create({
+      payer: payer.secretKey,
+      owner: owner.publicKey.toBase58(),
+    });
+  });
+
+  it('creates an inbox for an existing DID', async () => {
+    await createDID(
+      owner.publicKey,
+      payer.publicKey,
+      defaultSignCallback(payer)
+    );
+
+    inbox = await create({
+      payer: payer.secretKey,
+      owner: owner.publicKey.toBase58(),
+    });
+  });
 
   it('sends a message to an inbox', async () => {
     inbox = await create({
       owner: owner.publicKey.toBase58(),
-      payer: payer.secretKey
+      payer: payer.secretKey,
     });
 
     const message = 'Hello me!';
@@ -56,11 +62,14 @@ describe('E2E', () => {
       ownerDID: inbox.owner,
       senderDID: inbox.owner,
       signer: owner.secretKey,
-      message
-    })
+      message,
+    });
 
-    const messages = await read({ ownerDID: inbox.owner, decryptionKey: owner.secretKey });
-    
+    const messages = await read({
+      ownerDID: inbox.owner,
+      decryptionKey: owner.secretKey,
+    });
+
     expect(messages).toHaveLength(1);
     expect(messages[0].content).toEqual(message);
     expect(messages[0].sender).toEqual(inbox.owner);
@@ -68,10 +77,10 @@ describe('E2E', () => {
 
   it('sends more messages than an inbox can hold', async () => {
     const inboxSize = DEFAULT_MAX_MESSAGE_COUNT;
-    
+
     inbox = await create({
       owner: owner.publicKey.toBase58(),
-      payer: payer.secretKey
+      payer: payer.secretKey,
     });
 
     // send one more message than the inbox can hold
@@ -82,11 +91,14 @@ describe('E2E', () => {
         ownerDID: inbox.owner,
         senderDID: inbox.owner,
         signer: owner.secretKey,
-        message: `This is message ${i}`
-      })
+        message: `This is message ${i}`,
+      });
     }
 
-    const messages = await read({ ownerDID: inbox.owner, decryptionKey: owner.secretKey });
+    const messages = await read({
+      ownerDID: inbox.owner,
+      decryptionKey: owner.secretKey,
+    });
 
     expect(messages).toHaveLength(inboxSize);
     expect(messages[0].content).toEqual('This is message 1');
@@ -95,7 +107,7 @@ describe('E2E', () => {
   it('blocks sending a large message to an inbox', async () => {
     inbox = await create({
       owner: owner.publicKey.toBase58(),
-      payer: payer.secretKey
+      payer: payer.secretKey,
     });
 
     const message = repeat('This is a long message.', 50).join('');
@@ -104,15 +116,17 @@ describe('E2E', () => {
       ownerDID: inbox.owner,
       senderDID: inbox.owner,
       signer: owner.secretKey,
-      message
-    })
-    
+      message,
+    });
+
     return expect(shouldFail).rejects.toThrow(/Message too long/);
   });
 
-
   it('adds a key to the DID', async () => {
-    inbox = await create({ payer: payer.secretKey, owner: owner.publicKey.toBase58() });
+    inbox = await create({
+      payer: payer.secretKey,
+      owner: owner.publicKey.toBase58(),
+    });
 
     const newKey = Keypair.generate();
 
@@ -121,8 +135,8 @@ describe('E2E', () => {
       payer: payer.secretKey,
       signer: owner.secretKey,
       newKey: newKey.publicKey.toBase58(),
-      keyIdentifier: 'mobile'
-    })
+      keyIdentifier: 'mobile',
+    });
 
     console.log(newDoc);
 
@@ -133,15 +147,21 @@ describe('E2E', () => {
       ownerDID: inbox.owner,
       senderDID: inbox.owner,
       signer: owner.secretKey,
-      message
-    })
+      message,
+    });
 
     // read the message with the new key
-    const messagesForNewKey = await read({ ownerDID: inbox.owner, decryptionKey: newKey.secretKey });
+    const messagesForNewKey = await read({
+      ownerDID: inbox.owner,
+      decryptionKey: newKey.secretKey,
+    });
     expect(messagesForNewKey[0].content).toEqual(message);
 
     // check the old key still works
-    const messagesForOldKey = await read({ ownerDID: inbox.owner, decryptionKey: owner.secretKey });
+    const messagesForOldKey = await read({
+      ownerDID: inbox.owner,
+      decryptionKey: owner.secretKey,
+    });
     expect(messagesForOldKey[0].content).toEqual(message);
   });
 });

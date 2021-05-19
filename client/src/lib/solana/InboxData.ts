@@ -1,9 +1,9 @@
-import {Keypair, PublicKey} from '@solana/web3.js';
-import {Assignable, SCHEMA} from './solanaBorsh';
-import {encode} from 'bs58';
+import { Keypair, PublicKey } from '@solana/web3.js';
+import { Assignable, SCHEMA } from './solanaBorsh';
+import { encode } from 'bs58';
 
 export class MessageData extends Assignable {
-  sender: AssignablePublicKey
+  sender: AssignablePublicKey;
   content: string;
 }
 
@@ -12,9 +12,7 @@ export class InboxData extends Assignable {
   alias: string;
   messages: MessageData[];
 
-  static fromAccount(
-    accountData: Buffer,
-  ): InboxData {
+  static fromAccount(accountData: Buffer): InboxData {
     return InboxData.decode<InboxData>(accountData);
   }
 
@@ -24,7 +22,7 @@ export class InboxData extends Assignable {
       authority: AssignablePublicKey.fromPublicKey(authority),
     });
   }
-  
+
   static empty(owner?: PublicKey): InboxData {
     return new InboxData({
       owner: AssignablePublicKey.fromPublicKey(
@@ -32,7 +30,7 @@ export class InboxData extends Assignable {
       ),
 
       alias: '',
-      messages: []
+      messages: [],
     });
   }
 }
@@ -54,7 +52,9 @@ export class AssignablePublicKey extends Assignable {
   }
 
   static fromPublicKey(publicKey: PublicKey): AssignablePublicKey {
-    return new AssignablePublicKey({ bytes: Uint8Array.from(publicKey.toBuffer()) });
+    return new AssignablePublicKey({
+      bytes: Uint8Array.from(publicKey.toBuffer()),
+    });
   }
 
   static empty(): AssignablePublicKey {

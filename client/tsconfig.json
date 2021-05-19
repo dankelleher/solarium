@@ -29,8 +29,7 @@
     "noEmit": true,
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true
+    "resolveJsonModule": true
   },
   "ts-node": {
     "compilerOptions": {

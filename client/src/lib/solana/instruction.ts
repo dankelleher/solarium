@@ -1,5 +1,5 @@
 import { Enum, Assignable, SCHEMA } from './solanaBorsh';
-import {NONCE_SEED_STRING, PROGRAM_ID} from '../constants';
+import { NONCE_SEED_STRING, PROGRAM_ID } from '../constants';
 import {
   AccountMeta,
   PublicKey,
@@ -36,9 +36,7 @@ export class SolariumInstruction extends Enum {
   }
 }
 
-export async function getKeyFromOwner(
-  owner: PublicKey
-): Promise<PublicKey> {
+export async function getKeyFromOwner(owner: PublicKey): Promise<PublicKey> {
   const publicKeyNonce = await PublicKey.findProgramAddress(
     [owner.toBuffer(), Buffer.from(NONCE_SEED_STRING, 'utf8')],
     PROGRAM_ID
@@ -49,7 +47,7 @@ export async function getKeyFromOwner(
 export function initialize(
   payer: PublicKey,
   inboxAddress: PublicKey,
-  owner: PublicKey,
+  owner: PublicKey
 ): TransactionInstruction {
   const keys: AccountMeta[] = [
     { pubkey: payer, isSigner: true, isWritable: true },
@@ -124,8 +122,6 @@ SCHEMA.set(Initialize, {
 });
 SCHEMA.set(Post, {
   kind: 'struct',
-  fields: [
-    ['content', 'string'],
-  ],
+  fields: [['content', 'string']],
 });
 SCHEMA.set(CloseAccount, { kind: 'struct', fields: [] });

@@ -1,18 +1,18 @@
 import didJWT, { JWE, JWTVerified } from 'did-jwt';
-import {resolve as resolveToDocument } from '@identity.com/sol-did-client';
-import {makeKeypair, PrivateKey} from "../util";
-import {convertPublicKey, convertSecretKey} from 'ed2curve-esm'
-import {DIDResolutionResult} from "did-resolver/src/resolver";
-import {DIDDocument} from "did-resolver";
-import {encode, decode} from 'bs58'
+import { resolve as resolveToDocument } from '@identity.com/sol-did-client';
+import { makeKeypair, PrivateKey } from '../util';
+import { convertPublicKey, convertSecretKey } from 'ed2curve-esm';
+import { DIDResolutionResult } from 'did-resolver/src/resolver';
+import { DIDDocument } from 'did-resolver';
+import { encode, decode } from 'bs58';
 
 export type JWT = string;
 
 const EMPTY_DID_RESOLUTION_RESULT: DIDResolutionResult = {
   didResolutionMetadata: {},
   didDocument: null,
-  didDocumentMetadata: {}
-}
+  didDocumentMetadata: {},
+};
 
 // Solarium uses the x25519 ECDH protocol for e2e encryption,
 // which expects a key in the x25519 format (32-byte secret key)
@@ -24,42 +24,47 @@ const EMPTY_DID_RESOLUTION_RESULT: DIDResolutionResult = {
 // on the document, we artificially augment the document to include
 // the converted key. This saves space on chain by avoiding the need
 // to have the same key stored in two formats.
-const augmentDIDDocument = (didDocument: DIDDocument):DIDDocument => {
+const augmentDIDDocument = (didDocument: DIDDocument): DIDDocument => {
   // key agreement key already exists, so we cann use it
-  if (didDocument.keyAgreement && didDocument.keyAgreement.length) return didDocument;
+  if (didDocument.keyAgreement && didDocument.keyAgreement.length)
+    return didDocument;
 
   if (!didDocument.publicKey || !didDocument.publicKey.length) {
-    throw Error('Cannot augment DID document for x25519. The document has no keys')
+    throw Error(
+      'Cannot augment DID document for x25519. The document has no keys'
+    );
   }
 
   const keyAgreementKeys = didDocument.publicKey
     .filter(key => !!key.publicKeyBase58) // we currently only support keys in base58
     .map(key => ({
-    ...key,
-    id: key.id + '_keyAgreement',
-    type: 'X25519KeyAgreementKey2019',
-    publicKeyBase58: encode(convertPublicKey(decode(key.publicKeyBase58 as string)))
-  }));
+      ...key,
+      id: key.id + '_keyAgreement',
+      type: 'X25519KeyAgreementKey2019',
+      publicKeyBase58: encode(
+        convertPublicKey(decode(key.publicKeyBase58 as string))
+      ),
+    }));
 
   // add the new key to the document
   return {
     ...didDocument,
     publicKey: [...didDocument.publicKey, ...keyAgreementKeys],
-    keyAgreement: keyAgreementKeys.map(key => key.id)
-  }
+    keyAgreement: keyAgreementKeys.map(key => key.id),
+  };
 };
 
 const resolve = async (identifier: string): Promise<DIDResolutionResult> => {
-  const didDocument = await resolveToDocument(identifier)
+  const didDocument = await resolveToDocument(identifier);
 
   const augmentedDIDDocument = augmentDIDDocument(didDocument);
 
   return {
     ...EMPTY_DID_RESOLUTION_RESULT,
     didResolutionMetadata: { contentType: 'application/did+ld+json' },
-    didDocument: augmentedDIDDocument
-  }
-}
+    didDocument: augmentedDIDDocument,
+  };
+};
 
 export class SolariumCrypto {
   constructor(readonly did: string, readonly key: PrivateKey) {
@@ -72,7 +77,7 @@ export class SolariumCrypto {
     return didJWT.createJWT(payload, {
       issuer: this.did,
       signer,
-      alg: 'Ed25519'
+      alg: 'Ed25519',
     });
   }
 
@@ -98,7 +103,7 @@ export class SolariumCrypto {
   }
 
   async encrypt(payload: string, recipient: string): Promise<JWE> {
-    const didJwtResolver = {resolve};
+    const didJwtResolver = { resolve };
 
     const encoder = new TextEncoder(); // always utf-8
     const encoded = encoder.encode(payload);
@@ -110,9 +115,8 @@ export class SolariumCrypto {
     return didJWT.createJWE(encoded, encrypters);
   }
 
-
   verifyToken(token: JWT): Promise<JWTVerified> {
-    const didJwtResolver = {resolve};
+    const didJwtResolver = { resolve };
     return didJWT.verifyJWT(token, { resolver: didJwtResolver });
   }
 }

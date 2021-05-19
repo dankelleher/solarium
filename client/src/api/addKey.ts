@@ -9,7 +9,7 @@ import {
   toSolanaKeyMaterial,
 } from '../lib/util';
 import { DIDDocument } from 'did-resolver';
-import { keyToIdentifier } from '../../../../../Projects/sol-did/client';
+import { keyToIdentifier } from '@identity.com/sol-did-client';
 
 const didFromKey = (request: AddKeyRequest): Promise<string> => {
   if (request.signer)

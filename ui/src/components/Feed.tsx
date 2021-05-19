@@ -1,15 +1,9 @@
-import {useInbox} from "../service/inbox/inbox";
 import MessageView from "./MessageView";
-import {useEffect} from "react";
+import {Message} from "solarium-js";
 
-export default function Feed() {
-  const { messages } = useInbox();
-  
-  return (
-    <div>
-      <ul className="divide-y divide-gray-200">
-        {messages.map((message) => <MessageView message={message}/>)}
-      </ul>
-    </div>
-  )
-}
+type Props = { messages: Message[] }
+export default ({messages}: Props) => <div>
+  <ul className="divide-y divide-gray-200">
+    {messages.map((message) => <MessageView message={message}/>)}
+  </ul>
+</div>

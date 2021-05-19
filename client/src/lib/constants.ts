@@ -13,6 +13,5 @@ export const NONCE_SEED_STRING = 'solarium';  // must match get_inbox_address_wi
 // e.g. did:sol:devnet:abcde
 export const DEFAULT_CLUSTER = ClusterType.development(); // localhost - override with process.env.CLUSTER
 
-// must match
 export const MESSAGE_SIZE_BYTES = 1024;
 export const DEFAULT_MAX_MESSAGE_COUNT = 8;

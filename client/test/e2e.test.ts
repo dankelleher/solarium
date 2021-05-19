@@ -5,6 +5,7 @@ import {Keypair} from "@solana/web3.js";
 import {Inbox} from "../src/lib/Inbox";
 import {repeat} from 'ramda';
 import {DEFAULT_MAX_MESSAGE_COUNT} from "../src/lib/constants";
+import {defaultSignCallback} from "../src/lib/wallet";
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
@@ -34,7 +35,7 @@ describe('E2E', () => {
   });
 
   it('creates an inbox for an existing DID', async () => {
-    await createDID(owner.publicKey, payer);
+    await createDID(owner.publicKey, payer.publicKey, defaultSignCallback(payer));
 
     inbox = await create({
       payer: payer.secretKey,
@@ -118,7 +119,7 @@ describe('E2E', () => {
     const newDoc = await addKey({
       ownerDID: inbox.owner,
       payer: payer.secretKey,
-      ownerKey: owner.secretKey,
+      signer: owner.secretKey,
       newKey: newKey.publicKey.toBase58(),
       keyIdentifier: 'mobile'
     })

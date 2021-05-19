@@ -12,5 +12,5 @@ export const create = async (request: CreateRequest): Promise<Inbox> => {
   const owner = request.owner
     ? new PublicKey(request.owner)
     : pubkeyOf(payer)
-  return service.create(owner, payer, request.signCallback)
+  return service.create(owner, payer, request.signCallback, request.cluster)
 };

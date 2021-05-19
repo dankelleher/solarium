@@ -6,11 +6,11 @@ import {
   sendAndConfirmRawTransaction,
 } from '@solana/web3.js';
 import { SOLANA_COMMITMENT } from '../constants';
-import {getClusterEndpoint} from "../util";
-import { memoizeWith, identity } from 'ramda';
+import {ExtendedCluster, getClusterEndpoint} from "../util";
+import { memoizeWith} from 'ramda';
 
-const memoizedGetConnection = memoizeWith(identity, () => {
-  return new Connection(getClusterEndpoint(), SOLANA_COMMITMENT);
+const memoizedGetConnection = memoizeWith(getClusterEndpoint, (cluster?: ExtendedCluster) => {
+  return new Connection(getClusterEndpoint(cluster), SOLANA_COMMITMENT);
 })
 
 export class SolanaUtil {

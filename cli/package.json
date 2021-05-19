@@ -8,12 +8,12 @@
   },
   "bugs": "https://github.com/dankelleher/solarium/issues",
   "dependencies": {
-    "@oclif/command": "^1",
-    "@oclif/config": "^1",
-    "@oclif/plugin-help": "^3",
+    "@oclif/command": "^1.8.0",
+    "@oclif/config": "^1.17.0",
+    "@oclif/plugin-help": "^3.2.2",
     "@solana/web3.js": "^1.10.0",
     "rxjs": "^7.0.0",
-    "solarium-js": "^0.0.4",
+    "solarium-js": "^0.0.11",
     "tslib": "^1"
   },
   "devDependencies": {

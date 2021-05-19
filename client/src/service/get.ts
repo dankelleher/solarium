@@ -1,5 +1,5 @@
 import {Connection, PublicKey} from '@solana/web3.js';
-import {PrivateKey} from "../lib/util";
+import {ExtendedCluster, PrivateKey} from "../lib/util";
 import {SolariumTransaction} from "../lib/solana/transaction";
 import {Inbox} from "../lib/Inbox";
 import {Observable} from "rxjs";
@@ -10,11 +10,12 @@ import {InboxData} from "../lib/solana/InboxData";
  * @param inbox
  * @param connection
  * @param ownerKey
+ * @param cluster
  */
-export const get = async (inbox: PublicKey, connection: Connection, ownerKey?: PrivateKey): Promise<Inbox | null> => {
+export const get = async (inbox: PublicKey, connection: Connection, ownerKey?: PrivateKey, cluster?: ExtendedCluster): Promise<Inbox | null> => {
   const inboxData = await SolariumTransaction.getInboxData(connection, inbox);
   
-  return inboxData && Inbox.fromChainData(inboxData, ownerKey)
+  return inboxData && Inbox.fromChainData(inboxData, ownerKey, cluster)
 };
 
 /**
@@ -22,12 +23,13 @@ export const get = async (inbox: PublicKey, connection: Connection, ownerKey?: P
  * @param inbox
  * @param connection
  * @param ownerKey
+ * @param cluster
  */
-export const getStream = (inbox: PublicKey, connection: Connection, ownerKey?: PrivateKey): Observable<Inbox> =>
+export const getStream = (inbox: PublicKey, connection: Connection, ownerKey?: PrivateKey, cluster?: ExtendedCluster): Observable<Inbox> =>
   new Observable<Inbox>((subscriber) => {
     connection.onAccountChange(inbox, async (accountInfo) => {
       const inboxData = await InboxData.fromAccount(accountInfo.data);
-      const inbox = await Inbox.fromChainData(inboxData, ownerKey);
+      const inbox = await Inbox.fromChainData(inboxData, ownerKey, cluster);
       subscriber.next(inbox)
     })
   });

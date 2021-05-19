@@ -11,7 +11,10 @@ import {DEFAULT_COMMITMENT, ENDPOINTS} from "../constants";
 import {ExtendedCluster, SignCallback} from "solarium-js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 
-const DEFAULT_ENDPOINT = ENDPOINTS[0].endpoint;
+// Default to Devnet
+const DEFAULT_ENDPOINT_INDEX = 2;
+
+const DEFAULT_ENDPOINT = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].endpoint;
 
 interface ConnectionConfig {
   connection: Connection;
@@ -24,13 +27,13 @@ const ConnectionContext = React.createContext<ConnectionConfig>({
   endpoint: DEFAULT_ENDPOINT,
   setEndpoint: () => {},
   connection: new Connection(DEFAULT_ENDPOINT, DEFAULT_COMMITMENT),
-  env: ENDPOINTS[0].name,
+  env: ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name,
 });
 
 export function ConnectionProvider({ children = undefined as any }) {
-  const [endpoint, setEndpoint] = useLocalStorageState(
+  const [endpoint, setEndpoint] = useLocalStorageState<string>(
     "connectionEndpoints",
-    ENDPOINTS[0].endpoint
+    ENDPOINTS[DEFAULT_ENDPOINT_INDEX].endpoint
   );
 
   const connection = useMemo(() => new Connection(endpoint, DEFAULT_COMMITMENT), [
@@ -39,7 +42,7 @@ export function ConnectionProvider({ children = undefined as any }) {
 
   const env =
     ENDPOINTS.find((end) => end.endpoint === endpoint)?.name ||
-    ENDPOINTS[0].name;
+    ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
 
   // The websocket library solana/web3.js uses closes its websocket connection when the subscription list
   // is empty after opening its first time, preventing subsequent subscriptions from receiving responses.
@@ -92,7 +95,10 @@ export const sign = (
   ...signers: Keypair[]
 ):SignCallback =>
   async (instructions: TransactionInstruction[], transactionOpts?: TransactionCtorFields) => {
-    const transaction = new Transaction(transactionOpts)
+    const transaction = new Transaction({
+      feePayer: wallet.publicKey,
+      ...transactionOpts
+    })
       .add(...instructions);
 
     // TODO remove

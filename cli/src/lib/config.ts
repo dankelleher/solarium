@@ -9,7 +9,6 @@ type Config = {
   keypairPath: string
 }
 
-
 const DEFAULT_CONFIG_PATH = path.join(homedir(), '.solarium')
 // used only if the user does not have a discoverable solana wallet already
 const DEFAULT_KEYPAIR_FILE = path.join(DEFAULT_CONFIG_PATH.toString(), 'id.json')

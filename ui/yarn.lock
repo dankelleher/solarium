@@ -1240,10 +1240,22 @@
   resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-1.0.1.tgz#66d25f6441920bd5c2146ea27fd33995885452dd"
   integrity sha512-uikw2gKCmqnvjVxitecWfFLMOKyL9BTFcU4VM3hHj9OMwpkCr5Ke+MRMyY2/aQVmsYs4VTq7NCFX05MYwAHi3g==
 
-"@identity.com/sol-did-client@^0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.5.tgz#dd0ce3cd8d0818cc7b58d27e9461ab23d1262ac7"
-  integrity sha512-40NZ9APFSEv1aihRDA8/0+H39h35wXGZEPb2g2CX3XvgWECNQ7plLEsFvbecrvB4QBThavhdiFM4DE3bxSGGlQ==
+"@identity.com/sol-did-client@^0.1.6":
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.6.tgz#a47790b626d37468e96c7c9f2557c684759d58a9"
+  integrity sha512-lIB9AYdzURJkBklS3uSTOGC5l33/Mcnxd9/vHPgOygBKHkL/dRAgpEw20xZx9MIUbLCJimDYmB7do0Dl45LfBg==
+  dependencies:
+    "@solana/web3.js" "^0.93.0"
+    bn.js "^4.12.0"
+    borsh "^0.3.1"
+    bs58 "^4.0.1"
+    did-resolver "^3.0.1"
+    ramda "^0.27.1"
+
+"@identity.com/sol-did-client@^0.1.7":
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.7.tgz#33ba228a8fdf53ff0540bd55ace62197612bcf65"
+  integrity sha512-OmACO8SU/t9XWLEAeM7c9picqKhdAozIxOmE+ml6c2JFOauD3Fy48nT1nKwTlKW7Y8DAzQ+7tdOfh7YksXFvJQ==
   dependencies:
     "@solana/web3.js" "^0.93.0"
     bn.js "^4.12.0"
@@ -12301,12 +12313,12 @@ sockjs@^0.3.21:
     uuid "^3.4.0"
     websocket-driver "^0.7.4"
 
-solarium-js@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.0.4.tgz#9a4563e182b52708af008c2dab911649f7865e05"
-  integrity sha512-1irfvpbCHMdjFV8HN9YEoJAMcTqZ4ehlaei4EzwmpuSCIva1HixUFZrDUmEe0TyjVx+hMj00zZSRPhAK9yKCyA==
+solarium-js@^0.0.13:
+  version "0.0.13"
+  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.0.13.tgz#2c0369ec1200e52dbcbf2aa189391850e5a9af26"
+  integrity sha512-sYRgZu8kG+4EnkzBW3ryu4X7cEF4dlGOIpuL05p1X2kyRohGNK5kM1nRsakWr9Veeq3M16pmapubUfQdLszfiA==
   dependencies:
-    "@identity.com/sol-did-client" "^0.1.5"
+    "@identity.com/sol-did-client" "^0.1.6"
     "@solana/web3.js" "^1.10.0"
     borsh "^0.3.1"
     browserify-zlib "^0.2.0"

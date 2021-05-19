@@ -24,6 +24,7 @@ import Button from "./components/Button";
 import WalletBar from './components/WalletBar'
 import {WalletProvider} from "./service/wallet/wallet";
 import {InboxProvider} from "./service/inbox/inbox";
+import InboxView from "./components/InboxView";
 
 const user = {
   name: 'Chelsea Hagon',
@@ -352,17 +353,7 @@ export default function App() {
               {/* Main 3 column grid */}
               <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-3 lg:gap-8">
                 {/* Left column */}
-                <div className="grid grid-cols-1 gap-4 lg:col-span-2">
-                  <section aria-labelledby="section-1-title">
-                    <h2 className="sr-only" id="section-1-title">
-                      Section title
-                    </h2>
-                    <div className="rounded-lg bg-white overflow-hidden shadow">
-                      <div className="p-6"><Feed/></div>
-                    </div>
-                  </section>
-                </div>
-
+                <InboxView/>
                 {/* Right column */}
                 <div className="grid grid-cols-1 gap-4">
                   <section aria-labelledby="section-2-title">

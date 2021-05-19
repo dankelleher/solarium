@@ -28,7 +28,46 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
+* [`solarium add-key [PUBLICKEY]`](#solarium-add-key-publickey)
+* [`solarium create [FILE]`](#solarium-create-file)
 * [`solarium help [COMMAND]`](#solarium-help-command)
+* [`solarium post [MESSAGE]`](#solarium-post-message)
+* [`solarium read [FILE]`](#solarium-read-file)
+* [`solarium watch [FILE]`](#solarium-watch-file)
+
+## `solarium add-key [PUBLICKEY]`
+
+Add a new key to an existing DID
+
+```
+USAGE
+  $ solarium add-key [PUBLICKEY]
+
+ARGUMENTS
+  PUBLICKEY  A public key in base-58 encoding
+
+OPTIONS
+  -h, --help       show CLI help
+  -n, --name=name  (required) the key name (e.g. mobileDevice)
+```
+
+_See code: [src/commands/add-key.ts](https://github.com/dankelleher/solarium/blob/v0.0.3/src/commands/add-key.ts)_
+
+## `solarium create [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ solarium create [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src/commands/create.ts](https://github.com/dankelleher/solarium/blob/v0.0.3/src/commands/create.ts)_
 
 ## `solarium help [COMMAND]`
 
@@ -46,4 +85,56 @@ OPTIONS
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.2/src/commands/help.ts)_
+
+## `solarium post [MESSAGE]`
+
+describe the command here
+
+```
+USAGE
+  $ solarium post [MESSAGE]
+
+OPTIONS
+  -h, --help                 show CLI help
+  -i, --from-stdin
+  -r, --recipient=recipient  (required) Recipient DID
+```
+
+_See code: [src/commands/post.ts](https://github.com/dankelleher/solarium/blob/v0.0.3/src/commands/post.ts)_
+
+## `solarium read [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ solarium read [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+
+ALIASES
+  $ solarium get
+  $ solarium
+```
+
+_See code: [src/commands/read.ts](https://github.com/dankelleher/solarium/blob/v0.0.3/src/commands/read.ts)_
+
+## `solarium watch [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ solarium watch [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src/commands/watch.ts](https://github.com/dankelleher/solarium/blob/v0.0.3/src/commands/watch.ts)_
 <!-- commandsstop -->

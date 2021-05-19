@@ -8,6 +8,7 @@ import {
 import {Connection, PublicKey, TransactionInstruction} from '@solana/web3.js';
 import {InboxData} from "./InboxData";
 import {SignCallback} from "../wallet";
+import {ExtendedCluster} from "../util";
 // import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES, PROGRAM_ID} from "../constants";
 
 // const messageSizeOnChain = 1 + 32 + MESSAGE_SIZE_BYTES // Timestamp + sender + message size (TODO encode sender in message sig)
@@ -18,7 +19,8 @@ export class SolariumTransaction {
   static async createInbox(
     payer: PublicKey,
     owner: PublicKey,
-    signCallback: SignCallback
+    signCallback: SignCallback,
+    cluster?: ExtendedCluster
   ): Promise<PublicKey> {
     const address = await getKeyFromOwner(owner);
     console.log(`Inbox address: ${address}`);
@@ -27,7 +29,8 @@ export class SolariumTransaction {
 
     await SolariumTransaction.signAndSendTransaction(
       [instruction],
-      signCallback
+      signCallback,
+      cluster
     )
 
     return address;
@@ -51,19 +54,22 @@ export class SolariumTransaction {
    * @param [owner] A signer of the owner DID (defaults to payer)
    * @param [receiver] The recipient of the lamports stored in the inbox (defaults to owner)
    * @param signCallback
+   * @param cluster
    */
   static async closeInbox(
     inboxAddress: PublicKey,
     ownerDID: PublicKey,
     owner: PublicKey,
     receiver: PublicKey,
-    signCallback: SignCallback
+    signCallback: SignCallback,
+    cluster?: ExtendedCluster
   ): Promise<string> {
     const instruction = closeAccount(inboxAddress, ownerDID, owner, receiver)
 
     return SolariumTransaction.signAndSendTransaction(
       [instruction],
-      signCallback
+      signCallback,
+      cluster
     )
   }
 
@@ -72,21 +78,24 @@ export class SolariumTransaction {
     signer: PublicKey,
     inboxAddress: PublicKey,
     message: string,
-    signCallback: SignCallback
+    signCallback: SignCallback,
+    cluster?: ExtendedCluster
   ): Promise<string> {
     const instruction = post(inboxAddress, senderDID, signer, message);
 
     return SolariumTransaction.signAndSendTransaction(
       [instruction],
-      signCallback
+      signCallback,
+      cluster
     )
   }
 
   static async signAndSendTransaction(
     instructions: TransactionInstruction[],
-    createSignedTx: SignCallback
+    createSignedTx: SignCallback,
+    cluster?: ExtendedCluster
   ): Promise<string> {
-    const connection = SolanaUtil.getConnection();
+    const connection = SolanaUtil.getConnection(cluster);
     const { blockhash: recentBlockhash } = await connection.getRecentBlockhash();
 
     const transaction = await createSignedTx(instructions,

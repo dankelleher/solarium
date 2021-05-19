@@ -10,5 +10,5 @@ export const close = async (request: CloseRequest): Promise<void> => {
   const payer = toSolanaKeyMaterial(request.payer);
   const signer = (request.signer && makeKeypair(request.signer)) as (Keypair | undefined);
   
-  await service.close(request.ownerDID, payer, signer, undefined, request.signCallback);
+  await service.close(request.ownerDID, payer, signer, undefined, request.signCallback, request.cluster);
 };

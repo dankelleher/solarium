@@ -80,7 +80,11 @@ export const toSolanaKeyMaterial = (k: KeyMaterial): Keypair | PublicKey => {
   }
 }
 
-export type TransactionRequest = {
+export type SolanaRequest = {
+  cluster?: ExtendedCluster
+}
+
+export type TransactionRequest = SolanaRequest & {
   payer: KeyMaterial
   signCallback?: SignCallback
 }
@@ -101,23 +105,28 @@ export type PostRequest = TransactionRequest & {
   message: string,
 }
 
-export type ReadRequest = {
+export type ReadRequest = SolanaRequest & {
   ownerDID?: string,
   owner?: PublicKeyBase58,
   decryptionKey: PrivateKey
 }
 
+export type GetRequest = SolanaRequest & {
+  ownerDID?: string,
+  owner?: PublicKeyBase58,
+  decryptionKey?: PrivateKey
+}
+
 export type AddKeyRequest = TransactionRequest & {
-  ownerDID: string,
-  ownerKey?: PrivateKey,
+  ownerDID?: string,
+  signer?: PrivateKey,
   newKey: PublicKeyBase58,
   keyIdentifier: string,
 }
 
 export const didToPublicKey = (did: string) => DecentralizedIdentifier.parse(did).pubkey.toPublicKey()
 
-export const currentCluster = () => process.env.CLUSTER ? ClusterType.parse(process.env.CLUSTER) : DEFAULT_CLUSTER
-
+export const currentCluster = (cluster?:ExtendedCluster) => cluster ? ClusterType.parse(cluster) : (process.env.CLUSTER ? ClusterType.parse(process.env.CLUSTER) : DEFAULT_CLUSTER)
 
 // Typescript does not allow you to pass a possibly undefined value into a spread parameter
 // and have it behave as if it is not there,

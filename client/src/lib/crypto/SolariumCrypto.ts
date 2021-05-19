@@ -32,11 +32,13 @@ const augmentDIDDocument = (didDocument: DIDDocument):DIDDocument => {
     throw Error('Cannot augment DID document for x25519. The document has no keys')
   }
 
-  const keyAgreementKeys = didDocument.publicKey.map(key => ({
+  const keyAgreementKeys = didDocument.publicKey
+    .filter(key => !!key.publicKeyBase58) // we currently only support keys in base58
+    .map(key => ({
     ...key,
     id: key.id + '_keyAgreement',
     type: 'X25519KeyAgreementKey2019',
-    publicKeyBase58: encode(convertPublicKey(decode(key.publicKeyBase58)))
+    publicKeyBase58: encode(convertPublicKey(decode(key.publicKeyBase58 as string)))
   }));
 
   // add the new key to the document

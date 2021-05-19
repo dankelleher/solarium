@@ -14,8 +14,8 @@ type Message = {
 }
 
 const didFromKey = (request: ReadRequest): Promise<string> => {
-  if (request.owner) return keyToIdentifier(new PublicKey(request.owner), currentCluster());
-  return keyToIdentifier(makeKeypair(request.decryptionKey).publicKey, currentCluster());
+  if (request.owner) return keyToIdentifier(new PublicKey(request.owner), currentCluster(request.cluster));
+  return keyToIdentifier(makeKeypair(request.decryptionKey).publicKey, currentCluster(request.cluster));
 }
 
 const getInboxAddress = async (request: ReadRequest): Promise<PublicKey> => {
@@ -29,11 +29,11 @@ const getInboxAddress = async (request: ReadRequest): Promise<PublicKey> => {
  * @param request
  */
 export const read = async (request: ReadRequest): Promise<Message[]> => {
-  const connection = SolanaUtil.getConnection();
+  const connection = SolanaUtil.getConnection(request.cluster);
 
   const inboxAddress = await getInboxAddress(request);
 
-  const inbox = await service.get(inboxAddress, connection, request.decryptionKey)
+  const inbox = await service.get(inboxAddress, connection, request.decryptionKey, request.cluster)
 
   if (!inbox) throw new Error("No inbox found")
 
@@ -45,12 +45,12 @@ export const read = async (request: ReadRequest): Promise<Message[]> => {
  * @param request
  */
 export const readStream = (request: ReadRequest): Observable<Message> => {
-  const connection = SolanaUtil.getConnection();
+  const connection = SolanaUtil.getConnection(request.cluster);
 
   const inboxAddress$ = from(getInboxAddress(request));
 
   return inboxAddress$.pipe(switchMap((inboxAddress:PublicKey) => {
-    const inbox$ = service.getStream(inboxAddress, connection, request.decryptionKey)
+    const inbox$ = service.getStream(inboxAddress, connection, request.decryptionKey, request.cluster)
     const uniqueKey = (m:Message) => m.content + m.sender; // TODO add timestamp
     
     return inbox$

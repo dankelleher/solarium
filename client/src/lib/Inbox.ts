@@ -2,7 +2,7 @@ import {InboxData} from "./solana/InboxData";
 import {DecentralizedIdentifier} from "@identity.com/sol-did-client";
 import {PublicKey} from "@solana/web3.js";
 import {getKeyFromOwner} from "./solana/instruction";
-import {currentCluster, PrivateKey} from "./util";
+import {currentCluster, ExtendedCluster, PrivateKey} from "./util";
 import {SolariumCrypto} from "./crypto/SolariumCrypto";
 import {decode} from "./compression";
 
@@ -14,8 +14,8 @@ export class Message {
 export class Inbox {
   constructor(readonly owner: string, readonly messages: Message[]) {}
   
-  static async fromChainData(inboxData: InboxData, ownerKey?: PrivateKey): Promise<Inbox> {
-    const ownerDID = DecentralizedIdentifier.create(inboxData.owner.toPublicKey(), currentCluster()).toString();
+  static async fromChainData(inboxData: InboxData, ownerKey?: PrivateKey, cluster?: ExtendedCluster): Promise<Inbox> {
+    const ownerDID = DecentralizedIdentifier.create(inboxData.owner.toPublicKey(), currentCluster(cluster)).toString();
     
     const decrypt = async (message: Message):Promise<Message> => {
       if (!ownerKey) return message;  // only decrypt if a key is provided
@@ -32,7 +32,7 @@ export class Inbox {
     
     const messagePromises = inboxData.messages.map(
       (m) => new Message(
-        DecentralizedIdentifier.create(m.sender.toPublicKey(), currentCluster()).toString(),
+        DecentralizedIdentifier.create(m.sender.toPublicKey(), currentCluster(cluster)).toString(),
         m.content
       )).map(decrypt)
 
@@ -47,5 +47,9 @@ export class Inbox {
   async address():Promise<PublicKey> {
     const ownerKey = DecentralizedIdentifier.parse(this.owner).pubkey.toPublicKey()
     return getKeyFromOwner(ownerKey);
+  }
+  
+  get ownerDID():string {
+    return DecentralizedIdentifier.parse(this.owner).toString()
   }
 }

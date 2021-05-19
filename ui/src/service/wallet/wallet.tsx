@@ -14,7 +14,7 @@ const WalletContext = React.createContext<any>(null);
 
 export function WalletProvider({ children = null as any }) {
   const { endpoint } = useConnectionConfig();
-  const [providerUrl, setProviderUrl] = useLocalStorageState(
+  const [providerUrl, setProviderUrl] = useLocalStorageState<string>(
     "walletProvider",
     "https://www.sollet.io"
   );

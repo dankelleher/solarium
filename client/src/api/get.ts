@@ -1,24 +1,18 @@
-import {currentCluster, makeKeypair, PublicKeyBase58, ReadRequest} from "../lib/util";
+import {currentCluster, GetRequest, makeKeypair} from "../lib/util";
 import * as service from "../service/get";
 import {SolanaUtil} from "../lib/solana/solanaUtil";
 import {DecentralizedIdentifier, keyToIdentifier} from "@identity.com/sol-did-client";
 import {getKeyFromOwner} from "../lib/solana/instruction";
-import {distinct, switchMap} from "rxjs/operators";
-import {from, Observable} from "rxjs";
 import {PublicKey} from "@solana/web3.js";
 import {Inbox} from "../lib/Inbox";
 
-type Message = {
-  sender: PublicKeyBase58,
-  content: string;
+const didFromKey = (request: GetRequest): Promise<string> => {
+  if (request.owner) return keyToIdentifier(new PublicKey(request.owner), currentCluster(request.cluster));
+  if (request.decryptionKey) return keyToIdentifier(makeKeypair(request.decryptionKey).publicKey, currentCluster(request.cluster));
+  throw new Error('Unable to obtain DID from request - set either the owner or decryption key')
 }
 
-const didFromKey = (request: ReadRequest): Promise<string> => {
-  if (request.owner) return keyToIdentifier(new PublicKey(request.owner), currentCluster());
-  return keyToIdentifier(makeKeypair(request.decryptionKey).publicKey, currentCluster());
-}
-
-const getInboxAddress = async (request: ReadRequest): Promise<PublicKey> => {
+const getInboxAddress = async (request: GetRequest): Promise<PublicKey> => {
   const did = request.ownerDID || await didFromKey(request);
   const ownerAddress = DecentralizedIdentifier.parse(did).pubkey.toPublicKey();
   return getKeyFromOwner(ownerAddress);
@@ -28,33 +22,10 @@ const getInboxAddress = async (request: ReadRequest): Promise<PublicKey> => {
  * Reads an inbox
  * @param request
  */
-export const read = async (request: ReadRequest): Promise<Message[]> => {
+export const get = async (request: GetRequest): Promise<Inbox | null> => {
   const connection = SolanaUtil.getConnection(request.cluster);
 
   const inboxAddress = await getInboxAddress(request);
 
-  const inbox = await service.get(inboxAddress, connection, request.decryptionKey)
-
-  if (!inbox) throw new Error("No inbox found")
-
-  return inbox.messages;
-};
-
-/**
- * Subscribe to inbox updates
- * @param request
- */
-export const readStream = (request: ReadRequest): Observable<Message> => {
-  const connection = SolanaUtil.getConnection(request.cluster);
-
-  const inboxAddress$ = from(getInboxAddress(request));
-
-  return inboxAddress$.pipe(switchMap((inboxAddress:PublicKey) => {
-    const inbox$ = service.getStream(inboxAddress, connection, request.decryptionKey)
-    const uniqueKey = (m:Message) => m.content + m.sender; // TODO add timestamp
-    
-    return inbox$
-      .pipe(switchMap((inbox:Inbox) => inbox.messages))
-      .pipe(distinct(uniqueKey)); // only emit a message once 
-  }));
+  return service.get(inboxAddress, connection, request.decryptionKey, request.cluster)
 };

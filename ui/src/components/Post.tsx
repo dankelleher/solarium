@@ -1,15 +1,40 @@
-import {useInbox} from "../service/inbox/inbox";
-import MessageView from "./MessageView";
-import {useEffect} from "react";
+import {useState} from "react";
+import Avatar from "./Avatar";
 
-export default function Feed() {
-  const { messages } = useInbox();
-  
+type Props = {
+  recipient: string,
+  post: (message: string, recipient: string) => Promise<void>
+  disabled: boolean
+}
+export default ({recipient, post, disabled}: Props) => {
+  const [message, setMessage] = useState<string>();
   return (
     <div>
-      <ul className="divide-y divide-gray-200">
-        {messages.map((message) => <MessageView message={message}/>)}
-      </ul>
+      <div className="flex space-x-3">
+        
+        <div className="flex-1 space-y-1">
+          <div className="flex items-center justify-between">
+            <form onSubmit={(event) => {
+              event.preventDefault() 
+              message && post(message, recipient)
+            }}>
+              <label htmlFor="message" className="sr-only">
+                Message
+              </label>
+              <input
+                type="text"
+                name="message"
+                id="message"
+                className="disabled:opacity-50 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                placeholder="message"
+                onChange={event => setMessage(event.target.value)}
+                disabled={disabled}
+              />
+            </form>
+          </div>
+        </div>
+        <Avatar address={recipient}/>
+      </div>
     </div>
   )
 }

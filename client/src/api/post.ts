@@ -23,6 +23,6 @@ export const post = async (request: PostRequest): Promise<void> => {
   const payerOrUndefined = isKeypair(payer) ? payer : undefined;
   
   const signer = makeKeypair(request.signer);
-  const senderDID = request.senderDID || await keyToIdentifier(pubkeyOf(payer), currentCluster());
-  return service.post(request.ownerDID, senderDID, request.message, signer, payerOrUndefined, request.signCallback)
+  const senderDID = request.senderDID || await keyToIdentifier(pubkeyOf(payer), currentCluster(request.cluster));
+  return service.post(request.ownerDID, senderDID, request.message, signer, payerOrUndefined, request.signCallback, request.cluster)
 };

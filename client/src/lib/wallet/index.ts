@@ -37,8 +37,11 @@ export const defaultSignCallback = (payer: Keypair, ...signers: Keypair[]):SignC
     signatures: signerPubkeys,
     feePayer: payer.publicKey
   }).add(...instructions)
-  transaction.partialSign(...signers)
-
+  
+  if (signers.length) {
+    transaction.partialSign(...signers)
+  }
+  
   const message = transaction.serializeMessage();
   const myAccountSignature = nacl.sign.detached(message, payer.secretKey);
   transaction.addSignature(payer.publicKey, Buffer.from(myAccountSignature));

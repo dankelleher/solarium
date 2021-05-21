@@ -18,7 +18,7 @@ use {
 use crate::error::SolariumError;
 
 /// Structure of a channel
-#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
+    #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
 pub struct ChannelData {
     pub name: String,
     /// All of the messages in the channel
@@ -55,7 +55,7 @@ impl ChannelData {
 impl IsInitialized for ChannelData {
     /// Checks if a channel has been initialized
     fn is_initialized(&self) -> bool {
-        !self.name.to_bytes().is_empty()
+        !self.name.is_empty()
     }
 }
 
@@ -65,14 +65,14 @@ pub struct CEKData {
     // pub header: ???
     
     /// The identifier on the owner DID of the key that this CEK is encrypted with
-    pub kid: string,
+    pub kid: String,
     /// The CEK itself, encrypted by the DID key
-    pub encrypted_key: string,
+    pub encrypted_key: String,
     
 }
 
 /// Defines a CEK account structure.
-/// A CEK account is one that stores encrypted CEKs for a particular channnel
+/// A CEK account is one that stores encrypted CEKs for a particular channel
 /// encrypted for a particular DID.
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
 pub struct CEKAccountData {
@@ -101,7 +101,7 @@ impl CEKAccountData {
     }
     
     pub fn remove(&mut self, kid: string) -> Result<(), SolariumError> {
-        let find_result = self.ceks.iter().find_position(|cek| cek.kid == kid);
+        let find_result = self.ceks.iter().position(|cek| cek.kid == kid);
         
         match find_result {
             None => Err(SolariumError::CEKNotFound),
@@ -126,9 +126,9 @@ pub const CHANNEL_ADDRESS_SEED: &'static [u8; 16] = br"solarium_channel";
 /// The seed string used to derive a program address for a Solarium cek account
 pub const CEK_ACCOUNT_ADDRESS_SEED: &'static [u8; 20] = br"solarium_cek_account";
 
-/// Get program-derived channel address for the authority
-pub fn get_channel_address_with_seed(authority: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[&authority.to_bytes(), CHANNEL_ADDRESS_SEED], &id())
+/// Get program-derived cek account address for the did and channel 
+pub fn get_cek_account_address_with_seed(did: &Pubkey, channel: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[&did.to_bytes(), &channel.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED], &id())
 }
 
 /// Struct for the Message object

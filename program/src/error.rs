@@ -22,6 +22,10 @@ pub enum SolariumError {
     /// Missing CEK
     #[error("CEK not found")]
     CEKNotFound,
+
+    /// Attempt to create a channel for an address that is already in use
+    #[error("Attempt to create a channel for an address that is already in use")]
+    AlreadyInUse,
 }
 impl From<SolariumError> for ProgramError {
     fn from(e: SolariumError) -> Self {

@@ -18,6 +18,10 @@ pub enum SolariumError {
     /// Calculation overflow
     #[error("Calculation overflow")]
     Overflow,
+
+    /// Missing CEK
+    #[error("CEK not found")]
+    CEKNotFound,
 }
 impl From<SolariumError> for ProgramError {
     fn from(e: SolariumError) -> Self {

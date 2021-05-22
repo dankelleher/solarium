@@ -102,11 +102,7 @@ fn initialize_channel(accounts: &[AccountInfo], name: String, initial_ceks: Vec<
         system_program_info.clone(), 
         rent).unwrap();
 
-    msg!("CEK Account created for new channel");
-    
     let channel = ChannelData::new(name);
-
-    msg!("Channel created");
 
     channel.serialize(&mut *channel_account_info.data.borrow_mut())
         .map_err(|e| e.into())
@@ -143,6 +139,7 @@ fn post(accounts: &[AccountInfo], message: String) -> ProgramResult {
 }
 
 fn add_to_channel(accounts: &[AccountInfo], initial_ceks: Vec<CEKData>) -> ProgramResult {
+    msg!("SolariumInstruction::AddToChannel");
     let account_info_iter = &mut accounts.iter();
     let funder_info = next_account_info(account_info_iter)?;
     let invitee_did_info = next_account_info(account_info_iter)?;
@@ -201,21 +198,18 @@ fn create_cek_account<'a>(
     // Create the new cek account for the invitee
     let mut cek_account = CEKAccountData::new(*invitee_did_info.key, *channel_account_info.key);
     cek_account.add_all(initial_ceks);
-    let size = program_borsh::get_instance_packed_len(&cek_account).unwrap() as u64;
+    
+    let max_cek_size: u64 = 100;
+    let size = (CEKAccountData::MAX_CEKS as u64 * max_cek_size) + 32 + 32;
     let cek_account_signer_seeds: &[&[_]] =
         &[&invitee_did_info.key.to_bytes(), &channel_account_info.key.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED, &[cek_account_bump_seed]];
 
-    msg!("Creating CEK account with size {}", size);
-    msg!("invitee did info {}", invitee_did_info.key);
-    msg!("invitee cek info {}", invitee_cek_account_info.key);
-    msg!("funder info {}", funder_info.key);
-    msg!("channel info {}", channel_account_info.key);
     invoke_signed(
         &system_instruction::create_account(
             funder_info.key,
             invitee_cek_account_info.key,
             1.max(rent.minimum_balance(size as usize)),
-            size,
+            size as u64,
             &id(),
         ),
         &[
@@ -225,33 +219,37 @@ fn create_cek_account<'a>(
         ],
         &[&cek_account_signer_seeds],
     )?;
-    
-    msg!("CEK Account Created");
 
     cek_account.serialize(&mut *invitee_cek_account_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
 fn add_cek(accounts: &[AccountInfo], cek: CEKData) -> ProgramResult {
+    msg!("SolariumInstruction::AddCEK");
     let account_info_iter = &mut accounts.iter();
     let did_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
     let cek_account_info = next_account_info(account_info_iter)?;
     
+    msg!("checking authority");
     // Check that the authority is valid for the DID 
     // and that the DID owns the CEK account 
     check_authority_of_cek(authority_info, did_info, cek_account_info).unwrap();
 
+    msg!("checking account");
     let mut cek_account =
         program_borsh::try_from_slice_incomplete::<CEKAccountData>(*cek_account_info.data.borrow())?;
     
+    msg!("adding");
     cek_account.add(cek);
 
+    msg!("serializing");
     cek_account.serialize(&mut *cek_account_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
 fn remove_cek(accounts: &[AccountInfo], kid: String) -> ProgramResult {
+    msg!("SolariumInstruction::RemoveCEK");
     let account_info_iter = &mut accounts.iter();
     let did_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
@@ -279,11 +277,7 @@ pub fn process_instruction(
     let instruction = SolariumInstruction::try_from_slice(input)?;
 
     match instruction {
-        SolariumInstruction::InitializeChannel { name, initial_ceks} => {
-            let res = initialize_channel(accounts, name, initial_ceks);
-            msg!("InitializeChannel complete: {:#?}", res);
-            res
-        },
+        SolariumInstruction::InitializeChannel { name, initial_ceks} => initialize_channel(accounts, name, initial_ceks),
         SolariumInstruction::Post { message } => post(accounts, message),
         SolariumInstruction::AddToChannel { initial_ceks } => add_to_channel(accounts, initial_ceks),
         SolariumInstruction::AddCEK { cek } => add_cek(accounts, cek),

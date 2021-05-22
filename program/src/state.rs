@@ -25,7 +25,7 @@ pub struct ChannelData {
     pub messages: Vec<Message>
 }
 impl ChannelData {
-    /// Default size of struct
+    /// Default message count
     pub const DEFAULT_SIZE: u8 = 8;
 
     /// Max message size
@@ -40,7 +40,9 @@ impl ChannelData {
     }
 
     /// Post a message to the channel
-    pub fn post(&mut self, message: Message) {
+    pub fn post(&mut self, mut message: Message) {
+        let clock = Clock::get().unwrap();
+        message.timestamp = clock.unix_timestamp;
         let mut message_deque: VecDeque<Message> = self.messages.clone().into();
         message_deque.push_back(message);
         
@@ -161,8 +163,17 @@ pub struct Message {
 }
 
 impl Message {
-    /// Create a new message
+    /// Create a new message without a timestamp, for transport to the chain 
     pub fn new(sender: Pubkey, content: String) -> Self {
+        Self {
+            timestamp: 0,
+            sender,
+            content: content.to_string(),
+        }
+    }
+
+    /// Create a new message and set its timestamp
+    pub fn new_with_timestamp(sender: Pubkey, content: String) -> Self {
         let clock = Clock::get().unwrap();
         Self {
             timestamp: clock.unix_timestamp,
@@ -175,7 +186,5 @@ impl Message {
 
 #[cfg(test)]
 pub mod tests {
-    use super::*;
-
 
 }

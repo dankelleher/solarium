@@ -2,7 +2,6 @@ use solana_program_test::{ProgramTestContext, ProgramTest, processor};
 use sol_did::{
     id as did_program_id,
     instruction as did_instruction,
-    processor::process_instruction as did_process_instruction,
     state::{SolData, get_sol_address_with_seed}
 };
 use solana_sdk::{
@@ -10,8 +9,7 @@ use solana_sdk::{
     transaction::Transaction,
     pubkey::Pubkey,
     signature::Keypair,
-    process_instruction::ProcessInstructionWithContext,
-    system_instruction::create_account
+    system_instruction::create_account,
 };
 use solarium::{
     state::{
@@ -19,9 +17,11 @@ use solarium::{
     },
     instruction,
     id,
-    processor::process_instruction,
-    state::{get_channel_account_address_with_seed, ChannelData, CEKData}
+    state::{ChannelData, CEKData},
+    borsh as program_borsh,
+    processor::process_instruction
 };
+use solarium::state::{Message, CEKAccountData};
 
 pub struct SolariumContext {
     pub context: ProgramTestContext,
@@ -30,6 +30,7 @@ pub struct SolariumContext {
     pub bob: Keypair,
     pub alice_did: Pubkey,
     pub bob_did: Pubkey,
+    pub alice_cek: Option<Pubkey>,
 }
 impl SolariumContext {
     async fn make_did(context: &mut ProgramTestContext, authority: &Keypair) -> Pubkey {
@@ -67,13 +68,14 @@ impl SolariumContext {
             bob,
             alice_did,
             bob_did,
+            alice_cek: None,
             channel: None
         }
     }
     
     pub async fn create_channel(&mut self) -> () {
         let channel = Keypair::new();
-        let alice_ceks = vec![SolariumContext::make_dummy_cekdata()];
+        let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
 
         let channel_size = ChannelData::size_bytes();
         let lamports = self.context.banks_client
@@ -105,10 +107,111 @@ impl SolariumContext {
         );
         self.context.banks_client.process_transaction(transaction).await.unwrap();
         
+        let (alice_cek_account, _) = get_cek_account_address_with_seed(&self.alice_did, &channel.pubkey());
+        self.alice_cek = Some(alice_cek_account);
         self.channel = Some(channel.pubkey());
     }
 
-    fn make_dummy_cekdata() -> CEKData {
-        CEKData { kid: "".to_string(), encrypted_key: "".to_string() }
+    pub async fn add_to_channel(&mut self) -> () {
+        let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
+
+        let add_to_channel = instruction::add_to_channel(
+            &self.context.payer.pubkey(),
+            &self.channel.unwrap(),
+            &self.bob_did,
+            &self.alice_did,
+            &self.alice.pubkey(),
+            &self.alice_cek.unwrap(),
+            bob_ceks
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[add_to_channel],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.alice],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
+    }
+
+    pub async fn post(&mut self, message: &str) -> () {
+        let message_obj = Message::new(self.alice_did, message.to_string());
+        
+        let post = instruction::post(
+            &self.channel.unwrap(),
+            &self.alice.pubkey(),
+            &self.alice_cek.unwrap(),
+            &message_obj
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[post],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.alice],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
+    }
+
+    pub fn make_dummy_cekdata(kid: &str) -> CEKData {
+        CEKData { kid: kid.to_string(), encrypted_key: "".to_string() }
+    }
+    
+    pub async fn get_channel(&mut self) -> ChannelData {
+        let account_info = &self.context
+            .banks_client
+            .get_account(self.channel.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        let account_data =
+            program_borsh::try_from_slice_incomplete::<ChannelData>(&account_info.data).unwrap();
+        
+        account_data
+    }
+
+    pub async fn get_cek_account(&mut self, address: Pubkey) -> CEKAccountData {
+        let account_info = &self.context
+            .banks_client
+            .get_account(address)
+            .await
+            .unwrap()
+            .unwrap();
+        let account_data =
+            program_borsh::try_from_slice_incomplete::<CEKAccountData>(&account_info.data).unwrap();
+
+        account_data
+    }
+
+    pub async fn add_cek(&mut self, cek: CEKData) -> () {
+        let add_cek = instruction::add_cek(
+            &self.alice_did,
+            &self.alice.pubkey(),
+            &self.channel.unwrap(),
+            cek
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[add_cek],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.alice],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap_or_else(|e| {
+            println!("{:#?}",e)
+        });
+    }
+
+    pub async fn remove_cek(&mut self, kid: &str) -> () {
+        let remove_cek = instruction::remove_cek(
+            &self.alice_did,
+            &self.alice.pubkey(),
+            &self.channel.unwrap(),
+            kid.to_string()
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[remove_cek],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.alice],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
     }
 }

@@ -20,12 +20,22 @@ pub enum SolariumInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    /// 0. `[writable]` Unallocated channel account, must be a program address
+    /// 0. `[writable, signer]` Funding account, must be a system account
+    /// 1. `[writable]` Unallocated channel account, must be a program address
+    /// 2. `[]` Creator DID account - must be owned by the sol-did program
+    /// 3. `[signer]` Creator authority - must be a key on the creator DID
+    /// 4. `[writeable]` Unallocated creator CEK account, must be a program address
+    /// 5. `[]` Rent sysvar
+    /// 6. `[]` System program
     InitializeChannel {
         // /// Size of the channel
         // size: u8,
         /// The channel name
         name: String,
+
+        /// The initial set of CEKs that are added to the invited user's CEK Account
+        /// They should be signed by each key in the DID.
+        initial_ceks: Vec<CEKData>
     },
 
     /// Post a message to the provided channel account
@@ -58,7 +68,8 @@ pub enum SolariumInstruction {
     /// 7. `[]` Rent sysvar
     /// 8. `[]` System program
     AddToChannel {
-        /// The initial set of CEKs that should be used by 
+        /// The initial set of CEKs that are added to the invited user's CEK Account
+        /// They should be signed by each key in the DID.
         initial_ceks: Vec<CEKData>
     },
 
@@ -89,14 +100,25 @@ pub enum SolariumInstruction {
 
 /// Create a `SolariumInstruction::InitializeChannel` instruction
 pub fn initialize_channel(
+    funder_account: &Pubkey,
     channel_account: &Pubkey,
-    name: String
+    name: String,
+    creator_did: &Pubkey,
+    creator_authority: &Pubkey,
+    initial_ceks: Vec<CEKData>
 ) -> Instruction {
+    let (creator_cek_account, _) = get_cek_account_address_with_seed(creator_did, channel_account);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::InitializeChannel { name },
+        &SolariumInstruction::InitializeChannel { name, initial_ceks },
         vec![
+            AccountMeta::new(*funder_account, true),
             AccountMeta::new(*channel_account, false),
+            AccountMeta::new_readonly(*creator_did, false),
+            AccountMeta::new_readonly(*creator_authority, true),
+            AccountMeta::new(creator_cek_account, false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+            AccountMeta::new_readonly(system_program::id(), false),
         ],
     )
 }

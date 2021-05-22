@@ -69,4 +69,8 @@ impl SolariumContext {
             channel: None
         }
     }
+    
+    pub async fn create_channel() {
+        
+    }
 }

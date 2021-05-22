@@ -6,7 +6,6 @@ use {
         pubkey::Pubkey,
         program_pack::IsInitialized,
         msg,
-        clock::{UnixTimestamp},
         sysvar::{
             clock::{Clock}, Sysvar
         },
@@ -18,8 +17,9 @@ use {
 use crate::error::SolariumError;
 
 /// Structure of a channel
-    #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
 pub struct ChannelData {
+    /// The channel nae
     pub name: String,
     /// All of the messages in the channel
     pub messages: Vec<Message>
@@ -59,6 +59,7 @@ impl IsInitialized for ChannelData {
     }
 }
 
+/// A Content Encryption Key for a channel encrypted with a key on the DID of the owner
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
 pub struct CEKData {
     // TODO agree with Martin
@@ -80,10 +81,11 @@ pub struct CEKAccountData {
     pub owner_did: Pubkey,
     /// The channel that these CEKs decrypt
     pub channel: Pubkey,
-    // The CEKs for the channel, one per key in the owner DID
+    /// The CEKs for the channel, one per key in the owner DID
     pub ceks: Vec<CEKData>
 }
 impl CEKAccountData {
+    /// The maximum number of CEKs that can be added to an individual CEK account
     pub const MAX_CEKS: u8 = 8;
     
     /// Create a new CEKAccount
@@ -95,17 +97,23 @@ impl CEKAccountData {
         }
     }
 
+    /// Add a number of CEKs to the account at the same time
+    pub fn add_all(&mut self, ceks: Vec<CEKData>) {
+        ceks.iter().for_each(|cek| self.ceks.push(cek.clone()))
+    }
+
     /// add a new CEK to the account
     pub fn add(&mut self, cek: CEKData) {
         self.ceks.push(cek);
     }
     
-    pub fn remove(&mut self, kid: string) -> Result<(), SolariumError> {
+    /// remove a CEK from the account by key ID
+    pub fn remove(&mut self, kid: String) -> Result<(), SolariumError> {
         let find_result = self.ceks.iter().position(|cek| cek.kid == kid);
         
         match find_result {
             None => Err(SolariumError::CEKNotFound),
-            Some((index)) => {
+            Some(index) => {
                 self.ceks.remove(index);
                 Ok(())
             }

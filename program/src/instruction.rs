@@ -3,7 +3,7 @@
 use {
     crate::{
         id,
-        state::{get_channel_address_with_seed, Message, ChannelData},
+        state::{get_cek_account_address_with_seed, CEKData, Message},
     },
     borsh::{BorshDeserialize, BorshSerialize},
     solana_program::{
@@ -12,7 +12,6 @@ use {
         system_program, sysvar,
     },
 };
-use crate::state::{CEKData, get_cek_account_address_with_seed};
 
 /// Instructions supported by the program
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, PartialEq)]
@@ -70,7 +69,10 @@ pub enum SolariumInstruction {
     /// 1. `[]` Owner DID account - must be owned by the sol-did program
     /// 2. `[signer]` Owner authority - must be a key on the owner DID 
     /// 3. `[writable]` CEK account, must be owned by the owner DID
-    AddCEK { cek: CEKData },
+    AddCEK {
+        /// A new CEK to add to the account
+        cek: CEKData
+    },
 
     /// Remove a CEK from an existing CEKAccount 
     ///
@@ -79,7 +81,10 @@ pub enum SolariumInstruction {
     /// 1. `[]` Owner DID account - must be owned by the sol-did program
     /// 2. `[signer]` Owner authority - must be a key on the owner DID 
     /// 3. `[writable]` CEK account, must be owned by the owner DID
-    RemoveCEK { kid: String }
+    RemoveCEK {
+        /// The key id of the CEK to remove
+        kid: String
+    }
 }
 
 /// Create a `SolariumInstruction::InitializeChannel` instruction
@@ -118,19 +123,19 @@ pub fn add_to_channel(
     inviter_did: &Pubkey,
     inviter_authority: &Pubkey,
     inviter_cek_account: &Pubkey,
-    receiver: &Pubkey
+    initial_ceks: Vec<CEKData>
 ) -> Instruction {
     let (invitee_cek_account, _) = get_cek_account_address_with_seed(invitee_did, channel_account);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::AddToChannel {},
+        &SolariumInstruction::AddToChannel { initial_ceks },
         vec![
             AccountMeta::new(*funder_account, true),
             AccountMeta::new_readonly(*invitee_did, false),
             AccountMeta::new_readonly(*inviter_did, false),
             AccountMeta::new_readonly(*inviter_authority, true),
             AccountMeta::new_readonly(*inviter_cek_account, false),
-            AccountMeta::new(*invitee_cek_account, false),
+            AccountMeta::new(invitee_cek_account, false),
             AccountMeta::new_readonly(*channel_account, false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
@@ -138,6 +143,7 @@ pub fn add_to_channel(
     )
 }
 
+/// Create a `SolariumInstruction::AddCEK` instruction
 pub fn add_cek(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
@@ -151,11 +157,12 @@ pub fn add_cek(
         vec![
             AccountMeta::new_readonly(*owner_did, false),
             AccountMeta::new_readonly(*owner_authority, true),
-            AccountMeta::new(*owner_cek_account, false),
+            AccountMeta::new(owner_cek_account, false),
         ],
     )
 }
 
+/// Create a `SolariumInstruction::RemoveCEK` instruction
 pub fn remove_cek(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
@@ -169,7 +176,7 @@ pub fn remove_cek(
         vec![
             AccountMeta::new_readonly(*owner_did, false),
             AccountMeta::new_readonly(*owner_authority, true),
-            AccountMeta::new(*owner_cek_account, false),
+            AccountMeta::new(owner_cek_account, false),
         ],
     )
 }

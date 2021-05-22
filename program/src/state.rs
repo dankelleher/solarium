@@ -51,6 +51,11 @@ impl ChannelData {
         
         self.messages = message_deque.into()
     }
+    
+    /// The maximum size of a channel in bytes 
+    pub fn size_bytes() -> u64 {    
+        (((ChannelData::DEFAULT_SIZE as u32) * ChannelData::MESSAGE_SIZE) + 64) as u64   // TODO max title size
+    }
 }
 impl IsInitialized for ChannelData {
     /// Checks if a channel has been initialized
@@ -127,7 +132,6 @@ impl IsInitialized for CEKAccountData {
     }
 }
 
-
 /// The seed string used to derive a program address for a Solarium channel (for direct channels)
 pub const CHANNEL_ADDRESS_SEED: &'static [u8; 16] = br"solarium_channel";
 
@@ -138,6 +142,12 @@ pub const CEK_ACCOUNT_ADDRESS_SEED: &'static [u8; 20] = br"solarium_cek_account"
 pub fn get_cek_account_address_with_seed(did: &Pubkey, channel: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[&did.to_bytes(), &channel.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED], &id())
 }
+
+/// Get the program-derived channel account address for a direct channel
+pub fn get_channel_account_address_with_seed(did0: &Pubkey, did1: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[CHANNEL_ADDRESS_SEED, &did0.to_bytes(), &did1.to_bytes()], &id())
+}
+
 
 /// Struct for the Message object
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]

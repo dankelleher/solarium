@@ -70,7 +70,7 @@ fn check_cek_account(cek_account_info: &AccountInfo, channel_info: &AccountInfo)
     Ok(())
 }
 
-fn initialize_channel<'a>(accounts: &'a [AccountInfo<'a>], name: String, initial_ceks: Vec<CEKData>) -> ProgramResult {
+fn initialize_channel(accounts: &[AccountInfo], name: String, initial_ceks: Vec<CEKData>) -> ProgramResult {
     msg!("SolariumInstruction::InitializeChannel");
     let account_info_iter = &mut accounts.iter();
     let funder_info = next_account_info(account_info_iter)?;
@@ -83,15 +83,11 @@ fn initialize_channel<'a>(accounts: &'a [AccountInfo<'a>], name: String, initial
 
     let rent = &Rent::from_account_info(rent_info)?;
 
-    let data_len = channel_account_info.data.borrow().len();
-    if data_len > 0 {
+    let channel =
+        program_borsh::try_from_slice_incomplete::<ChannelData>(*channel_account_info.data.borrow())?;
+    if channel.is_initialized() {
         msg!("Error: Attempt to create a channel for an address that is already in use");
         return Err(SolariumError::AlreadyInUse.into());
-    }
-
-    if *channel_account_info.owner != id() {
-        msg!("Error: channel account owner is not the Solarium program");
-        return Err(ProgramError::IncorrectProgramId);
     }
 
     // Check that the authority is valid for the DID 
@@ -99,14 +95,18 @@ fn initialize_channel<'a>(accounts: &'a [AccountInfo<'a>], name: String, initial
 
     create_cek_account(
         initial_ceks,
-        funder_info, 
+        funder_info.clone(), 
         creator_did_info, 
-        creator_cek_account_info, 
+        creator_cek_account_info.clone(), 
         channel_account_info, 
-        system_program_info, 
+        system_program_info.clone(), 
         rent).unwrap();
 
+    msg!("CEK Account created for new channel");
+    
     let channel = ChannelData::new(name);
+
+    msg!("Channel created");
 
     channel.serialize(&mut *channel_account_info.data.borrow_mut())
         .map_err(|e| e.into())
@@ -142,7 +142,7 @@ fn post(accounts: &[AccountInfo], message: String) -> ProgramResult {
         .map_err(|e| e.into())
 }
 
-fn add_to_channel<'a>(accounts: &'a[AccountInfo<'a>], initial_ceks: Vec<CEKData>) -> ProgramResult {
+fn add_to_channel(accounts: &[AccountInfo], initial_ceks: Vec<CEKData>) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let funder_info = next_account_info(account_info_iter)?;
     let invitee_did_info = next_account_info(account_info_iter)?;
@@ -163,16 +163,24 @@ fn add_to_channel<'a>(accounts: &'a[AccountInfo<'a>], initial_ceks: Vec<CEKData>
     // and that the inviter DID owns the inviter CEK account 
     check_authority_of_cek(inviter_authority_info, inviter_did_info, inviter_cek_account_info).unwrap();
 
-    create_cek_account(initial_ceks, funder_info, invitee_did_info, invitee_cek_account_info, channel_account_info, system_program_info, rent)
+    create_cek_account(
+        initial_ceks,
+        funder_info.clone(),
+        invitee_did_info, 
+        invitee_cek_account_info.clone(), 
+        channel_account_info,
+        system_program_info.clone(),
+        rent
+    )
 }
 
 fn create_cek_account<'a>(
     initial_ceks: Vec<CEKData>,
-    funder_info: &AccountInfo<'a>,
+    funder_info: AccountInfo<'a>,
     invitee_did_info: &AccountInfo,
-    invitee_cek_account_info: &'a AccountInfo<'a>,
+    invitee_cek_account_info: AccountInfo<'a>,
     channel_account_info: &AccountInfo,
-    system_program_info: &'a AccountInfo<'a>,
+    system_program_info: AccountInfo<'a>,
     rent:&Rent) -> ProgramResult {
     let (cek_account_address, cek_account_bump_seed) = get_cek_account_address_with_seed(invitee_did_info.key, channel_account_info.key);
 
@@ -195,9 +203,13 @@ fn create_cek_account<'a>(
     cek_account.add_all(initial_ceks);
     let size = program_borsh::get_instance_packed_len(&cek_account).unwrap() as u64;
     let cek_account_signer_seeds: &[&[_]] =
-        &[&invitee_did_info.key.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED, &[cek_account_bump_seed]];
+        &[&invitee_did_info.key.to_bytes(), &channel_account_info.key.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED, &[cek_account_bump_seed]];
 
     msg!("Creating CEK account with size {}", size);
+    msg!("invitee did info {}", invitee_did_info.key);
+    msg!("invitee cek info {}", invitee_cek_account_info.key);
+    msg!("funder info {}", funder_info.key);
+    msg!("channel info {}", channel_account_info.key);
     invoke_signed(
         &system_instruction::create_account(
             funder_info.key,
@@ -213,6 +225,8 @@ fn create_cek_account<'a>(
         ],
         &[&cek_account_signer_seeds],
     )?;
+    
+    msg!("CEK Account Created");
 
     cek_account.serialize(&mut *invitee_cek_account_info.data.borrow_mut())
         .map_err(|e| e.into())
@@ -257,15 +271,19 @@ fn remove_cek(accounts: &[AccountInfo], kid: String) -> ProgramResult {
 }
 
 /// Instruction processor
-pub fn process_instruction<'a>(
+pub fn process_instruction(
     _program_id: &Pubkey,
-    accounts: &'a[AccountInfo<'a>],
+    accounts: &[AccountInfo],
     input: &[u8],
 ) -> ProgramResult {
     let instruction = SolariumInstruction::try_from_slice(input)?;
 
     match instruction {
-        SolariumInstruction::InitializeChannel { name, initial_ceks} => initialize_channel(accounts, name, initial_ceks),
+        SolariumInstruction::InitializeChannel { name, initial_ceks} => {
+            let res = initialize_channel(accounts, name, initial_ceks);
+            msg!("InitializeChannel complete: {:#?}", res);
+            res
+        },
         SolariumInstruction::Post { message } => post(accounts, message),
         SolariumInstruction::AddToChannel { initial_ceks } => add_to_channel(accounts, initial_ceks),
         SolariumInstruction::AddCEK { cek } => add_cek(accounts, cek),

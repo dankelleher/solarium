@@ -24,7 +24,8 @@ use {
 mod solarium_context;
 
 #[tokio::test]
-async fn add_gatekeeper_should_succeed() {
+async fn create_chanel_should_succeed() {
     let mut context = SolariumContext::new().await;
 
+    context.create_channel().await
 }

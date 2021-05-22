@@ -1,26 +1,27 @@
 use solana_program_test::{ProgramTestContext, ProgramTest, processor};
-use solarium::{
-    id,
-    processor::process_instruction
-};
 use sol_did::{
     id as did_program_id,
     instruction as did_instruction,
-    processor::process_instruction as did_process_instruction
+    processor::process_instruction as did_process_instruction,
+    state::{SolData, get_sol_address_with_seed}
 };
-use sol_did::state::{SolData, get_sol_address_with_seed};
 use solana_sdk::{
     signature::Signer,
     transaction::Transaction,
     pubkey::Pubkey,
     signature::Keypair,
-    process_instruction::ProcessInstructionWithContext
+    process_instruction::ProcessInstructionWithContext,
+    system_instruction::create_account
 };
-
-
-fn program_test(name: &str, id: Pubkey, processor: Option<ProcessInstructionWithContext>) -> ProgramTest {
-    ProgramTest::new(name, id, processor)
-}
+use solarium::{
+    state::{
+        get_cek_account_address_with_seed,
+    },
+    instruction,
+    id,
+    processor::process_instruction,
+    state::{get_channel_account_address_with_seed, ChannelData, CEKData}
+};
 
 pub struct SolariumContext {
     pub context: ProgramTestContext,
@@ -70,7 +71,44 @@ impl SolariumContext {
         }
     }
     
-    pub async fn create_channel() {
+    pub async fn create_channel(&mut self) -> () {
+        let channel = Keypair::new();
+        let alice_ceks = vec![SolariumContext::make_dummy_cekdata()];
+
+        let channel_size = ChannelData::size_bytes();
+        let lamports = self.context.banks_client
+            .get_rent()
+            .await
+            .unwrap()
+            .minimum_balance(channel_size as usize);
+        let create_channel_account = create_account(
+            &self.context.payer.pubkey(),
+            &channel.pubkey(),
+            lamports,
+            channel_size,
+            &id()
+        );
         
+        let initialize_channel = instruction::initialize_channel(
+            &self.context.payer.pubkey(),
+            &channel.pubkey(),
+            "test channel".to_string(),
+            &self.alice_did,
+            &self.alice.pubkey(),
+            alice_ceks
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[create_channel_account, initialize_channel],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &channel, &self.alice],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
+        
+        self.channel = Some(channel.pubkey());
+    }
+
+    fn make_dummy_cekdata() -> CEKData {
+        CEKData { kid: "".to_string(), encrypted_key: "".to_string() }
     }
 }

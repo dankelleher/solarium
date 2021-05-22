@@ -18,8 +18,13 @@ use {
         transaction::{Transaction, TransactionError},
         transport,
     },
+    crate::solarium_context::SolariumContext
 };
 
-fn program_test() -> ProgramTest {
-    ProgramTest::new("solarium", id(), processor!(process_instruction))
+mod solarium_context;
+
+#[tokio::test]
+async fn add_gatekeeper_should_succeed() {
+    let mut context = SolariumContext::new().await;
+
 }

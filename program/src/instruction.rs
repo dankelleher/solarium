@@ -184,54 +184,8 @@ pub fn remove_cek(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::tests::test_channel_data;
     use solana_program::program_error::ProgramError;
-
-    #[test]
-    fn serialize_initialize() {
-        let size = ChannelData::DEFAULT_SIZE;
-        let alias = "Alice";
-        let init_data = test_channel_data();
-        let mut expected = vec![0];
-        expected.extend_from_slice(&size.to_le_bytes());
-        expected.append(&mut init_data.try_to_vec().unwrap());
-        let instruction = SolariumInstruction::Initialize { };//size, alias };
-        assert_eq!(instruction.try_to_vec().unwrap(), expected);
-        assert_eq!(
-            SolariumInstruction::try_from_slice(&expected).unwrap(),
-            instruction
-        );
-    }
-
-    #[test]
-    fn serialize_write() {
-        let data = test_channel_data().try_to_vec().unwrap();
-        let offset = 0u64;
-        let instruction = SolariumInstruction::Write {
-            offset: 0,
-            data: data.clone(),
-        };
-        let mut expected = vec![1];
-        expected.extend_from_slice(&offset.to_le_bytes());
-        expected.append(&mut data.try_to_vec().unwrap());
-        assert_eq!(instruction.try_to_vec().unwrap(), expected);
-        assert_eq!(
-            SolariumInstruction::try_from_slice(&expected).unwrap(),
-            instruction
-        );
-    }
-
-    #[test]
-    fn serialize_close_account() {
-        let instruction = SolariumInstruction::CloseAccount;
-        let expected = vec![2];
-        assert_eq!(instruction.try_to_vec().unwrap(), expected);
-        assert_eq!(
-            SolariumInstruction::try_from_slice(&expected).unwrap(),
-            instruction
-        );
-    }
-
+    
     #[test]
     fn deserialize_invalid_instruction() {
         let expected = vec![12];

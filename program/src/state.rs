@@ -70,8 +70,8 @@ impl IsInitialized for ChannelData {
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
 pub struct CEKData {
     // TODO agree with Martin
-    // pub header: ???
-    
+    /// The header information for the CEK
+    pub header: String,
     /// The identifier on the owner DID of the key that this CEK is encrypted with
     pub kid: String,
     /// The CEK itself, encrypted by the DID key
@@ -146,8 +146,8 @@ pub fn get_cek_account_address_with_seed(did: &Pubkey, channel: &Pubkey) -> (Pub
 }
 
 /// Get the program-derived channel account address for a direct channel
-pub fn get_channel_account_address_with_seed(did0: &Pubkey, did1: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[CHANNEL_ADDRESS_SEED, &did0.to_bytes(), &did1.to_bytes()], &id())
+pub fn get_channel_address_with_seed(did0: &Pubkey, did1: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[&did0.to_bytes(), &did1.to_bytes(), CHANNEL_ADDRESS_SEED], &id())
 }
 
 

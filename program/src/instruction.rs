@@ -33,9 +33,32 @@ pub enum SolariumInstruction {
         /// The channel name
         name: String,
 
+        /// The initial set of CEKs that are added to the creator's CEK Account
+        /// They should be signed by each key in the creator DID.
+        ceks: Vec<CEKData>
+    },
+
+    /// Create a new direct channel with two participants
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    /// 0. `[writable, signer]` Funding account, must be a system account
+    /// 1. `[writable]` Unallocated channel account, must be a program address, derived from the participants' DIDs 
+    /// 2. `[]` Creator DID account - must be owned by the sol-did program
+    /// 3. `[signer]` Creator authority - must be a key on the creator DID
+    /// 4. `[writeable]` Unallocated creator CEK account, must be a program address
+    /// 5. `[]` Invitee DID account - must be owned by the sol-did program
+    /// 6. `[writeable]` Unallocated invitee CEK account, must be a program address
+    /// 7. `[]` Rent sysvar
+    /// 8. `[]` System program
+    InitializeDirectChannel {
+        /// The initial set of CEKs that are added to the creator's CEK Account
+        /// They should be signed by each key in the creator DID.
+        creator_ceks: Vec<CEKData>,
+
         /// The initial set of CEKs that are added to the invited user's CEK Account
-        /// They should be signed by each key in the DID.
-        initial_ceks: Vec<CEKData>
+        /// They should be signed by each key in the invitee DID.
+        invitee_ceks: Vec<CEKData>
     },
 
     /// Post a message to the provided channel account
@@ -70,7 +93,7 @@ pub enum SolariumInstruction {
     AddToChannel {
         /// The initial set of CEKs that are added to the invited user's CEK Account
         /// They should be signed by each key in the DID.
-        initial_ceks: Vec<CEKData>
+        ceks: Vec<CEKData>
     },
 
     /// Add a CEK to an existing CEKAccount 
@@ -101,19 +124,19 @@ pub enum SolariumInstruction {
 /// Create a `SolariumInstruction::InitializeChannel` instruction
 pub fn initialize_channel(
     funder_account: &Pubkey,
-    channel_account: &Pubkey,
+    channel: &Pubkey,
     name: String,
     creator_did: &Pubkey,
     creator_authority: &Pubkey,
-    initial_ceks: Vec<CEKData>
+    ceks: Vec<CEKData>
 ) -> Instruction {
-    let (creator_cek_account, _) = get_cek_account_address_with_seed(creator_did, channel_account);
+    let (creator_cek_account, _) = get_cek_account_address_with_seed(creator_did, channel);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::InitializeChannel { name, initial_ceks },
+        &SolariumInstruction::InitializeChannel { name, ceks },
         vec![
             AccountMeta::new(*funder_account, true),
-            AccountMeta::new(*channel_account, false),
+            AccountMeta::new(*channel, false),
             AccountMeta::new_readonly(*creator_did, false),
             AccountMeta::new_readonly(*creator_authority, true),
             AccountMeta::new(creator_cek_account, false),
@@ -123,16 +146,49 @@ pub fn initialize_channel(
     )
 }
 
+/// Create a `SolariumInstruction::InitializeChannel` instruction
+pub fn initialize_direct_channel(
+    funder_account: &Pubkey,
+    channel: &Pubkey,
+    creator_did: &Pubkey,
+    creator_authority: &Pubkey,
+    invitee_did: &Pubkey,
+    creator_ceks: Vec<CEKData>,
+    invitee_ceks: Vec<CEKData>
+) -> Instruction {
+    let (creator_cek_account, _) = get_cek_account_address_with_seed(creator_did, channel);
+    let (invitee_cek_account, _) = get_cek_account_address_with_seed(invitee_did, channel);
+    Instruction::new_with_borsh(
+        id(),
+        &SolariumInstruction::InitializeDirectChannel {
+            creator_ceks,
+            invitee_ceks
+        },
+        vec![
+            AccountMeta::new(*funder_account, true),
+            AccountMeta::new(*channel, false),
+            AccountMeta::new_readonly(*creator_did, false),
+            AccountMeta::new_readonly(*creator_authority, true),
+            AccountMeta::new(creator_cek_account, false),
+            AccountMeta::new_readonly(*invitee_did, false),
+            AccountMeta::new(invitee_cek_account, false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+            AccountMeta::new_readonly(system_program::id(), false),
+        ],
+    )
+}
+
 /// Create a `SolariumInstruction::Post` instruction
-pub fn post(channel_account: &Pubkey, sender_authority: &Pubkey, sender_cek_account: &Pubkey, message: &Message) -> Instruction {
+pub fn post(channel: &Pubkey, sender_authority: &Pubkey, message: &Message) -> Instruction {
+    let (sender_cek_account, _) = get_cek_account_address_with_seed(&message.sender, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::Post { message: message.content.to_string() },
         vec![
-            AccountMeta::new(*channel_account, false),
+            AccountMeta::new(*channel, false),
             AccountMeta::new_readonly(message.sender, false),
             AccountMeta::new_readonly(*sender_authority, true),
-            AccountMeta::new_readonly(*sender_cek_account, false),
+            AccountMeta::new_readonly(sender_cek_account, false),
         ],
     )
 }
@@ -140,25 +196,25 @@ pub fn post(channel_account: &Pubkey, sender_authority: &Pubkey, sender_cek_acco
 /// Create a `SolariumInstruction::AddToChannel` instruction
 pub fn add_to_channel(
     funder_account: &Pubkey,
-    channel_account: &Pubkey, 
+    channel: &Pubkey, 
     invitee_did: &Pubkey,
     inviter_did: &Pubkey,
     inviter_authority: &Pubkey,
-    inviter_cek_account: &Pubkey,
-    initial_ceks: Vec<CEKData>
+    ceks: Vec<CEKData>
 ) -> Instruction {
-    let (invitee_cek_account, _) = get_cek_account_address_with_seed(invitee_did, channel_account);
+    let (inviter_cek_account, _) = get_cek_account_address_with_seed(inviter_did, channel);
+    let (invitee_cek_account, _) = get_cek_account_address_with_seed(invitee_did, channel);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::AddToChannel { initial_ceks },
+        &SolariumInstruction::AddToChannel { ceks },
         vec![
             AccountMeta::new(*funder_account, true),
             AccountMeta::new_readonly(*invitee_did, false),
             AccountMeta::new_readonly(*inviter_did, false),
             AccountMeta::new_readonly(*inviter_authority, true),
-            AccountMeta::new_readonly(*inviter_cek_account, false),
+            AccountMeta::new_readonly(inviter_cek_account, false),
             AccountMeta::new(invitee_cek_account, false),
-            AccountMeta::new_readonly(*channel_account, false),
+            AccountMeta::new_readonly(*channel, false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
         ],
@@ -169,10 +225,10 @@ pub fn add_to_channel(
 pub fn add_cek(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
-    channel_account: &Pubkey,
+    channel: &Pubkey,
     cek: CEKData
 ) -> Instruction {
-    let (owner_cek_account, _) = get_cek_account_address_with_seed(owner_did, channel_account);
+    let (owner_cek_account, _) = get_cek_account_address_with_seed(owner_did, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::AddCEK { cek },
@@ -188,10 +244,10 @@ pub fn add_cek(
 pub fn remove_cek(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
-    channel_account: &Pubkey,
+    channel: &Pubkey,
     kid: String
 ) -> Instruction {
-    let (owner_cek_account, _) = get_cek_account_address_with_seed(owner_did, channel_account);
+    let (owner_cek_account, _) = get_cek_account_address_with_seed(owner_did, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::RemoveCEK { kid },

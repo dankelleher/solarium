@@ -9,7 +9,7 @@ use solana_sdk::{
     transaction::Transaction,
     pubkey::Pubkey,
     signature::Keypair,
-    system_instruction::create_account,
+    system_instruction::{create_account, create_account_with_seed},
 };
 use solarium::{
     state::{
@@ -21,7 +21,7 @@ use solarium::{
     borsh as program_borsh,
     processor::process_instruction
 };
-use solarium::state::{Message, CEKAccountData};
+use solarium::state::{Message, CEKAccountData, CHANNEL_ADDRESS_SEED, get_channel_address_with_seed};
 
 pub struct SolariumContext {
     pub context: ProgramTestContext,
@@ -83,7 +83,7 @@ impl SolariumContext {
             .await
             .unwrap()
             .minimum_balance(channel_size as usize);
-        let create_channel_account = create_account(
+        let create_channel = create_account(
             &self.context.payer.pubkey(),
             &channel.pubkey(),
             lamports,
@@ -100,7 +100,7 @@ impl SolariumContext {
             alice_ceks
         );
         let transaction = Transaction::new_signed_with_payer(
-            &[create_channel_account, initialize_channel],
+            &[create_channel, initialize_channel],
             Some(&self.context.payer.pubkey()),
             &[&self.context.payer, &channel, &self.alice],
             self.context.last_blockhash,
@@ -112,6 +112,35 @@ impl SolariumContext {
         self.channel = Some(channel.pubkey());
     }
 
+    pub async fn create_direct_channel(&mut self) -> () {
+        let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
+        let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
+        
+        let (channel, bump_seed) = get_channel_address_with_seed(
+            &self.alice_did, &self.bob_did);
+        let initialize_direct_channel = instruction::initialize_direct_channel(
+            &self.context.payer.pubkey(),
+            &channel,
+            &self.alice_did,
+            &self.alice.pubkey(),
+            &self.bob_did,
+            alice_ceks,
+            bob_ceks
+        );
+        
+        let transaction = Transaction::new_signed_with_payer(
+            &[initialize_direct_channel],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.alice],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
+
+        let (alice_cek_account, _) = get_cek_account_address_with_seed(&self.alice_did, &channel);
+        self.alice_cek = Some(alice_cek_account);
+        self.channel = Some(channel);
+    }
+
     pub async fn add_to_channel(&mut self) -> () {
         let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
 
@@ -121,7 +150,6 @@ impl SolariumContext {
             &self.bob_did,
             &self.alice_did,
             &self.alice.pubkey(),
-            &self.alice_cek.unwrap(),
             bob_ceks
         );
         let transaction = Transaction::new_signed_with_payer(
@@ -139,7 +167,6 @@ impl SolariumContext {
         let post = instruction::post(
             &self.channel.unwrap(),
             &self.alice.pubkey(),
-            &self.alice_cek.unwrap(),
             &message_obj
         );
         let transaction = Transaction::new_signed_with_payer(
@@ -151,8 +178,25 @@ impl SolariumContext {
         self.context.banks_client.process_transaction(transaction).await.unwrap();
     }
 
+    pub async fn post_as_bob(&mut self, message: &str) -> () {
+        let message_obj = Message::new(self.bob_did, message.to_string());
+
+        let post = instruction::post(
+            &self.channel.unwrap(),
+            &self.bob.pubkey(),
+            &message_obj
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[post],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.bob],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
+    }
+
     pub fn make_dummy_cekdata(kid: &str) -> CEKData {
-        CEKData { kid: kid.to_string(), encrypted_key: "".to_string() }
+        CEKData { header: "".to_string(), kid: kid.to_string(), encrypted_key: "".to_string() }
     }
     
     pub async fn get_channel(&mut self) -> ChannelData {

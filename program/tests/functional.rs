@@ -89,3 +89,23 @@ async fn post_multiple() {
     assert_eq!(channel.messages.len(), ChannelData::DEFAULT_SIZE as usize);
     assert_eq!(channel.messages[0].content, format!("{}{}", message, ChannelData::DEFAULT_SIZE));
 }
+
+#[tokio::test]
+async fn create_direct_channel() {
+    let mut context = SolariumContext::new().await;
+
+    context.create_direct_channel().await;
+
+    let alices_message = "hi from alice";
+    let bobs_message = "hi from bob";
+    
+    context.post(alices_message).await;
+    context.post_as_bob(bobs_message).await;
+
+    let channel = context.get_channel().await;
+
+    // check the most recent DEFAULT_SIZE messages were retained
+    assert_eq!(channel.messages.len(), 2);
+    assert_eq!(channel.messages[0].content, alices_message);
+    assert_eq!(channel.messages[1].content, bobs_message);
+}

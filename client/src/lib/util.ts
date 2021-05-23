@@ -98,6 +98,7 @@ export type TransactionRequest = SolanaRequest & {
 
 export type CreateRequest = TransactionRequest & {
   owner?: PublicKeyBase58;
+  name: string;
 };
 
 export type CloseRequest = TransactionRequest & {
@@ -116,12 +117,14 @@ export type ReadRequest = SolanaRequest & {
   ownerDID?: string;
   owner?: PublicKeyBase58;
   decryptionKey: PrivateKey;
+  channel: PublicKeyBase58
 };
 
 export type GetRequest = SolanaRequest & {
   ownerDID?: string;
   owner?: PublicKeyBase58;
   decryptionKey?: PrivateKey;
+  channel: PublicKeyBase58
 };
 
 export type AddKeyRequest = TransactionRequest & {

@@ -1,9 +1,20 @@
 import { SolanaUtil } from './solanaUtil';
-import { closeAccount, getKeyFromOwner, initialize, post } from './instruction';
-import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
-import { InboxData } from './InboxData';
+import {Connection, Keypair, PublicKey, SystemProgram, TransactionInstruction} from '@solana/web3.js';
 import { SignCallback } from '../wallet';
 import { ExtendedCluster } from '../util';
+import {
+  addToChannel,
+  getCekAccountKey,
+  getDirectChannelAccountKey,
+  initializeChannel,
+  initializeDirectChannel,
+  post
+} from "./instruction";
+import {CEKData} from "./models/CEKData";
+import {ChannelData} from "./models/ChannelData";
+import {PROGRAM_ID} from "../constants";
+import {CEKAccountData} from "./models/CEKAccountData";
+import {MessageData} from "./models/MessageData";
 // import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES, PROGRAM_ID} from "../constants";
 
 // const messageSizeOnChain = 1 + 32 + MESSAGE_SIZE_BYTES // Timestamp + sender + message size (TODO encode sender in message sig)
@@ -11,76 +22,148 @@ import { ExtendedCluster } from '../util';
 // const inboxSize = inboxHeader + (messageSizeOnChain * DEFAULT_MAX_MESSAGE_COUNT)
 
 export class SolariumTransaction {
-  static async createInbox(
+  static async createGroupChannel(
+    connection: Connection,
     payer: PublicKey,
-    owner: PublicKey,
+    creatorDID: PublicKey,
+    creatorAuthority: PublicKey,
+    name: string,
+    initialCEKs: CEKData[],
     signCallback: SignCallback,
     cluster?: ExtendedCluster
   ): Promise<PublicKey> {
-    const address = await getKeyFromOwner(owner);
-    console.log(`Inbox address: ${address}`);
+    const channel = Keypair.generate();
+    console.log(`Channel address: ${channel.publicKey.toBase58()}`);
 
-    const instruction = initialize(payer, address, owner);
+    const size = ChannelData.sizeBytes();
+    const balanceNeeded = await connection.getMinimumBalanceForRentExemption(size)
+    const createChannelAccountInstruction = SystemProgram.createAccount({
+      programId: PROGRAM_ID,
+      fromPubkey: payer,
+      lamports: balanceNeeded,
+      newAccountPubkey: channel.publicKey,
+      space: size
+    })
+    
+    const initializeChannelInstruction = await initializeChannel(
+      payer,
+      channel.publicKey,
+      name,
+      creatorDID,
+      creatorAuthority,
+      initialCEKs);
 
     await SolariumTransaction.signAndSendTransaction(
-      [instruction],
+      [
+        createChannelAccountInstruction,
+        initializeChannelInstruction
+      ],
       signCallback,
+      [channel],
       cluster
     );
 
-    return address;
+    return channel.publicKey;
   }
 
-  static async getInboxData(
+  static async createDirectChannel(
+    payer: PublicKey,
+    creatorDID: PublicKey,
+    creatorAuthority: PublicKey,
+    inviteeDID: PublicKey,
+    creatorCEKs: CEKData[],
+    inviteeCEKs: CEKData[],
+    signCallback: SignCallback,
+    cluster?: ExtendedCluster
+  ): Promise<PublicKey> {
+    const channel = await getDirectChannelAccountKey(creatorDID, inviteeDID);
+    console.log(`Channel address: ${channel.toBase58()}`);
+
+    const initializeDirectChannelInstruction = await initializeDirectChannel(
+      payer,
+      channel,
+      creatorDID,
+      creatorAuthority,
+      inviteeDID,
+      creatorCEKs,
+      inviteeCEKs);
+
+
+    await SolariumTransaction.signAndSendTransaction(
+      [initializeDirectChannelInstruction],
+      signCallback,
+      [],
+      cluster
+    );
+
+    return channel;
+  }
+
+  static async addDIDToChannel(
+    payer: PublicKey,
+    channel: PublicKey,
+    inviterDID: PublicKey,
+    inviterAuthority: PublicKey,
+    inviteeDID: PublicKey,
+    ceks: CEKData[],
+    signCallback: SignCallback,
+    cluster?: ExtendedCluster
+  ): Promise<void> {
+    const addToChannelInstruction = await addToChannel(
+      payer,
+      channel,
+      inviteeDID,
+      inviterDID,
+      inviterAuthority,
+      ceks);
+
+    await SolariumTransaction.signAndSendTransaction(
+      [addToChannelInstruction],
+      signCallback,
+      [],
+      cluster
+    );
+  }
+  
+  static async getChannelData(
     connection: Connection,
-    inboxAddress: PublicKey
-  ): Promise<InboxData | null> {
-    const accountInfo = await connection.getAccountInfo(inboxAddress);
+    channel: PublicKey
+  ): Promise<ChannelData | null> {
+    const accountInfo = await connection.getAccountInfo(channel);
 
     if (!accountInfo) return null;
 
-    return InboxData.fromAccount(accountInfo.data);
+    return ChannelData.fromAccount(accountInfo.data);
   }
 
-  /**
-   * Create and send an instruction to close the inbox
-   * @param inboxAddress The inbox to close
-   * @param ownerDID The owner of the inbox
-   * @param [owner] A signer of the owner DID (defaults to payer)
-   * @param [receiver] The recipient of the lamports stored in the inbox (defaults to owner)
-   * @param signCallback
-   * @param cluster
-   */
-  static async closeInbox(
-    inboxAddress: PublicKey,
+  static async getCEKAccountData(
+    connection: Connection,
     ownerDID: PublicKey,
-    owner: PublicKey,
-    receiver: PublicKey,
-    signCallback: SignCallback,
-    cluster?: ExtendedCluster
-  ): Promise<string> {
-    const instruction = closeAccount(inboxAddress, ownerDID, owner, receiver);
+    channel: PublicKey
+  ): Promise<CEKAccountData | null> {
+    const cekAccount = await getCekAccountKey(ownerDID, channel);
+    const accountInfo = await connection.getAccountInfo(cekAccount);
 
-    return SolariumTransaction.signAndSendTransaction(
-      [instruction],
-      signCallback,
-      cluster
-    );
+    if (!accountInfo) return null;
+
+    return CEKAccountData.fromAccount(accountInfo.data);
   }
 
-  static async post(
+  static async postMessage(
+    channel: PublicKey,
     senderDID: PublicKey,
-    signer: PublicKey,
-    inboxAddress: PublicKey,
+    senderAuthority: PublicKey,
     message: string,
     signCallback: SignCallback,
     cluster?: ExtendedCluster
   ): Promise<string> {
-    const instruction = post(inboxAddress, senderDID, signer, message);
+    const messageData = MessageData.for(senderDID, message);
+    const instruction = await post(channel, senderAuthority, messageData);
 
     return SolariumTransaction.signAndSendTransaction(
       [instruction],
       signCallback,
+      [],
       cluster
     );
   }
@@ -88,6 +171,7 @@ export class SolariumTransaction {
   static async signAndSendTransaction(
     instructions: TransactionInstruction[],
     createSignedTx: SignCallback,
+    additionalSigners: Keypair[],
     cluster?: ExtendedCluster
   ): Promise<string> {
     const connection = SolanaUtil.getConnection(cluster);
@@ -96,6 +180,8 @@ export class SolariumTransaction {
     } = await connection.getRecentBlockhash();
 
     const transaction = await createSignedTx(instructions, { recentBlockhash });
+    
+    if (additionalSigners.length) transaction.partialSign(...additionalSigners)
 
     // Send the instructions
     return SolanaUtil.sendAndConfirmRawTransaction(connection, transaction);

@@ -1,45 +1,64 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { ExtendedCluster, PrivateKey } from '../lib/util';
+import {didToPublicKey, ExtendedCluster, PrivateKey} from '../lib/util';
 import { SolariumTransaction } from '../lib/solana/transaction';
-import { Inbox } from '../lib/Inbox';
-import { Observable } from 'rxjs';
-import { InboxData } from '../lib/solana/InboxData';
+import { Channel } from '../lib/Channel';
+import {from, Observable} from 'rxjs';
+import {get as getDID} from "../lib/did/get";
+import {ChannelData} from "../lib/solana/models/ChannelData";
+import {switchMap} from "rxjs/operators";
+import {CEKAccountData} from "../lib/solana/models/CEKAccountData";
 
 /**
- * Gets an inbox
- * @param inbox
+ * Gets an channel
+ * @param channel
  * @param connection
+ * @param ownerDID
  * @param ownerKey
  * @param cluster
  */
 export const get = async (
-  inbox: PublicKey,
+  channel: PublicKey,
   connection: Connection,
+  ownerDID: string,
   ownerKey?: PrivateKey,
   cluster?: ExtendedCluster
-): Promise<Inbox | null> => {
-  const inboxData = await SolariumTransaction.getInboxData(connection, inbox);
+): Promise<Channel | null> => {
+  const didKey = didToPublicKey(ownerDID);
+  const channelData = await SolariumTransaction.getChannelData(connection, channel);
+  const cekAccountData = await SolariumTransaction.getCEKAccountData(connection, didKey, channel);
 
-  return inboxData && Inbox.fromChainData(inboxData, ownerKey, cluster);
+  if (!cekAccountData) throw new Error(`No CEK account found for DID ${ownerDID}. Are they a member of the channel?`)
+
+  return channelData && Channel.fromChainData(channelData, cekAccountData, ownerKey, cluster);
 };
 
 /**
- * Subscribe to inbox updates
- * @param inbox
+ * Subscribe to channel updates
+ * @param channel
  * @param connection
+ * @param ownerDID
  * @param ownerKey
  * @param cluster
  */
 export const getStream = (
-  inbox: PublicKey,
+  channel: PublicKey,
   connection: Connection,
+  ownerDID: string,
   ownerKey?: PrivateKey,
   cluster?: ExtendedCluster
-): Observable<Inbox> =>
-  new Observable<Inbox>(subscriber => {
-    connection.onAccountChange(inbox, async accountInfo => {
-      const inboxData = await InboxData.fromAccount(accountInfo.data);
-      const inbox = await Inbox.fromChainData(inboxData, ownerKey, cluster);
-      subscriber.next(inbox);
+): Observable<Channel> => {
+  const didKey = didToPublicKey(ownerDID);
+  const cekAccountData$ = from(SolariumTransaction.getCEKAccountData(connection, didKey, channel));
+
+  return cekAccountData$.pipe(switchMap((cekAccountData: CEKAccountData | null) => {
+    if (!cekAccountData) throw new Error(`No CEK account found for DID ${ownerDID}. Are they a member of the channel?`);
+
+    return new Observable<Channel>(subscriber => {
+      connection.onAccountChange(channel, async accountInfo => {
+        const channelData = await ChannelData.fromAccount(accountInfo.data);
+        const channel = await Channel.fromChainData(channelData, cekAccountData, ownerKey, cluster);
+        subscriber.next(channel);
+      });
     });
-  });
+  }));
+};

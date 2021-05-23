@@ -9,10 +9,10 @@ import { SolariumTransaction } from '../lib/solana/transaction';
 import { get as getDID } from '../lib/did/get';
 import { create as createDID } from '../lib/did/create';
 import { DIDDocument } from 'did-resolver';
-import { Inbox } from '../lib/Inbox';
-import { get } from './get';
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
+import {createEncryptedCEK} from "../lib/crypto/ChannelCrypto";
+import {ChannelData} from "../lib/solana/models/ChannelData";
 
 /**
  * If a DID was already registered for this owner, return its document. Else create one
@@ -44,15 +44,17 @@ const getOrCreateDID = async (
  * Creates an inbox
  * @param owner
  * @param payer
+ * @param name
  * @param signCallback
  * @param cluster
  */
-export const create = async (
+export const createChannel = async (
   owner: PublicKey,
   payer: Keypair | PublicKey,
+  name: string,
   signCallback?: SignCallback,
   cluster?: ExtendedCluster
-): Promise<Inbox> => {
+): Promise<ChannelData> => {
   const createSignedTx =
     signCallback || (isKeypair(payer) && defaultSignCallback(payer));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
@@ -64,22 +66,27 @@ export const create = async (
     cluster
   );
   const didKey = didToPublicKey(didForOwner.id);
+  
+  const ceks = await createEncryptedCEK(didForOwner.id);
+  
+  const connection = SolanaUtil.getConnection(cluster);
 
-  console.log(`Creating inbox for DID: ${didForOwner.id}`);
-
-  const inboxAddress = await SolariumTransaction.createInbox(
+  const channelAddress = await SolariumTransaction.createGroupChannel(
+    connection,
     pubkeyOf(payer),
     didKey,
+    owner,
+    name,
+    ceks,
     createSignedTx,
     cluster
   );
 
-  const connection = SolanaUtil.getConnection(cluster);
-  const inbox = await get(inboxAddress, connection);
+  const channel = await SolariumTransaction.getChannelData(connection, channelAddress);
 
-  if (!inbox) {
-    throw new Error('Error retrieving created inbox');
+  if (!channel) {
+    throw new Error('Error retrieving created channel');
   }
 
-  return inbox;
+  return channel;
 };

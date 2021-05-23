@@ -120,3 +120,22 @@ export class SolariumCrypto {
     return didJWT.verifyJWT(token, { resolver: didJwtResolver });
   }
 }
+
+// Crypto Refactoring for Solarium with shared Group CEK.
+/**
+ * Interfaces:
+ * - Init CEK for Group (identified by?):
+ * --> Securely create new CEK and encrypt for own DID.
+ *
+ * - Authorize DID for Group (identified by)?
+ * --> Get CEK for gourp and reencrypt for all keys in given DID.
+ *
+ * - Decrypt Message (CipherText) in Group with DID and PrivKey / Signer
+ * --> Decrypt CEK for Group and decrypt ciphertext (message)
+ *
+ * - Encrypt Message (CipherText) in Group with DID and PrivKey / Signer
+ * --> Encrypt CEK for Group and decrypt ciphertext (message)
+ *
+ * Vertical concerns:
+ * - COSE&ZIP vs BASE64
+ */

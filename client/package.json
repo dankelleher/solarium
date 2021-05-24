@@ -2,7 +2,6 @@
   "version": "0.0.13",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
-  "license": "MIT",
   "files": [
     "dist",
     "src"
@@ -14,12 +13,11 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test --runInBand",
-    "test:unit": "tsdx test test/unit/** --runInBand",
-    "lint": "tsdx lint src test",
+    "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
-    "start-validator": "solana-test-validator --bpf-program boxndjnzQZEWbBku3YipL4pchYRc1zi4nNSrFUwawWo ../program/target/deploy/solarium.so  --bpf-program ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV ../../sol-did/program/target/deploy/sol_did.so --reset"
+    "start-validator": "solana-test-validator --bpf-program boxndjnzQZEWbBku3YipL4pchYRc1zi4nNSrFUwawWo ../program/target/deploy/solarium.so  --bpf-program ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV ../program/tests/fixtures/sol_did.so --reset"
   },
   "peerDependencies": {},
   "husky": {

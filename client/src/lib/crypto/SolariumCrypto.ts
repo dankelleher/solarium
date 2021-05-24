@@ -24,7 +24,7 @@ const EMPTY_DID_RESOLUTION_RESULT: DIDResolutionResult = {
 // on the document, we artificially augment the document to include
 // the converted key. This saves space on chain by avoiding the need
 // to have the same key stored in two formats.
-const augmentDIDDocument = (didDocument: DIDDocument): DIDDocument => {
+export const augmentDIDDocument = (didDocument: DIDDocument): DIDDocument => {
   // key agreement key already exists, so we cann use it
   if (didDocument.keyAgreement && didDocument.keyAgreement.length)
     return didDocument;

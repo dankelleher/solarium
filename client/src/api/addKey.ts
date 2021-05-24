@@ -5,11 +5,12 @@ import {
   currentCluster,
   isKeypair,
   makeKeypair,
-  pubkeyOf,
+  pubkeyOf, PublicKeyBase58,
   toSolanaKeyMaterial,
 } from '../lib/util';
 import { DIDDocument } from 'did-resolver';
 import { keyToIdentifier } from '@identity.com/sol-did-client';
+import {updateCEKAccount} from "../service/updateCEKAccount";
 
 const didFromKey = (request: AddKeyRequest): Promise<string> => {
   if (request.signer)
@@ -39,14 +40,31 @@ export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
     | Keypair
     | undefined;
   const signerKey = signer || pubkeyOf(payer);
-
-  return addKeyToDID(
+  const newKey = new PublicKey(request.newKey);
+  const didDocument = await addKeyToDID(
     did,
     request.keyIdentifier,
-    new PublicKey(request.newKey),
+    newKey,
     signerKey,
     payerOrUndefined,
     request.signCallback,
     request.cluster
   );
+
+  const updateChannel = (channelAddress: PublicKeyBase58) => {
+    return updateCEKAccount(
+      signerKey,
+      payer,
+      new PublicKey(channelAddress),
+      newKey,
+      request.signCallback,
+      request.cluster
+    )
+  };
+
+  const channelUpdateResults = await Promise.allSettled(request.channelsToUpdate.map(updateChannel));
+  
+  console.log(channelUpdateResults);
+  
+  return didDocument;
 };

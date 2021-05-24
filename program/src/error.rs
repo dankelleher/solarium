@@ -11,13 +11,29 @@ use {
 /// Errors that may be returned by the program.
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum SolariumError {
-    /// Incorrect authority provided on delete
-    #[error("Incorrect authority provided on delete")]
+    /// Incorrect authority provided
+    #[error("Incorrect authority provided")]
     IncorrectAuthority,
 
     /// Calculation overflow
     #[error("Calculation overflow")]
     Overflow,
+
+    /// Missing CEK
+    #[error("CEK not found")]
+    CEKNotFound,
+
+    /// Invalid CEK for this channel
+    #[error("CEK not valid for this channel")]
+    CEKIncorrectChannel,
+
+    /// Attempt to create a channel for an address that is already in use
+    #[error("Attempt to create a channel for an address that is already in use")]
+    AlreadyInUse,
+
+    /// Incorrect account address derivation
+    #[error("Incorrect account address derivation")]
+    AddressDerivationMismatch,
 }
 impl From<SolariumError> for ProgramError {
     fn from(e: SolariumError) -> Self {

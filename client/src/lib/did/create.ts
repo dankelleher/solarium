@@ -23,6 +23,7 @@ export const create = async (
   await SolariumTransaction.signAndSendTransaction(
     [instruction],
     signCallback,
+    [],
     cluster
   );
 

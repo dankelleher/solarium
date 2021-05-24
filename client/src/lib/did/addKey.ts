@@ -49,6 +49,7 @@ export const addKey = async (
   await SolariumTransaction.signAndSendTransaction(
     [instruction],
     createSignedTx,
+    [],
     cluster
   );
 

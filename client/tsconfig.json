@@ -19,7 +19,7 @@
     "strictPropertyInitialization": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,  // TODO Temp during refactor
     "noUnusedParameters": true,
     "moduleResolution": "node",
     "jsx": "react",

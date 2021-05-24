@@ -24,7 +24,8 @@ export const create = async (): Promise<Keypair> => {
 
 export type SignCallback = (
   instructions: TransactionInstruction[],
-  transactionOpts?: TransactionCtorFields
+  transactionOpts?: TransactionCtorFields,
+  additionalSigners?: Keypair[]
 ) => Promise<Transaction>;
 
 export const defaultSignCallback = (
@@ -32,7 +33,8 @@ export const defaultSignCallback = (
   ...signers: Keypair[]
 ): SignCallback => async (
   instructions: TransactionInstruction[],
-  transactionOpts?: TransactionCtorFields
+  transactionOpts?: TransactionCtorFields,
+  additionalSigners: Keypair[] =  []
 ) => {
   const signerPubkeys: SignaturePubkeyPair[] = signers.map(s => ({
     signature: null,
@@ -44,8 +46,8 @@ export const defaultSignCallback = (
     feePayer: payer.publicKey,
   }).add(...instructions);
 
-  if (signers.length) {
-    transaction.partialSign(...signers);
+  if (signers.length + additionalSigners.length) {
+    transaction.partialSign(...signers, ...additionalSigners);
   }
 
   const message = transaction.serializeMessage();

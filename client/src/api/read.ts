@@ -10,11 +10,10 @@ import {
   DecentralizedIdentifier,
   keyToIdentifier,
 } from '@identity.com/sol-did-client';
-import { getKeyFromOwner } from '../lib/solana/instruction';
 import { distinct, switchMap } from 'rxjs/operators';
 import { from, Observable } from 'rxjs';
 import { PublicKey } from '@solana/web3.js';
-import { Inbox } from '../lib/Inbox';
+import { Channel } from '../lib/Channel';
 
 type Message = {
   sender: PublicKeyBase58;
@@ -22,9 +21,10 @@ type Message = {
 };
 
 const didFromKey = (request: ReadRequest): Promise<string> => {
-  if (request.owner)
+  if (request.memberDID) return Promise.resolve(request.memberDID);
+  if (request.member)
     return keyToIdentifier(
-      new PublicKey(request.owner),
+      new PublicKey(request.member),
       currentCluster(request.cluster)
     );
   return keyToIdentifier(
@@ -33,24 +33,19 @@ const didFromKey = (request: ReadRequest): Promise<string> => {
   );
 };
 
-const getInboxAddress = async (request: ReadRequest): Promise<PublicKey> => {
-  const did = request.ownerDID || (await didFromKey(request));
-  const ownerAddress = DecentralizedIdentifier.parse(did).pubkey.toPublicKey();
-  return getKeyFromOwner(ownerAddress);
-};
-
 /**
- * Reads an inbox
+ * Reads an channel
  * @param request
  */
 export const read = async (request: ReadRequest): Promise<Message[]> => {
   const connection = SolanaUtil.getConnection(request.cluster);
 
-  const inboxAddress = await getInboxAddress(request);
+  const memberDID = await didFromKey(request);
 
   const inbox = await service.get(
-    inboxAddress,
+    new PublicKey(request.channel),
     connection,
+    memberDID,
     request.decryptionKey,
     request.cluster
   );
@@ -61,27 +56,27 @@ export const read = async (request: ReadRequest): Promise<Message[]> => {
 };
 
 /**
- * Subscribe to inbox updates
+ * Subscribe to channel updates
  * @param request
  */
 export const readStream = (request: ReadRequest): Observable<Message> => {
   const connection = SolanaUtil.getConnection(request.cluster);
 
-  const inboxAddress$ = from(getInboxAddress(request));
+  const memberDID$ = from(didFromKey(request));
 
-  return inboxAddress$.pipe(
-    switchMap((inboxAddress: PublicKey) => {
-      const inbox$ = service.getStream(
-        inboxAddress,
+  return memberDID$.pipe(
+    switchMap((memberDID: string) => {
+      const channel$ = service.getStream(
+        new PublicKey(request.channel),
         connection,
+        memberDID,
         request.decryptionKey,
         request.cluster
       );
       const uniqueKey = (m: Message) => m.content + m.sender; // TODO add timestamp
 
-      return inbox$
-        .pipe(switchMap((inbox: Inbox) => inbox.messages))
+      return channel$
+        .pipe(switchMap((channel: Channel) => channel.messages))
         .pipe(distinct(uniqueKey)); // only emit a message once
-    })
-  );
+    }));
 };

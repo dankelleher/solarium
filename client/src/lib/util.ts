@@ -97,7 +97,13 @@ export type TransactionRequest = SolanaRequest & {
 };
 
 export type CreateRequest = TransactionRequest & {
-  owner?: PublicKeyBase58;
+  owner?: KeyMaterial;
+  name: string;
+};
+
+export type CreateDirectRequest = TransactionRequest & {
+  owner?: KeyMaterial;
+  inviteeDID: string 
 };
 
 export type CloseRequest = TransactionRequest & {
@@ -108,20 +114,29 @@ export type CloseRequest = TransactionRequest & {
 export type PostRequest = TransactionRequest & {
   senderDID?: string;
   signer: PrivateKey;
-  ownerDID: string;
+  channel: PublicKeyBase58;
+  message: string;
+};
+
+export type PostDirectRequest = TransactionRequest & {
+  senderDID?: string;
+  signer: PrivateKey;
+  recipientDID: string;
   message: string;
 };
 
 export type ReadRequest = SolanaRequest & {
-  ownerDID?: string;
-  owner?: PublicKeyBase58;
+  memberDID?: string;
+  member?: PublicKeyBase58;
   decryptionKey: PrivateKey;
+  channel: PublicKeyBase58
 };
 
 export type GetRequest = SolanaRequest & {
   ownerDID?: string;
   owner?: PublicKeyBase58;
   decryptionKey?: PrivateKey;
+  channel: PublicKeyBase58
 };
 
 export type AddKeyRequest = TransactionRequest & {
@@ -129,6 +144,7 @@ export type AddKeyRequest = TransactionRequest & {
   signer?: PrivateKey;
   newKey: PublicKeyBase58;
   keyIdentifier: string;
+  channelsToUpdate: PublicKeyBase58[]
 };
 
 export const didToPublicKey = (did: string) =>
@@ -153,3 +169,5 @@ export const isPublicKey = (k: KeyMaterial): k is PublicKey =>
   k instanceof PublicKey;
 export const pubkeyOf = (k: Keypair | PublicKey): PublicKey =>
   isKeypair(k) ? k.publicKey : k;
+
+export const isString = (value): value is string => typeof value === 'string' || value instanceof String;

@@ -1,4 +1,6 @@
 import { BinaryReader, BorshError, Schema, serialize } from 'borsh';
+import {PublicKey} from "@solana/web3.js";
+import {encode} from "bs58";
 
 // Class wrapping a plain object
 export abstract class Assignable {
@@ -119,3 +121,37 @@ export function deserializeExtraBytes<T extends Assignable>(
   const reader = new BinaryReader(buffer);
   return deserializeStruct(schema, classType, reader);
 }
+
+export class AssignablePublicKey extends Assignable {
+  // The public key bytes
+  bytes: number[];
+
+  toPublicKey(): PublicKey {
+    return new PublicKey(this.bytes);
+  }
+
+  toString(): string {
+    return encode(this.bytes);
+  }
+
+  static parse(pubkey: string): AssignablePublicKey {
+    return AssignablePublicKey.fromPublicKey(new PublicKey(pubkey));
+  }
+
+  static fromPublicKey(publicKey: PublicKey): AssignablePublicKey {
+    return new AssignablePublicKey({
+      bytes: Uint8Array.from(publicKey.toBuffer()),
+    });
+  }
+
+  static empty(): AssignablePublicKey {
+    const bytes = new Array(32);
+    bytes.fill(0);
+    return new AssignablePublicKey({ bytes });
+  }
+}
+
+SCHEMA.set(AssignablePublicKey, {
+  kind: 'struct',
+  fields: [['bytes', [32]]],
+});

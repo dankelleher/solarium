@@ -30,7 +30,7 @@ export function InboxProvider({ children = null as any }) {
 
   const create = useCallback(async () => {
     const createdInbox = await createInbox(connection, wallet)
-    console.log("Inbox created");
+    console.log("Channel created");
     return createdInbox;
   }, [connection, wallet]);
 

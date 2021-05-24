@@ -11,9 +11,6 @@ import { create as createDID } from '../lib/did/create';
 import { DIDDocument } from 'did-resolver';
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
-import {createEncryptedCEK, encryptCEKForDID, generateCEK} from "../lib/crypto/ChannelCrypto";
-import {ChannelData} from "../lib/solana/models/ChannelData";
-import {resolve} from "@identity.com/sol-did-client";
 import {Channel} from "../lib/Channel";
 import {get} from "./get";
 
@@ -61,20 +58,23 @@ const getChannel = async (
 }
 
 /**
- * Creates a group channel
+ * Adds a key to a CEK account for a channel
  * @param owner
  * @param payer
- * @param name
+ * @param channel
+ * @param newKey
  * @param signCallback
  * @param cluster
  */
-export const createChannel = async (
+export const updateCEKAccount = async (
   owner: Keypair | PublicKey,
   payer: Keypair | PublicKey,
-  name: string,
+  channel: PublicKey,
+  newKey: PublicKey,
   signCallback?: SignCallback,
   cluster?: ExtendedCluster
-): Promise<Channel> => {
+): Promise<void> => {
+  const connection = SolanaUtil.getConnection(cluster);
   const createSignedTx =
     signCallback || (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
@@ -86,73 +86,21 @@ export const createChannel = async (
     cluster
   );
   const didKey = didToPublicKey(ownerDIDDocument.id);
-  
-  const ceks = await createEncryptedCEK(ownerDIDDocument.id);
-  
-  const connection = SolanaUtil.getConnection(cluster);
 
-  const channelAddress = await SolariumTransaction.createGroupChannel(
-    connection,
-    pubkeyOf(payer),
+  const foundVerificationMethod = (ownerDIDDocument.verificationMethod || [])
+    .find(verificationMethod => verificationMethod.publicKeyBase58 === newKey.toBase58());
+  
+  if (!foundVerificationMethod) throw new Error('New key was not found on the DID')
+  
+  const channelObject = await getChannel(owner, ownerDIDDocument.id, channel, connection, cluster)
+  const newCEK = await channelObject.encryptCek(foundVerificationMethod);
+
+  await SolariumTransaction.addCEKToAccount(
+    channel,
     didKey,
     pubkeyOf(owner),
-    name,
-    ceks,
+    newCEK,
     createSignedTx,
     cluster
   );
-  
-  return getChannel(owner, ownerDIDDocument.id, channelAddress, connection, cluster);
-};
-
-/**
- * Creates a direct channel between two DIDs
- * @param owner
- * @param payer
- * @param inviteeDID
- * @param signCallback
- * @param cluster
- */
-export const createDirectChannel = async (
-  owner: Keypair | PublicKey,
-  payer: Keypair | PublicKey,
-  inviteeDID: string,
-  signCallback?: SignCallback,
-  cluster?: ExtendedCluster
-): Promise<Channel> => {
-  const createSignedTx =
-    signCallback || (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
-  if (!createSignedTx) throw new Error('No payer or sign callback specified');
-
-  // Create the owner DID if it doesn't exist
-  const ownerPubKey = pubkeyOf(owner);
-  const ownerDIDDocument = await getOrCreateDID(
-    ownerPubKey,
-    payer,
-    createSignedTx,
-    cluster
-  );
-
-  const inviteeDIDDocument = await resolve(inviteeDID)
-  
-  // create and encrypt a CEK for the new channel
-  const cek = await generateCEK();
-  const ownerCEKs = await encryptCEKForDID(cek, ownerDIDDocument.id);
-  const inviteeCEKs = await encryptCEKForDID(cek, inviteeDIDDocument.id);
-
-  const connection = SolanaUtil.getConnection(cluster);
-
-  // create the channel
-  const channelAddress = await SolariumTransaction.createDirectChannel(
-    pubkeyOf(payer),
-    didToPublicKey(ownerDIDDocument.id),
-    ownerPubKey,
-    didToPublicKey(inviteeDID),
-    ownerCEKs,
-    inviteeCEKs,
-    createSignedTx,
-    cluster
-  );
-
-  return getChannel(owner, ownerDIDDocument.id, channelAddress, connection, cluster);
 };

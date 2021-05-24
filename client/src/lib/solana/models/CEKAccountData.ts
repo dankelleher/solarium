@@ -24,6 +24,6 @@ SCHEMA.set(CEKAccountData, {
   fields: [
     ['ownerDID', AssignablePublicKey],
     ['channel', AssignablePublicKey],
-    ['messages', [CEKData]],
+    ['ceks', [CEKData]],
   ],
 });

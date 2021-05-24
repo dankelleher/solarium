@@ -1,171 +1,253 @@
-import { create, post, read, addKey } from '../src';
+import {create, post, read, addKey, Channel} from '../src';
 import { create as createDID } from '../src/lib/did/create';
 import { SolanaUtil } from '../src/lib/solana/solanaUtil';
 import { Keypair } from '@solana/web3.js';
 import { repeat } from 'ramda';
 import { DEFAULT_MAX_MESSAGE_COUNT } from '../src/lib/constants';
 import { defaultSignCallback } from '../src/lib/wallet';
-import {ChannelData} from "../src/lib/solana/models/ChannelData";
+import {createDirect} from "../src/api/create";
+import {ClusterType, keyToIdentifier} from "@identity.com/sol-did-client";
+import {postDirect} from "../src/api/post";
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
   let payer: Keypair;
-  let owner: Keypair;
-  let channel: ChannelData;
+  let alice: Keypair;
+  let bob: Keypair;
+  
+  let aliceDID: string;
+  let bobDID: string;
+  
+  let channel: Channel;
 
   beforeAll(async () => {
     payer = await SolanaUtil.newWalletWithLamports(connection, 1000000000);
   });
 
-  beforeEach(() => {
-    owner = Keypair.generate();
+  beforeEach(async () => {
+    alice = Keypair.generate();
+    bob = Keypair.generate();
+    
+    aliceDID = await keyToIdentifier(alice.publicKey, ClusterType.development())
+    bobDID = await keyToIdentifier(bob.publicKey, ClusterType.development())
   });
-
-  // // Clean up after each test
-  // afterEach(async () => {
-  //   await close({
-  //     ownerDID: inbox.owner,
-  //     signer: owner.secretKey,
-  //     payer: payer.secretKey,
-  //   });
-  // });<
 
   it('creates a DID and group channel', async () => {
+    const channelName = "dummy channel" + Date.now();
     channel = await create({
       payer: payer.secretKey,
-      owner: owner.publicKey.toBase58(),
-      name: "dummy channel" + Date.now()
+      owner: alice.secretKey,
+      name: channelName
     });
-  });
-  
-  /*
 
-  it('creates an inbox for an existing DID', async () => {
+    expect(channel.name).toEqual(channelName);
+  });
+
+  it('creates a group channel with by an existing DID', async () => {
+    const channelName = "dummy channel" + Date.now();
+
     await createDID(
-      owner.publicKey,
+      alice.publicKey,
       payer.publicKey,
       defaultSignCallback(payer)
     );
 
-    inbox = await create({
+    channel = await create({
       payer: payer.secretKey,
-      owner: owner.publicKey.toBase58(),
+      owner: alice.secretKey,
+      name: channelName
     });
   });
-
-  it('sends a message to an inbox', async () => {
-    inbox = await create({
-      owner: owner.publicKey.toBase58(),
+  
+  it('creates a DID and direct channel', async () => {
+    await createDID(
+      bob.publicKey,
+      payer.publicKey,
+      defaultSignCallback(payer)
+    );
+    
+    channel = await createDirect({
       payer: payer.secretKey,
+      owner: alice.secretKey,
+      inviteeDID: bobDID
+    });
+    
+    expect(channel.name).toContain(bobDID.replace('did:sol:localnet:', ''))
+  });
+
+  it('sends a message to a group channel', async () => {
+    channel = await create({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: 'dummy'
     });
 
-    const message = 'Hello me!';
+    const message = 'Hello!';
     await post({
       payer: payer.secretKey,
-      ownerDID: inbox.owner,
-      senderDID: inbox.owner,
-      signer: owner.secretKey,
+      channel: channel.address.toBase58(),
+      senderDID: aliceDID,
+      signer: alice.secretKey,
       message,
     });
 
     const messages = await read({
-      ownerDID: inbox.owner,
-      decryptionKey: owner.secretKey,
+      channel: channel.address.toBase58(),
+      memberDID: aliceDID,
+      decryptionKey: alice.secretKey
     });
 
     expect(messages).toHaveLength(1);
     expect(messages[0].content).toEqual(message);
-    expect(messages[0].sender).toEqual(inbox.owner);
+    expect(messages[0].sender).toEqual(aliceDID);
+  });
+  
+  
+  it('sends a message to a direct channel', async () => {
+    // create bob's did
+    await createDID(
+      bob.publicKey,
+      payer.publicKey,
+      defaultSignCallback(payer)
+    );
+    
+    channel = await createDirect({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      inviteeDID: bobDID
+    });
+
+    const message = 'Hello Bob!';
+    await postDirect({
+      payer: payer.secretKey,
+      senderDID: aliceDID,
+      recipientDID: bobDID,
+      signer: alice.secretKey,
+      message,
+    });
+
+    // read as Bob
+    const messagesForBob = await read({
+      channel: channel.address.toBase58(),
+      memberDID: bobDID,
+      decryptionKey: bob.secretKey
+    });
+
+    expect(messagesForBob).toHaveLength(1);
+    expect(messagesForBob[0].content).toEqual(message);
+    expect(messagesForBob[0].sender).toEqual(aliceDID);
+    
+    // read as Alice
+    const messagesForAlice = await read({
+      channel: channel.address.toBase58(),
+      memberDID: aliceDID,
+      decryptionKey: alice.secretKey
+    });
+
+    expect(messagesForAlice).toEqual(messagesForBob);
   });
 
-  it('sends more messages than an inbox can hold', async () => {
-    const inboxSize = DEFAULT_MAX_MESSAGE_COUNT;
+  it('sends more messages than a channel can hold', async () => {
+    const channelSize = DEFAULT_MAX_MESSAGE_COUNT;
 
-    inbox = await create({
-      owner: owner.publicKey.toBase58(),
+    channel = await create({
       payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: 'dummy'
     });
 
     // send one more message than the inbox can hold
-    for (let i = 0; i < inboxSize + 1; i++) {
+    for (let i = 0; i < channelSize + 1; i++) {
       console.log(`Posting message ${i}`);
       await post({
         payer: payer.secretKey,
-        ownerDID: inbox.owner,
-        senderDID: inbox.owner,
-        signer: owner.secretKey,
+        channel: channel.address.toBase58(),
+        senderDID: aliceDID,
+        signer: alice.secretKey,
         message: `This is message ${i}`,
       });
     }
 
     const messages = await read({
-      ownerDID: inbox.owner,
-      decryptionKey: owner.secretKey,
+      channel: channel.address.toBase58(),
+      memberDID: aliceDID,
+      decryptionKey: alice.secretKey
     });
 
-    expect(messages).toHaveLength(inboxSize);
+    expect(messages).toHaveLength(channelSize);
     expect(messages[0].content).toEqual('This is message 1');
   }, 20000);
 
-  it('blocks sending a large message to an inbox', async () => {
-    inbox = await create({
-      owner: owner.publicKey.toBase58(),
+  it('blocks sending a large message to a channel', async () => {
+    channel = await create({
       payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: 'dummy'
     });
 
     const message = repeat('This is a long message.', 50).join('');
     const shouldFail = post({
       payer: payer.secretKey,
-      ownerDID: inbox.owner,
-      senderDID: inbox.owner,
-      signer: owner.secretKey,
+      channel: channel.address.toBase58(),
+      senderDID: aliceDID,
+      signer: alice.secretKey,
       message,
     });
 
     return expect(shouldFail).rejects.toThrow(/Message too long/);
   });
-
+  
+  // This test checks that if a user adds a key to their DID,
+  // they can read messages in channels they belong to with this new key
   it('adds a key to the DID', async () => {
-    inbox = await create({
+    channel = await create({
       payer: payer.secretKey,
-      owner: owner.publicKey.toBase58(),
+      owner: alice.secretKey,
+      name: 'dummy'
     });
 
-    const newKey = Keypair.generate();
+    const newAliceKey = Keypair.generate();
 
     const newDoc = await addKey({
-      ownerDID: inbox.owner,
+      ownerDID: aliceDID,
       payer: payer.secretKey,
-      signer: owner.secretKey,
-      newKey: newKey.publicKey.toBase58(),
+      signer: alice.secretKey,
+      newKey: newAliceKey.publicKey.toBase58(),
       keyIdentifier: 'mobile',
+      channelsToUpdate: [
+        channel.address.toBase58()
+      ]
     });
 
     console.log(newDoc);
 
-    // check the new key can decode new messages
-    const message = 'Hello me!';
+    // Alice posts a message with the old key
+    const message = 'Hello!';
     await post({
       payer: payer.secretKey,
-      ownerDID: inbox.owner,
-      senderDID: inbox.owner,
-      signer: owner.secretKey,
+      channel: channel.address.toBase58(),
+      senderDID: aliceDID,
+      signer: alice.secretKey,
       message,
     });
 
-    // read the message with the new key
-    const messagesForNewKey = await read({
-      ownerDID: inbox.owner,
-      decryptionKey: newKey.secretKey,
+    // Check Alice can read the channel with the new key 
+    const messagesWithNewKey = await read({
+      channel: channel.address.toBase58(),
+      memberDID: aliceDID,
+      decryptionKey: newAliceKey.secretKey
     });
-    expect(messagesForNewKey[0].content).toEqual(message);
+
+    expect(messagesWithNewKey).toHaveLength(1);
+    expect(messagesWithNewKey[0].content).toEqual(message);
+    expect(messagesWithNewKey[0].sender).toEqual(aliceDID);
 
     // check the old key still works
-    const messagesForOldKey = await read({
-      ownerDID: inbox.owner,
-      decryptionKey: owner.secretKey,
+    const messagesWithOldKey = await read({
+      channel: channel.address.toBase58(),
+      memberDID: aliceDID,
+      decryptionKey: alice.secretKey
     });
-    expect(messagesForOldKey[0].content).toEqual(message);
+    expect(messagesWithOldKey).toEqual(messagesWithNewKey);
   });
-  */
 });

@@ -245,6 +245,7 @@ SCHEMA.set(SolariumInstruction, {
   field: 'enum',
   values: [
     ['initializeChannel', InitializeChannel],
+    ['initializeDirectChannel', InitializeDirectChannel],
     ['post', Post],
     ['addToChannel', AddToChannel],
     ['addCEK', AddCEK],
@@ -258,9 +259,16 @@ SCHEMA.set(InitializeChannel, {
     ['CEKs', [CEKData]]
   ],
 });
+SCHEMA.set(InitializeDirectChannel, {
+  kind: 'struct',
+  fields: [
+    ['creatorCEKs', [CEKData]],
+    ['inviteeCEKs', [CEKData]]
+  ],
+});
 SCHEMA.set(Post, {
   kind: 'struct',
-  fields: [['content', 'string']],
+  fields: [['message', 'string']],
 });
 SCHEMA.set(AddToChannel, {
   kind: 'struct',

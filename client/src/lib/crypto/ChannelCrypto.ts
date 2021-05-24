@@ -3,9 +3,10 @@ import {augmentDIDDocument} from "./SolariumCrypto";
 import {VerificationMethod} from "did-resolver/src/resolver";
 import {DIDDocument} from "did-resolver";
 import {CEKData} from "../solana/models/CEKData";
-import {PrivateKey} from "../util";
+import {makeKeypair, PrivateKey} from "../util";
+import {Channel} from "../Channel";
 
-type CEK = {};
+export type CEK = {};
 
 // Create a CEK for a new channel
 export const generateCEK = async ():Promise<CEK> => {
@@ -14,16 +15,16 @@ export const generateCEK = async ():Promise<CEK> => {
 }
 
 // given a key or reference to a key in a DID, return the key itself
-const getKey = (keyOrRef: VerificationMethod | string, document: DIDDocument):VerificationMethod => {
-  if (Object.prototype.hasOwnProperty.call(keyOrRef, 'id')) return keyOrRef as VerificationMethod;
+const getVerificationMethod = (vmOrRef: VerificationMethod | string, document: DIDDocument):VerificationMethod => {
+  if (Object.prototype.hasOwnProperty.call(vmOrRef, 'id')) return vmOrRef as VerificationMethod;
 
   const foundKey = (document.verificationMethod || []).find(key => 
-    key.id === keyOrRef
+    key.id === vmOrRef
     ||
-    key.id === (keyOrRef as string).replace('_keyAgreement','') // hack - see augmentDIDDocument
+    key.id === (vmOrRef as string).replace('_keyAgreement','') // hack - see augmentDIDDocument
   );
 
-  if (!foundKey) throw new Error(`Missing key ${keyOrRef}`);
+  if (!foundKey) throw new Error(`Missing key ${vmOrRef}`);
 
   return foundKey;
 }
@@ -37,18 +38,22 @@ export const encryptCEKForDID = async (cek: CEK, did:string):Promise<CEKData[]> 
   return encryptCEKForDIDDocument(cek, augmentedDIDDocument)
 }
 
-// Given an unecrypted channel CEK, encrypt it for a DID Document
+export const encryptCEKForVerificationMethod = async (cek: CEK, key: VerificationMethod) => {
+  console.log(`Encrypting ${cek} with ${key}`);
+  // TODO encrypt cek
+  return new CEKData({
+    kid: key.id,
+    header: "TODO",
+    encryptedKey: "TODO"
+  });
+};
+
+// Given an unencrypted channel CEK, encrypt it for a DID Document
 export const encryptCEKForDIDDocument = async (cek: CEK, didDocument:DIDDocument):Promise<CEKData[]> => {
   const encryptedCEKPromises = (didDocument.keyAgreement || []).map(
     async (keyOrRef):Promise<CEKData> => {
-      const key = getKey(keyOrRef, didDocument);
-      console.log(`Encrypting ${cek} with ${key}`);
-      // TODO encrypt cek
-      return new CEKData({
-        kid: key.id,
-        header: "TODO",
-        encryptedKey: "TODO"
-      });
+      const key = getVerificationMethod(keyOrRef, didDocument);
+      return encryptCEKForVerificationMethod(cek, key);
     }
   );
 
@@ -89,4 +94,34 @@ export const encryptMessage = async(message: string, cek: CEK):Promise<string> =
 export const decryptMessage = async(encryptedMessage: string, cek: CEK):Promise<string> => {
   console.log(`Decrypting ${encryptedMessage} with ${cek}`);  // TODO remove once done to avoid leaking private key
   return encryptedMessage; // TODO placeholder until decryption is in
+}
+
+// Given a private key, find the ID of the associated public key on the DID
+export const findKIDForKey = (did: DIDDocument, key: PrivateKey):string | undefined => {
+  const keypair = makeKeypair(key);
+  const pubkey = keypair.publicKey.toBase58();
+  
+  const foundVerificationMethod = (did.verificationMethod || [])
+    .find(verificationMethod => verificationMethod.publicKeyBase58 === pubkey);
+  
+  return foundVerificationMethod?.id;
+}
+
+// Given a cek encrypted for fromDID, and a private key for fromDID
+// decrypt and reencrypt for toDID
+export const reencryptCEKForDID = async (
+  encryptedCEK: CEKData[],
+  fromDID: string,
+  fromPrivateKey: PrivateKey,
+  toDID: string
+):Promise<CEKData[]> => {
+  // TODO add cache here
+  const fromDIDDocument = await resolve(fromDID);
+  const fromKID = findKIDForKey(fromDIDDocument, fromPrivateKey);
+  
+  if (!fromKID) throw new Error("Private key does not match any key in the DID");
+  
+  const cek = await decryptCEKs(encryptedCEK, fromKID, fromPrivateKey);
+  
+  return encryptCEKForDID(cek, toDID);
 }

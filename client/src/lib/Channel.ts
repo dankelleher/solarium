@@ -1,27 +1,56 @@
-import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
+import {DecentralizedIdentifier, resolve} from '@identity.com/sol-did-client';
 import { currentCluster, ExtendedCluster, PrivateKey } from './util';
 import {ChannelData} from "./solana/models/ChannelData";
 import {CEKAccountData} from "./solana/models/CEKAccountData";
-import {decryptCEKs, decryptMessage} from "./crypto/ChannelCrypto";
+import {
+  CEK,
+  decryptCEKs,
+  decryptMessage,
+  encryptCEKForVerificationMethod,
+  encryptMessage,
+  findKIDForKey
+} from "./crypto/ChannelCrypto";
+import {PublicKey} from "@solana/web3.js";
+import {VerificationMethod} from "did-resolver";
+import {CEKData} from "./solana/models/CEKData";
 
 export class Message {
   constructor(readonly sender: string, readonly content: string) {}
 }
 
 export class Channel {
-  constructor(readonly name: string, readonly messages: Message[]) {}
+  constructor(readonly name: string, readonly messages: Message[], readonly address: PublicKey, private cek?: CEK) {}
+  
+  async encrypt(message: string) {
+    if (!this.cek) {
+      throw new Error("Cannot encrypt, this channel was loaded without a private key, so no CEK was available")
+    }
+    return encryptMessage(message, this.cek);
+  }
+
+  async encryptCek(verificationMethod: VerificationMethod):Promise<CEKData> {
+    if (!this.cek) {
+      throw new Error("Cannot encrypt, this channel was loaded without a private key, so no CEK was available")
+    }
+    return encryptCEKForVerificationMethod(this.cek, verificationMethod);
+  }
 
   static async fromChainData(
+    address: PublicKey,
     channelData: ChannelData,
     cekAccountData: CEKAccountData,
-    ownerKey?: PrivateKey,
+    memberDID: string,
+    memberKey?: PrivateKey,
     cluster?: ExtendedCluster
   ): Promise<Channel> {
+    const getCEK = async (key: PrivateKey) => {
+      const kid = findKIDForKey(memberDIDDocument, key);
+      if (!kid) throw new Error(`Invalid private key for DID ${memberDIDDocument.id}`);
+      return decryptCEKs(cekAccountData.ceks, kid, key)
+    };
 
     const decrypt = async (message: Message): Promise<Message> => {
-      if (!ownerKey) return message; // only decrypt if a key is provided
-      // TODO pass the kid
-      const cek = await decryptCEKs(cekAccountData.ceks, "TODO",  ownerKey)
+      if (!cek) return message; // only decrypt if a key is provided
       const decrypted = await decryptMessage(message.content, cek);
       return {
         ...message,
@@ -29,21 +58,23 @@ export class Channel {
       };
     };
 
+    // TODO add caching
+    const memberDIDDocument = await resolve(memberDID);
+    const cek = memberKey ? await getCEK(memberKey) : undefined;
+
     const messagePromises = channelData.messages
       .map(
-        m =>
-          new Message(
-            DecentralizedIdentifier.create(
-              m.sender.toPublicKey(),
-              currentCluster(cluster)
-            ).toString(),
-            m.content
-          )
+        m => new Message(
+          DecentralizedIdentifier.create(
+            m.sender.toPublicKey(),
+            currentCluster(cluster)
+          ).toString(),
+          m.content)
       )
       .map(decrypt);
 
     const messages = await Promise.all(messagePromises);
 
-    return new Channel(channelData.name, messages);
+    return new Channel(channelData.name, messages, address, cek);
   }
 }

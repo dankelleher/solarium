@@ -3,6 +3,7 @@ import {Connection, Keypair, PublicKey, SystemProgram, TransactionInstruction} f
 import { SignCallback } from '../wallet';
 import { ExtendedCluster } from '../util';
 import {
+  addCEK,
   addToChannel,
   getCekAccountKey,
   getDirectChannelAccountKey,
@@ -168,6 +169,28 @@ export class SolariumTransaction {
     );
   }
 
+  static async addCEKToAccount(
+    channel: PublicKey,
+    memberDID: PublicKey,
+    memberAuthority: PublicKey,
+    cek: CEKData,
+    signCallback: SignCallback,
+    cluster?: ExtendedCluster
+  ): Promise<void> {
+    const addToChannelInstruction = await addCEK(
+      channel,
+      memberDID,
+      memberAuthority,
+      cek);
+
+    await SolariumTransaction.signAndSendTransaction(
+      [addToChannelInstruction],
+      signCallback,
+      [],
+      cluster
+    );
+  }
+
   static async signAndSendTransaction(
     instructions: TransactionInstruction[],
     createSignedTx: SignCallback,
@@ -179,9 +202,7 @@ export class SolariumTransaction {
       blockhash: recentBlockhash,
     } = await connection.getRecentBlockhash();
 
-    const transaction = await createSignedTx(instructions, { recentBlockhash });
-    
-    if (additionalSigners.length) transaction.partialSign(...additionalSigners)
+    const transaction = await createSignedTx(instructions, { recentBlockhash }, additionalSigners);
 
     // Send the instructions
     return SolanaUtil.sendAndConfirmRawTransaction(connection, transaction);

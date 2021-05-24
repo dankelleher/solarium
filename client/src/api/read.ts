@@ -21,10 +21,10 @@ type Message = {
 };
 
 const didFromKey = (request: ReadRequest): Promise<string> => {
-  if (request.ownerDID) return Promise.resolve(request.ownerDID);
-  if (request.owner)
+  if (request.memberDID) return Promise.resolve(request.memberDID);
+  if (request.member)
     return keyToIdentifier(
-      new PublicKey(request.owner),
+      new PublicKey(request.member),
       currentCluster(request.cluster)
     );
   return keyToIdentifier(
@@ -40,12 +40,12 @@ const didFromKey = (request: ReadRequest): Promise<string> => {
 export const read = async (request: ReadRequest): Promise<Message[]> => {
   const connection = SolanaUtil.getConnection(request.cluster);
 
-  const ownerDID = await didFromKey(request);
+  const memberDID = await didFromKey(request);
 
   const inbox = await service.get(
     new PublicKey(request.channel),
     connection,
-    ownerDID,
+    memberDID,
     request.decryptionKey,
     request.cluster
   );
@@ -62,14 +62,14 @@ export const read = async (request: ReadRequest): Promise<Message[]> => {
 export const readStream = (request: ReadRequest): Observable<Message> => {
   const connection = SolanaUtil.getConnection(request.cluster);
 
-  const ownerDID$ = from(didFromKey(request));
+  const memberDID$ = from(didFromKey(request));
 
-  return ownerDID$.pipe(
-    switchMap((ownerDID: string) => {
+  return memberDID$.pipe(
+    switchMap((memberDID: string) => {
       const channel$ = service.getStream(
         new PublicKey(request.channel),
         connection,
-        ownerDID,
+        memberDID,
         request.decryptionKey,
         request.cluster
       );

@@ -12,52 +12,55 @@ import {CEKAccountData} from "../lib/solana/models/CEKAccountData";
  * Gets an channel
  * @param channel
  * @param connection
- * @param ownerDID
- * @param ownerKey
+ * @param memberDID
+ * @param memberKey
  * @param cluster
  */
 export const get = async (
   channel: PublicKey,
   connection: Connection,
-  ownerDID: string,
-  ownerKey?: PrivateKey,
+  memberDID: string,
+  memberKey?: PrivateKey,
   cluster?: ExtendedCluster
-): Promise<Channel | null> => {
-  const didKey = didToPublicKey(ownerDID);
+): Promise<Channel> => {
+  const didKey = didToPublicKey(memberDID);
   const channelData = await SolariumTransaction.getChannelData(connection, channel);
+
+  if (!channelData) throw new Error(`Channel not found`)
+  
   const cekAccountData = await SolariumTransaction.getCEKAccountData(connection, didKey, channel);
 
-  if (!cekAccountData) throw new Error(`No CEK account found for DID ${ownerDID}. Are they a member of the channel?`)
+  if (!cekAccountData) throw new Error(`No CEK account found for DID ${memberDID}. Are they a member of the channel?`)
 
-  return channelData && Channel.fromChainData(channelData, cekAccountData, ownerKey, cluster);
+  return Channel.fromChainData(channel, channelData, cekAccountData, memberDID, memberKey, cluster);
 };
 
 /**
  * Subscribe to channel updates
  * @param channel
  * @param connection
- * @param ownerDID
- * @param ownerKey
+ * @param memberDID
+ * @param memberKey
  * @param cluster
  */
 export const getStream = (
   channel: PublicKey,
   connection: Connection,
-  ownerDID: string,
-  ownerKey?: PrivateKey,
+  memberDID: string,
+  memberKey?: PrivateKey,
   cluster?: ExtendedCluster
 ): Observable<Channel> => {
-  const didKey = didToPublicKey(ownerDID);
+  const didKey = didToPublicKey(memberDID);
   const cekAccountData$ = from(SolariumTransaction.getCEKAccountData(connection, didKey, channel));
 
   return cekAccountData$.pipe(switchMap((cekAccountData: CEKAccountData | null) => {
-    if (!cekAccountData) throw new Error(`No CEK account found for DID ${ownerDID}. Are they a member of the channel?`);
+    if (!cekAccountData) throw new Error(`No CEK account found for DID ${memberDID}. Are they a member of the channel?`);
 
     return new Observable<Channel>(subscriber => {
       connection.onAccountChange(channel, async accountInfo => {
         const channelData = await ChannelData.fromAccount(accountInfo.data);
-        const channel = await Channel.fromChainData(channelData, cekAccountData, ownerKey, cluster);
-        subscriber.next(channel);
+        const channelObject = await Channel.fromChainData(channel, channelData, cekAccountData, memberDID, memberKey, cluster);
+        subscriber.next(channelObject);
       });
     });
   }));

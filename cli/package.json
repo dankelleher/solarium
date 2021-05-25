@@ -1,7 +1,7 @@
 {
   "name": "solarium-cli",
   "description": "CLI for Solarium: The E2E-encrypted messenger on Solana",
-  "version": "0.0.3",
+  "version": "0.1.1",
   "author": "dankelleher @dankelleher",
   "bin": {
     "solarium": "./bin/run"
@@ -13,7 +13,8 @@
     "@oclif/plugin-help": "^3.2.2",
     "@solana/web3.js": "^1.10.0",
     "rxjs": "^7.0.0",
-    "solarium-js": "^0.0.11",
+    "rxjs-stream": "^3.2.1",
+    "solarium-js": "^0.1.3",
     "tslib": "^1"
   },
   "devDependencies": {

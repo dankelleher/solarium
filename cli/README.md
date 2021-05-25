@@ -19,7 +19,7 @@ $ npm install -g solarium-cli
 $ solarium COMMAND
 running command...
 $ solarium (-v|--version|version)
-solarium-cli/0.1.1 darwin-x64 node-v16.0.0
+solarium-cli/0.1.2 darwin-x64 node-v16.0.0
 $ solarium --help [COMMAND]
 USAGE
   $ solarium COMMAND
@@ -52,7 +52,7 @@ OPTIONS
   -n, --name=name  (required) the key name (e.g. mobileDevice)
 ```
 
-_See code: [src/commands/add-key.ts](https://github.com/dankelleher/solarium/blob/v0.1.1/src/commands/add-key.ts)_
+_See code: [src/commands/add-key.ts](https://github.com/dankelleher/solarium/blob/v0.1.2/src/commands/add-key.ts)_
 
 ## `solarium chat WITH`
 
@@ -63,15 +63,13 @@ USAGE
   $ solarium chat WITH
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -h, --help  show CLI help
 
 ALIASES
   $ solarium
 ```
 
-_See code: [src/commands/chat.ts](https://github.com/dankelleher/solarium/blob/v0.1.1/src/commands/chat.ts)_
+_See code: [src/commands/chat.ts](https://github.com/dankelleher/solarium/blob/v0.1.2/src/commands/chat.ts)_
 
 ## `solarium create NAME`
 
@@ -85,7 +83,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/create.ts](https://github.com/dankelleher/solarium/blob/v0.1.1/src/commands/create.ts)_
+_See code: [src/commands/create.ts](https://github.com/dankelleher/solarium/blob/v0.1.2/src/commands/create.ts)_
 
 ## `solarium help [COMMAND]`
 
@@ -113,12 +111,12 @@ USAGE
   $ solarium post [MESSAGE]
 
 OPTIONS
-  -h, --help                 show CLI help
+  -c, --channel=channel  (required) Channel address
+  -h, --help             show CLI help
   -i, --from-stdin
-  -r, --recipient=recipient  (required) Recipient DID
 ```
 
-_See code: [src/commands/post.ts](https://github.com/dankelleher/solarium/blob/v0.1.1/src/commands/post.ts)_
+_See code: [src/commands/post.ts](https://github.com/dankelleher/solarium/blob/v0.1.2/src/commands/post.ts)_
 
 ## `solarium read [CHANNEL]`
 
@@ -135,7 +133,7 @@ ALIASES
   $ solarium get
 ```
 
-_See code: [src/commands/read.ts](https://github.com/dankelleher/solarium/blob/v0.1.1/src/commands/read.ts)_
+_See code: [src/commands/read.ts](https://github.com/dankelleher/solarium/blob/v0.1.2/src/commands/read.ts)_
 
 ## `solarium watch [CHANNEL]`
 
@@ -149,5 +147,5 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/watch.ts](https://github.com/dankelleher/solarium/blob/v0.1.1/src/commands/watch.ts)_
+_See code: [src/commands/watch.ts](https://github.com/dankelleher/solarium/blob/v0.1.2/src/commands/watch.ts)_
 <!-- commandsstop -->

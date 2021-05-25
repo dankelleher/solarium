@@ -1,15 +1,15 @@
 import {Command, flags} from '@oclif/command'
-import {rxToStream, streamToStringRx} from 'rxjs-stream';
+import {streamToStringRx} from 'rxjs-stream';
 import * as service from "../service/chat";
 
 export default class Chat extends Command {
-  static description = 'describe the command here'
+  static description = 'Chat with another DID. Note: the DID must already exist.'
 
   static flags = {
     help: flags.help({char: 'h'}),
   }
 
-  static args = [{name: 'with', required: true}]
+  static args = [{name: 'with', description: 'The DID to chat with', required: true}]
   static aliases = [''] // Default command
 
   async run() {

@@ -56,11 +56,14 @@ _See code: [src/commands/add-key.ts](https://github.com/dankelleher/solarium/blo
 
 ## `solarium chat WITH`
 
-describe the command here
+Chat with another DID. Note: the DID must already exist.
 
 ```
 USAGE
   $ solarium chat WITH
+
+ARGUMENTS
+  WITH  The DID to chat with
 
 OPTIONS
   -h, --help  show CLI help
@@ -73,7 +76,7 @@ _See code: [src/commands/chat.ts](https://github.com/dankelleher/solarium/blob/v
 
 ## `solarium create NAME`
 
-describe the command here
+Create a channel
 
 ```
 USAGE
@@ -104,7 +107,7 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.2
 
 ## `solarium post [MESSAGE]`
 
-describe the command here
+Post to a channel
 
 ```
 USAGE
@@ -120,7 +123,7 @@ _See code: [src/commands/post.ts](https://github.com/dankelleher/solarium/blob/v
 
 ## `solarium read [CHANNEL]`
 
-describe the command here
+Read a channel
 
 ```
 USAGE
@@ -137,7 +140,7 @@ _See code: [src/commands/read.ts](https://github.com/dankelleher/solarium/blob/v
 
 ## `solarium watch [CHANNEL]`
 
-describe the command here
+Listen to new messages from a channel
 
 ```
 USAGE

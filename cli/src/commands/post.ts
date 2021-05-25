@@ -2,7 +2,7 @@ import {Command, flags} from '@oclif/command'
 import * as service from '../service/post'
 
 export default class Post extends Command {
-  static description = 'describe the command here'
+  static description = 'Post to a channel'
 
   static flags = {
     help: flags.help({char: 'h'}),

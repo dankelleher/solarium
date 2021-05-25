@@ -26,7 +26,7 @@ use {
         sysvar::Sysvar
     }
 };
-use crate::state::CHANNEL_ADDRESS_SEED;
+use crate::state::{CHANNEL_ADDRESS_SEED, direct_channel_address_order};
 
 /// Checks that the authority_info account is an authority for the DID,
 /// And that the CEK Account is owned by that DID
@@ -170,8 +170,9 @@ fn initialize_direct_channel(accounts: &[AccountInfo], creator_ceks: Vec<CEKData
     msg!("Creating channel");
 
     let size = ChannelData::size_bytes();
+    let did_seeds = direct_channel_address_order(creator_did_info.key, invitee_did_info.key);
     let channel_signer_seeds: &[&[_]] =
-        &[&creator_did_info.key.to_bytes(), &invitee_did_info.key.to_bytes(), CHANNEL_ADDRESS_SEED, &[channel_bump_seed]];
+        &[&did_seeds[0].to_bytes(), &did_seeds[1].to_bytes(), CHANNEL_ADDRESS_SEED, &[channel_bump_seed]];
 
     invoke_signed(
         &system_instruction::create_account(

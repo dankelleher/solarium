@@ -88,8 +88,11 @@ export async function getCekAccountKey(ownerDID: PublicKey, channel: PublicKey):
 }
 
 export async function getDirectChannelAccountKey(did1: PublicKey, did2: PublicKey): Promise<PublicKey> {
+  // To ensure predictable account addresses, sort the DIDs alphabetically.
+  const reverse = did1.toBuffer().compare(did2.toBuffer()) === 1;
+  const orderedDIDs = reverse ? [did2.toBuffer(), did1.toBuffer()] : [did1.toBuffer(), did2.toBuffer()]
   const publicKeyNonce = await PublicKey.findProgramAddress(
-    [did1.toBuffer(), did2.toBuffer(), Buffer.from(CHANNEL_NONCE_SEED_STRING, 'utf8')],
+    [...orderedDIDs, Buffer.from(CHANNEL_NONCE_SEED_STRING, 'utf8')],
     PROGRAM_ID
   );
   return publicKeyNonce[0];

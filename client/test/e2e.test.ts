@@ -1,4 +1,4 @@
-import {create, post, read, addKey, Channel} from '../src';
+import {create, post, read, addKey, Channel, getDirect} from '../src';
 import { create as createDID } from '../src/lib/did/create';
 import { SolanaUtil } from '../src/lib/solana/solanaUtil';
 import { Keypair } from '@solana/web3.js';
@@ -73,6 +73,39 @@ describe('E2E', () => {
     });
     
     expect(channel.name).toContain(bobDID.replace('did:sol:localnet:', ''))
+  });
+
+  it('gets a direct channel as the partner', async () => {
+    // create Bob's DID
+    await createDID(
+      bob.publicKey,
+      payer.publicKey,
+      defaultSignCallback(payer)
+    );
+
+    // Alice creates the channel
+    channel = await createDirect({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      inviteeDID: bobDID
+    });
+    
+    // get as Bob
+    const channelForBob = await getDirect({
+      ownerDID: bobDID,
+      decryptionKey: bob.secretKey,
+      partnerDID: aliceDID
+    })
+
+    // get as Alice
+    const channelForAlice = await getDirect({
+      ownerDID: aliceDID,
+      decryptionKey: alice.secretKey,
+      partnerDID: bobDID
+    })
+
+    expect(channelForAlice!.address).toEqual(channel.address)
+    expect(channelForBob!.address).toEqual(channel.address)
   });
 
   it('sends a message to a group channel', async () => {

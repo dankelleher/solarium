@@ -1,4 +1,4 @@
-import { currentCluster, GetRequest, makeKeypair } from '../lib/util';
+import {currentCluster, didToPublicKey, GetDirectRequest, GetRequest, makeKeypair} from '../lib/util';
 import * as service from '../service/get';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import {
@@ -6,8 +6,9 @@ import {
 } from '@identity.com/sol-did-client';
 import { PublicKey } from '@solana/web3.js';
 import { Channel } from '../lib/Channel';
+import {getDirectChannelAccountKey} from "../lib/solana/instruction";
 
-const didFromKey = (request: GetRequest): Promise<string> => {
+const didFromKey = (request: GetRequest | GetDirectRequest): Promise<string> => {
   if (request.ownerDID) return Promise.resolve(request.ownerDID);
   if (request.owner)
     return keyToIdentifier(
@@ -26,15 +27,36 @@ const didFromKey = (request: GetRequest): Promise<string> => {
 
 
 /**
- * Reads an inbox
+ * Reads a channel
  * @param request
  */
-export const get = async (request: GetRequest): Promise<Channel | null> => {
+export const get = async (request: GetRequest): Promise<Channel> => {
   const connection = SolanaUtil.getConnection(request.cluster);
   const ownerDID = await didFromKey(request);
   
   return service.get(
     new PublicKey(request.channel),
+    connection,
+    ownerDID,
+    request.decryptionKey,
+    request.cluster
+  );
+};
+
+/**
+ * Reads a direct channel
+ * @param request
+ */
+export const getDirect = async (request: GetDirectRequest): Promise<Channel | null> => {
+  const connection = SolanaUtil.getConnection(request.cluster);
+  const ownerDID = await didFromKey(request);
+
+  const ownerDIDKey = didToPublicKey(ownerDID)
+  const partnerDIDKey = didToPublicKey(request.partnerDID)
+  const channel = await getDirectChannelAccountKey(ownerDIDKey, partnerDIDKey);
+
+  return service.get(
+    new PublicKey(channel),
     connection,
     ownerDID,
     request.decryptionKey,

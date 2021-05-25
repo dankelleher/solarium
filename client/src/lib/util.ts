@@ -139,6 +139,13 @@ export type GetRequest = SolanaRequest & {
   channel: PublicKeyBase58
 };
 
+export type GetDirectRequest = SolanaRequest & {
+  ownerDID?: string;
+  partnerDID: string;
+  owner?: PublicKeyBase58;
+  decryptionKey?: PrivateKey;
+};
+
 export type AddKeyRequest = TransactionRequest & {
   ownerDID?: string;
   signer?: PrivateKey;

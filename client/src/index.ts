@@ -1,6 +1,6 @@
-export { create } from './api/create';
-export { post } from './api/post';
-export { get } from './api/get';
+export { create, createDirect } from './api/create';
+export { post, postDirect } from './api/post';
+export { get, getDirect } from './api/get';
 export { read, readStream } from './api/read';
 export { addKey } from './api/addKey';
 

@@ -3,7 +3,6 @@ import {didToPublicKey, ExtendedCluster, PrivateKey} from '../lib/util';
 import { SolariumTransaction } from '../lib/solana/transaction';
 import { Channel } from '../lib/Channel';
 import {from, Observable} from 'rxjs';
-import {get as getDID} from "../lib/did/get";
 import {ChannelData} from "../lib/solana/models/ChannelData";
 import {switchMap} from "rxjs/operators";
 import {CEKAccountData} from "../lib/solana/models/CEKAccountData";

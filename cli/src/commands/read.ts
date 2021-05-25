@@ -6,19 +6,15 @@ export default class Read extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
   }
 
-  static args = [{name: 'file'}]
-  static aliases = ['get', ''] // Default command
+  static args = [{name: 'channel'}]
+  static aliases = ['get']
 
   async run() {
     const {args, flags} = this.parse(Read)
 
-    const messages = await service.read();
+    const messages = await service.read(args.channel);
 
     messages
       .map(m => `From: ${m.sender}: ${m.content}`)

@@ -3,7 +3,7 @@ import * as service from "../service/read";
 import {Message} from "solarium-js";
 
 export default class Watch extends Command {
-  static description = 'describe the command here'
+  static description = 'Listen to new messages from a channel'
 
   static flags = {
     help: flags.help({char: 'h'}),

@@ -2,7 +2,7 @@ import {Command, flags} from '@oclif/command'
 import * as service from "../service/read";
 
 export default class Read extends Command {
-  static description = 'describe the command here'
+  static description = 'Read a channel'
 
   static flags = {
     help: flags.help({char: 'h'}),

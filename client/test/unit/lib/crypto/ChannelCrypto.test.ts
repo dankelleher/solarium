@@ -12,11 +12,7 @@ describe('ChannelCrypto', () => {
 
   // Alice has two keys
   const aliceKeypair = Keypair.generate();
-  const aliceKeypair2 = Keypair.generate();
-
-  const bobKeypair = Keypair.generate();
-  const elviraKeypair = Keypair.generate();
-  let cek, cleartext, encrypter, decrypter
+  let cek, cleartext
 
 
   beforeEach(async () => {
@@ -46,6 +42,9 @@ describe('ChannelCrypto', () => {
       publicKeyBase58: aliceKeypair.publicKey.toBase58()
     })
     // expect(cekData).toEqual('')
+
+    console.log(`Secret Key: ${aliceKeypair.secretKey}`)
+    console.log(`Secret Key Length: ${aliceKeypair.secretKey.length}`)
 
     const decCek = await decryptCEK(cekData, aliceKeypair.secretKey)
     expect(decCek).toEqual(cek)

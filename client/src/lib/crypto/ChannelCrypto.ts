@@ -4,7 +4,6 @@ import {VerificationMethod} from "did-resolver/src/resolver";
 import {DIDDocument} from "did-resolver";
 import {CEKData} from "../solana/models/CEKData";
 import {makeKeypair, PrivateKey} from "../util";
-import {Channel} from "../Channel";
 import { randomBytes } from '@stablelib/random'
 import {x25519Decrypter, x25519Encrypter, xc20pDirDecrypter, xc20pDirEncrypter} from "./xc20pEncryption";
 import {
@@ -14,12 +13,11 @@ import {
   bytesToBase64url,
   bytesToString,
   stringToBytes,
-  toSealed
 } from "./util";
 import * as u8a from 'uint8arrays'
 
-import {bin} from "cbor/types/lib/utils";
 import {Recipient, RecipientHeader} from "./JWE";
+import { convertPublicKey, convertSecretKey } from 'ed2curve-esm';
 
 
 /**
@@ -70,7 +68,7 @@ export const encryptCEKForVerificationMethod = async (cek: CEK, key: Verificatio
   }
 
   // @ts-ignore
-  const recipient = await x25519Encrypter(base58ToBytes(key.publicKeyBase58), key.id).encryptCek(cek);
+  const recipient = await x25519Encrypter(convertPublicKey(base58ToBytes(key.publicKeyBase58)), key.id).encryptCek(cek);
 
   // encode all header information within a string
   // Received: {"encrypted_key": "dDClXNoduuCOERuxcpocX5lz7e7jE_8n4P4sl6K5VCk", "header": {"alg": "ECDH-ES+XC20PKW", "epk": {"crv": "X25519", "kty": "OKP", "x": "rMHFFnBhe5o13OQlxhnSIhLDs2wKUpd9fQ5mHK_GG0I"}, "iv": "Lwinhb_oEmetqwMM6G7EHDoOdjG6IPeh", "kid": "key0", "tag": "Pu9P4DWQI8bIGHc5euAlvA"}, "kid": "key0"}
@@ -130,8 +128,21 @@ export const decryptCEK = async (encryptedCEK: CEKData, key: PrivateKey):Promise
     encrypted_key: encryptedCEK.encryptedKey
   }
 
+  // normalise the key into an uint array
+  const ed25519Key = makeKeypair(key).secretKey;
+
+  // The key is used both for Ed25519 signing and x25519 ECDH encryption
+  // the two different protocols use the same curve (Curve25519) but
+  // different key formats. Specifically Ed25519 uses a 64 byte secret key
+  // (which is the same format used by Solana), which is in fact a keypair
+  // i.e. combination of the secret and public key, whereas x25519 uses a 32 byte
+  // secret key. In order to use the same key for both, we convert here
+  // from Ed25519 to x25519 format.
+  const curve25519Key = convertSecretKey(ed25519Key);
+
+
   // @ts-ignore
-  const cek = await x25519Decrypter(key).decryptCek(recipient);
+  const cek = await x25519Decrypter(curve25519Key).decryptCek(recipient);
   if (cek === null) {
     throw Error('There was a problem decrypting the CEK')
   }

@@ -50,7 +50,6 @@ function deserializeField(
   reader: BinaryReader
 ): any {
   try {
-    // console.log("FIELD TYPE " + fieldType + " FIELD NAME " + fieldName);
     if (typeof fieldType === 'string') {
       return reader[`read${capitalizeFirstLetter(fieldType)}`]();
     }

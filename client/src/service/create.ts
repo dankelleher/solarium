@@ -1,5 +1,6 @@
 import {Connection, Keypair, PublicKey} from '@solana/web3.js';
 import {
+  debug,
   didToPublicKey,
   ExtendedCluster,
   isKeypair, isString,
@@ -31,11 +32,11 @@ const getOrCreateDID = async (
   cluster?: ExtendedCluster
 ): Promise<DIDDocument> => {
   try {
-    console.log(`Looking for a DID owned by ${owner.toBase58()}`);
+    debug(`Looking for a DID owned by ${owner.toBase58()}`);
     return await getDID(owner, cluster);
   } catch (error) {
     if (error.message.startsWith('No DID found')) {
-      console.log('No DID found - creating...');
+      debug('No DID found - creating...');
 
       return createDID(owner, pubkeyOf(payer), signCallback, cluster);
     }

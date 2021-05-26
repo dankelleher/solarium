@@ -931,10 +931,10 @@
   resolved "https://registry.yarnpkg.com/@cto.af/textdecoder/-/textdecoder-0.0.0.tgz#e1e8d84c936c30a0f4619971f19ca41941af9fdc"
   integrity sha512-sJpx3F5xcVV/9jNYJQtvimo4Vfld/nD3ph+ZWtQzZ03Zo8rJC7QKQTRcIGS13Rcz80DwFNthCWMrd58vpY4ZAQ==
 
-"@identity.com/sol-did-client@^0.1.8":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.8.tgz#28b3a54127e68932013c755805ff6db1ae8808fc"
-  integrity sha512-kCZl/j/HOnoZNFyMBd85R1reeAxDKdFTFK32BI1+ioIu/6k+dXU5wTbe6bTwu4kwpnSJzD0X7g1eO1kVO62j9w==
+"@identity.com/sol-did-client@^0.1.9":
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.9.tgz#e7755121d6f3feaac6ee55a07ac38775295175fd"
+  integrity sha512-Nxgf89bqvS3QMt2M/um7Dro243fKjNZmv9ho5eLMLjyGNjpzpJAZoqs6hjvA4Jo5X1C59wSXPPTYUFxKs9MrZA==
   dependencies:
     "@solana/web3.js" "^1.11.0"
     bn.js "^4.12.0"
@@ -3385,7 +3385,7 @@ debug@^3.2.7:
   dependencies:
     ms "^2.1.1"
 
-debug@^4.0.1, debug@^4.1.0, debug@^4.1.1:
+debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.1.tgz#f0d229c505e0c6d8c49ac553d1b13dc183f6b2ee"
   integrity sha512-doEwdvm4PCeK4K3RQN2ZC2BYUBaxwLARCqZmMjtF8a51J2Rb0xpVloFRnCODwqjpwnAoao4pelN8l3RJdv3gRQ==

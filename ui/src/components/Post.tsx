@@ -1,12 +1,10 @@
 import {useState} from "react";
-import Avatar from "./Avatar";
 
 type Props = {
-  recipient: string,
-  post: (message: string, recipient: string) => Promise<void>
+  post: (message: string) => Promise<void>
   disabled: boolean
 }
-export default ({recipient, post, disabled}: Props) => {
+export default ({post, disabled}: Props) => {
   const [message, setMessage] = useState<string>();
   return (
     <div>
@@ -16,7 +14,7 @@ export default ({recipient, post, disabled}: Props) => {
           <div className="flex items-center justify-between">
             <form onSubmit={(event) => {
               event.preventDefault() 
-              message && post(message, recipient)
+              message && post(message)
             }}>
               <label htmlFor="message" className="sr-only">
                 Message
@@ -33,7 +31,6 @@ export default ({recipient, post, disabled}: Props) => {
             </form>
           </div>
         </div>
-        <Avatar address={recipient}/>
       </div>
     </div>
   )

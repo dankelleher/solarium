@@ -16,11 +16,6 @@ import {ChannelData} from "./models/ChannelData";
 import {PROGRAM_ID} from "../constants";
 import {CEKAccountData} from "./models/CEKAccountData";
 import {MessageData} from "./models/MessageData";
-// import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES, PROGRAM_ID} from "../constants";
-
-// const messageSizeOnChain = 1 + 32 + MESSAGE_SIZE_BYTES // Timestamp + sender + message size (TODO encode sender in message sig)
-// const inboxHeader = 32 + 16 // owner + alias (TODO remove alias?)
-// const inboxSize = inboxHeader + (messageSizeOnChain * DEFAULT_MAX_MESSAGE_COUNT)
 
 export class SolariumTransaction {
   static async createGroupChannel(

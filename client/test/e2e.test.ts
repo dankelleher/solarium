@@ -190,7 +190,7 @@ describe('E2E', () => {
       name: 'dummy'
     });
 
-    // send one more message than the inbox can hold
+    // send one more message than the channel can hold
     for (let i = 0; i < channelSize + 1; i++) {
       console.log(`Posting message ${i}`);
       await post({

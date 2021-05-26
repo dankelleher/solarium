@@ -25,7 +25,7 @@ const didFromKey = (request: AddKeyRequest): Promise<string> => {
 };
 
 /**
- * Add an owner to an inbox
+ * Add an owner to an DID, and all known channels the DID is in
  * @param request
  */
 export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {

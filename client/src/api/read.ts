@@ -42,7 +42,7 @@ export const read = async (request: ReadRequest): Promise<Message[]> => {
 
   const memberDID = await didFromKey(request);
 
-  const inbox = await service.get(
+  const channel = await service.get(
     new PublicKey(request.channel),
     connection,
     memberDID,
@@ -50,9 +50,9 @@ export const read = async (request: ReadRequest): Promise<Message[]> => {
     request.cluster
   );
 
-  if (!inbox) throw new Error('No inbox found');
+  if (!channel) throw new Error('No channel found');
 
-  return inbox.messages;
+  return channel.messages;
 };
 
 /**

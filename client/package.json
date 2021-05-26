@@ -1,5 +1,5 @@
 {
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
@@ -59,12 +59,13 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@identity.com/sol-did-client": "^0.1.8",
+    "@identity.com/sol-did-client": "^0.1.9",
     "@solana/web3.js": "^1.11.0",
     "borsh": "^0.3.1",
     "browserify-zlib": "^0.2.0",
     "bs58": "^4.0.1",
     "cbor": "^7.0.5",
+    "debug": "^4.3.1",
     "did-jwt": "npm:did-jwt-multikey@^5.2.0",
     "did-resolver": "^3.1.0",
     "ed2curve-esm": "^0.3.0-alpha-1",

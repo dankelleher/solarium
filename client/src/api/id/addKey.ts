@@ -2,7 +2,7 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { addKey as addKeyToDID } from '../lib/did/addKey';
 import {
   AddKeyRequest,
-  currentCluster,
+  currentCluster, debug,
   isKeypair,
   makeKeypair,
   pubkeyOf, PublicKeyBase58,
@@ -64,7 +64,7 @@ export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
 
   const channelUpdateResults = await Promise.allSettled(request.channelsToUpdate.map(updateChannel));
   
-  console.log(channelUpdateResults);
+  debug(channelUpdateResults);
   
   return didDocument;
 };

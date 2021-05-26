@@ -1,7 +1,7 @@
 import { SolanaUtil } from './solanaUtil';
 import {Connection, Keypair, PublicKey, SystemProgram, TransactionInstruction} from '@solana/web3.js';
 import { SignCallback } from '../wallet';
-import { ExtendedCluster } from '../util';
+import {debug, ExtendedCluster} from '../util';
 import {
   addCEK,
   addToChannel,
@@ -34,7 +34,7 @@ export class SolariumTransaction {
     cluster?: ExtendedCluster
   ): Promise<PublicKey> {
     const channel = Keypair.generate();
-    console.log(`Channel address: ${channel.publicKey.toBase58()}`);
+    debug(`Channel address: ${channel.publicKey.toBase58()}`);
 
     const size = ChannelData.sizeBytes();
     const balanceNeeded = await connection.getMinimumBalanceForRentExemption(size)
@@ -78,7 +78,7 @@ export class SolariumTransaction {
     cluster?: ExtendedCluster
   ): Promise<PublicKey> {
     const channel = await getDirectChannelAccountKey(creatorDID, inviteeDID);
-    console.log(`Channel address: ${channel.toBase58()}`);
+    debug(`Channel address: ${channel.toBase58()}`);
 
     const initializeDirectChannelInstruction = await initializeDirectChannel(
       payer,

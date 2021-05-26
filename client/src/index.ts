@@ -2,7 +2,9 @@ export { create, createDirect } from './api/create';
 export { post, postDirect } from './api/post';
 export { get, getDirect } from './api/get';
 export { read, readStream } from './api/read';
-export { addKey } from './api/addKey';
+export { addKey } from './api/id/addKey';
+export { get as getDID } from './api/id/get';
+export { create as createDID } from './api/id/create';
 
 export { Channel, Message } from './lib/Channel';
 export { create as createWallet, SignCallback } from './lib/wallet';

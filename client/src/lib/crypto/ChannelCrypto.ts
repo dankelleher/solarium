@@ -3,7 +3,7 @@ import {augmentDIDDocument} from "./SolariumCrypto";
 import {VerificationMethod} from "did-resolver/src/resolver";
 import {DIDDocument} from "did-resolver";
 import {CEKData} from "../solana/models/CEKData";
-import {makeKeypair, PrivateKey} from "../util";
+import {debug, makeKeypair, PrivateKey} from "../util";
 import {Channel} from "../Channel";
 
 export type CEK = {};
@@ -39,7 +39,7 @@ export const encryptCEKForDID = async (cek: CEK, did:string):Promise<CEKData[]> 
 }
 
 export const encryptCEKForVerificationMethod = async (cek: CEK, key: VerificationMethod) => {
-  console.log(`Encrypting ${cek} with ${key}`);
+  debug(`Encrypting ${cek} with ${key}`);
   // TODO encrypt cek
   return new CEKData({
     kid: key.id,
@@ -68,7 +68,7 @@ export const createEncryptedCEK = async (did:string):Promise<CEKData[]> => {
 
 // Decrypt an encrypted CEK for the with the key that was used to encrypt it
 export const decryptCEK = async (encryptedCEK: CEKData, key: PrivateKey):Promise<CEK> => {
-  console.log(`Decrypting ${encryptedCEK} with ${key}`);  // TODO remove once done to avoid leaking private key
+  debug(`Decrypting ${encryptedCEK} with ${key}`);  // TODO remove once done to avoid leaking private key
   // TODO Decrypt
   return {};
 }
@@ -85,14 +85,14 @@ export const decryptCEKs = async (encryptedCEKs: CEKData[], kid: string, key: Pr
 
 // Encrypt a message with a CEK
 export const encryptMessage = async(message: string, cek: CEK):Promise<string> => {
-  console.log(`Encrypting ${message} with ${cek}`);  // TODO remove once done to avoid leaking private key
+  debug(`Encrypting ${message} with ${cek}`);  // TODO remove once done to avoid leaking private key
   // TODO for now return base64, but we can fix that to be a byte array
   return message; // TODO placeholder until encryption is in
 }
 
 // Decrypt a message with the CEK used to encrypt it
 export const decryptMessage = async(encryptedMessage: string, cek: CEK):Promise<string> => {
-  console.log(`Decrypting ${encryptedMessage} with ${cek}`);  // TODO remove once done to avoid leaking private key
+  debug(`Decrypting ${encryptedMessage} with ${cek}`);  // TODO remove once done to avoid leaking private key
   return encryptedMessage; // TODO placeholder until decryption is in
 }
 

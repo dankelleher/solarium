@@ -19,7 +19,7 @@ $ npm install -g solarium-cli
 $ solarium COMMAND
 running command...
 $ solarium (-v|--version|version)
-solarium-cli/0.1.6 darwin-x64 node-v16.0.0
+solarium-cli/0.1.7 darwin-x64 node-v16.0.0
 $ solarium --help [COMMAND]
 USAGE
   $ solarium COMMAND
@@ -33,6 +33,7 @@ USAGE
 * [`solarium create NAME`](#solarium-create-name)
 * [`solarium help [COMMAND]`](#solarium-help-command)
 * [`solarium id`](#solarium-id)
+* [`solarium invite [INVITEE] [CHANNEL]`](#solarium-invite-invitee-channel)
 * [`solarium post [MESSAGE]`](#solarium-post-message)
 * [`solarium read [CHANNEL]`](#solarium-read-channel)
 * [`solarium watch [CHANNEL]`](#solarium-watch-channel)
@@ -53,7 +54,7 @@ OPTIONS
   -n, --name=name  (required) the key name (e.g. mobileDevice)
 ```
 
-_See code: [src/commands/add-key.ts](https://github.com/dankelleher/solarium/blob/v0.1.6/src/commands/add-key.ts)_
+_See code: [src/commands/add-key.ts](https://github.com/dankelleher/solarium/blob/v0.1.7/src/commands/add-key.ts)_
 
 ## `solarium chat WITH`
 
@@ -73,7 +74,7 @@ ALIASES
   $ solarium
 ```
 
-_See code: [src/commands/chat.ts](https://github.com/dankelleher/solarium/blob/v0.1.6/src/commands/chat.ts)_
+_See code: [src/commands/chat.ts](https://github.com/dankelleher/solarium/blob/v0.1.7/src/commands/chat.ts)_
 
 ## `solarium create NAME`
 
@@ -87,7 +88,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/create.ts](https://github.com/dankelleher/solarium/blob/v0.1.6/src/commands/create.ts)_
+_See code: [src/commands/create.ts](https://github.com/dankelleher/solarium/blob/v0.1.7/src/commands/create.ts)_
 
 ## `solarium help [COMMAND]`
 
@@ -120,7 +121,28 @@ OPTIONS
   -v, --verbose  Show the entire DID document
 ```
 
-_See code: [src/commands/id.ts](https://github.com/dankelleher/solarium/blob/v0.1.6/src/commands/id.ts)_
+_See code: [src/commands/id.ts](https://github.com/dankelleher/solarium/blob/v0.1.7/src/commands/id.ts)_
+
+## `solarium invite [INVITEE] [CHANNEL]`
+
+Invite someone to a group channel
+
+```
+USAGE
+  $ solarium invite [INVITEE] [CHANNEL]
+
+ARGUMENTS
+  INVITEE  The invitee DID
+  CHANNEL  The channel address
+
+OPTIONS
+  -h, --help  show CLI help
+
+EXAMPLE
+  solarium invite did:sol:<INVITEE> <CHANNEL_ADDRESS>
+```
+
+_See code: [src/commands/invite.ts](https://github.com/dankelleher/solarium/blob/v0.1.7/src/commands/invite.ts)_
 
 ## `solarium post [MESSAGE]`
 
@@ -136,7 +158,7 @@ OPTIONS
   -i, --from-stdin
 ```
 
-_See code: [src/commands/post.ts](https://github.com/dankelleher/solarium/blob/v0.1.6/src/commands/post.ts)_
+_See code: [src/commands/post.ts](https://github.com/dankelleher/solarium/blob/v0.1.7/src/commands/post.ts)_
 
 ## `solarium read [CHANNEL]`
 
@@ -153,7 +175,7 @@ ALIASES
   $ solarium get
 ```
 
-_See code: [src/commands/read.ts](https://github.com/dankelleher/solarium/blob/v0.1.6/src/commands/read.ts)_
+_See code: [src/commands/read.ts](https://github.com/dankelleher/solarium/blob/v0.1.7/src/commands/read.ts)_
 
 ## `solarium watch [CHANNEL]`
 
@@ -167,5 +189,5 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/watch.ts](https://github.com/dankelleher/solarium/blob/v0.1.6/src/commands/watch.ts)_
+_See code: [src/commands/watch.ts](https://github.com/dankelleher/solarium/blob/v0.1.7/src/commands/watch.ts)_
 <!-- commandsstop -->

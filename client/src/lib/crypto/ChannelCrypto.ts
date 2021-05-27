@@ -1,31 +1,41 @@
 import { resolve } from '@identity.com/sol-did-client';
-import {augmentDIDDocument} from "./SolariumCrypto";
 import {VerificationMethod} from "did-resolver/src/resolver";
 import {DIDDocument} from "did-resolver";
 import {CEKData} from "../solana/models/CEKData";
-import {debug, makeKeypair, PrivateKey} from "../util";
-import {Channel} from "../Channel";
+import {isPublicKey, makeKeypair, PrivateKey} from "../util";
+import { randomBytes } from '@stablelib/random'
+import {
+  x25519xc20pKeyWrap,
+  x25519xc20pKeyUnwrap,
+  XC20P_IV_LENGTH,
+  XC20P_TAG_LENGTH,
+  xc20pDecrypter,
+  xc20pEncrypter
+} from "./xc20pEncryption";
 
-export type CEK = {};
+import * as u8a from 'uint8arrays'
+
+import { convertPublicKey, convertSecretKey } from 'ed2curve-esm';
+import {PublicKey} from "@solana/web3.js";
+import {base64ToBytes, bytesToBase64, bytesToString, stringToBytes, base58ToBytes, bytesToBase58} from "./utils";
+
+export type CEK = Uint8Array;
 
 // Create a CEK for a new channel
 export const generateCEK = async ():Promise<CEK> => {
-  // TODO generate
-  return Promise.resolve({});
+  const cek = randomBytes(32)
+  return Promise.resolve(cek);
 }
 
 // given a key or reference to a key in a DID, return the key itself
 const getVerificationMethod = (vmOrRef: VerificationMethod | string, document: DIDDocument):VerificationMethod => {
   if (Object.prototype.hasOwnProperty.call(vmOrRef, 'id')) return vmOrRef as VerificationMethod;
 
-  const foundKey = (document.verificationMethod || []).find(key => 
+  const foundKey = (document.verificationMethod || []).find(key =>
     key.id === vmOrRef
-    ||
-    key.id === (vmOrRef as string).replace('_keyAgreement','') // hack - see augmentDIDDocument
   );
 
   if (!foundKey) throw new Error(`Missing key ${vmOrRef}`);
-
   return foundKey;
 }
 
@@ -34,17 +44,25 @@ export const encryptCEKForDID = async (cek: CEK, did:string):Promise<CEKData[]> 
   // TODO add cache here
   const didDocument = await resolve(did);
   const augmentedDIDDocument = augmentDIDDocument(didDocument);
-  
+
   return encryptCEKForDIDDocument(cek, augmentedDIDDocument)
 }
 
 export const encryptCEKForVerificationMethod = async (cek: CEK, key: VerificationMethod) => {
-  debug(`Encrypting ${cek} with ${key}`);
-  // TODO encrypt cek
+  if (!key.publicKeyBase58) {
+    throw Error('Currently we expect the recipient key to be encoded as base58')
+  }
+
+  const res = await x25519xc20pKeyWrap(base58ToBytes(key.publicKeyBase58))(cek);
+
+  // header.iv + header.tag + header.epk.x
+  const concatByteArray = u8a.concat([res.iv, res.tag, res.epPubKey])
+  const header = bytesToBase64(concatByteArray)
+
   return new CEKData({
     kid: key.id,
-    header: "TODO",
-    encryptedKey: "TODO"
+    header,
+    encryptedKey: bytesToBase64(res.encryptedKey)
   });
 };
 
@@ -52,8 +70,8 @@ export const encryptCEKForVerificationMethod = async (cek: CEK, key: Verificatio
 export const encryptCEKForDIDDocument = async (cek: CEK, didDocument:DIDDocument):Promise<CEKData[]> => {
   const encryptedCEKPromises = (didDocument.keyAgreement || []).map(
     async (keyOrRef):Promise<CEKData> => {
-      const key = getVerificationMethod(keyOrRef, didDocument);
-      return encryptCEKForVerificationMethod(cek, key);
+      const verificationMethod = getVerificationMethod(keyOrRef, didDocument);
+      return encryptCEKForVerificationMethod(cek, verificationMethod);
     }
   );
 
@@ -68,43 +86,89 @@ export const createEncryptedCEK = async (did:string):Promise<CEKData[]> => {
 
 // Decrypt an encrypted CEK for the with the key that was used to encrypt it
 export const decryptCEK = async (encryptedCEK: CEKData, key: PrivateKey):Promise<CEK> => {
-  debug(`Decrypting ${encryptedCEK} with ${key}`);  // TODO remove once done to avoid leaking private key
-  // TODO Decrypt
-  return {};
+  // decode information from CEKData
+  const encodedHeader = base64ToBytes(encryptedCEK.header)
+  // iv (24), tag (16), epk PubKey (rest)
+  const iv = encodedHeader.subarray(0, XC20P_IV_LENGTH)
+  const tag = encodedHeader.subarray(XC20P_IV_LENGTH, XC20P_IV_LENGTH+XC20P_TAG_LENGTH)
+  const epkPub = encodedHeader.subarray(XC20P_IV_LENGTH+XC20P_TAG_LENGTH)
+  const encryptedKey = base64ToBytes(encryptedCEK.encryptedKey)
+
+  // normalise the key into an uint array
+  const ed25519Key = makeKeypair(key).secretKey;
+
+  // The key is used both for Ed25519 signing and x25519 ECDH encryption
+  // the two different protocols use the same curve (Curve25519) but
+  // different key formats. Specifically Ed25519 uses a 64 byte secret key
+  // (which is the same format used by Solana), which is in fact a keypair
+  // i.e. combination of the secret and public key, whereas x25519 uses a 32 byte
+  // secret key. In order to use the same key for both, we convert here
+  // from Ed25519 to x25519 format.
+  const curve25519Key = convertSecretKey(ed25519Key);
+
+
+  // @ts-ignore
+  const cek = await x25519xc20pKeyUnwrap(curve25519Key)(encryptedKey, tag, iv, epkPub);
+  if (cek === null) {
+    throw Error('There was a problem decrypting the CEK')
+  }
+
+  return cek;
 }
 
-// Find the CEK encrypted with a particular key, and decrypt it 
+// Find the CEK encrypted with a particular key, and decrypt it
 export const decryptCEKs = async (encryptedCEKs: CEKData[], kid: string, key: PrivateKey):Promise<CEK> => {
   // find the encrypted CEK for the key
   const encryptedCEK = encryptedCEKs.find(k => k.kid === kid);
-  
+
   if (!encryptedCEK) throw new Error(`No encrypted CEK found for key ${kid}`);
-  
+
   return decryptCEK(encryptedCEK, key);
 }
 
 // Encrypt a message with a CEK
 export const encryptMessage = async(message: string, cek: CEK):Promise<string> => {
-  debug(`Encrypting ${message} with ${cek}`);  // TODO remove once done to avoid leaking private key
-  // TODO for now return base64, but we can fix that to be a byte array
-  return message; // TODO placeholder until encryption is in
+  const encryptMessage = await xc20pEncrypter(cek)(stringToBytes(message))
+  // iv (24), ciphertext (var), tag (16)
+  const encodedEncMessage = bytesToBase64(u8a.concat([encryptMessage.iv, encryptMessage.ciphertext, encryptMessage.tag]))
+
+  return encodedEncMessage;
 }
 
 // Decrypt a message with the CEK used to encrypt it
 export const decryptMessage = async(encryptedMessage: string, cek: CEK):Promise<string> => {
-  debug(`Decrypting ${encryptedMessage} with ${cek}`);  // TODO remove once done to avoid leaking private key
-  return encryptedMessage; // TODO placeholder until decryption is in
+  const encMessage = base64ToBytes(encryptedMessage)
+  // iv (24), ciphertext (var), tag (16)
+  const iv = encMessage.subarray(0, XC20P_IV_LENGTH)
+  const ciphertext = encMessage.subarray(XC20P_IV_LENGTH, -XC20P_TAG_LENGTH)
+  const tag = encMessage.subarray(-XC20P_TAG_LENGTH)
+
+  const binMessage = await xc20pDecrypter(cek)(ciphertext, tag, iv)
+  if (binMessage === null) {
+    throw new Error('There was an error decoding the message!')
+  }
+
+  const message = bytesToString(binMessage)
+
+  return message;
 }
 
 // Given a private key, find the ID of the associated public key on the DID
-export const findKIDForKey = (did: DIDDocument, key: PrivateKey):string | undefined => {
-  const keypair = makeKeypair(key);
-  const pubkey = keypair.publicKey.toBase58();
-  
-  const foundVerificationMethod = (did.verificationMethod || [])
+// Note, this needs to operate on the augmented DIDDocument Version
+export const findVerificationMethodForKey = (didDoc: DIDDocument, key: PrivateKey | PublicKey): VerificationMethod | undefined => {
+  const augmentedDIDDoc = augmentDIDDocument(didDoc);
+
+  if (!isPublicKey(key)) {
+    const keypair = makeKeypair(key);
+    key = keypair.publicKey
+  }
+  // operate on x25519 curve PubKey
+  const pubkey = bytesToBase58(convertPublicKey(key.toBytes()))
+
+  const foundVerificationMethod = (augmentedDIDDoc.verificationMethod || [])
     .find(verificationMethod => verificationMethod.publicKeyBase58 === pubkey);
-  
-  return foundVerificationMethod?.id;
+
+  return foundVerificationMethod;
 }
 
 // Given a cek encrypted for fromDID, and a private key for fromDID
@@ -117,11 +181,54 @@ export const reencryptCEKForDID = async (
 ):Promise<CEKData[]> => {
   // TODO add cache here
   const fromDIDDocument = await resolve(fromDID);
-  const fromKID = findKIDForKey(fromDIDDocument, fromPrivateKey);
-  
-  if (!fromKID) throw new Error("Private key does not match any key in the DID");
-  
-  const cek = await decryptCEKs(encryptedCEK, fromKID, fromPrivateKey);
-  
+  const fromVerificationMethod = findVerificationMethodForKey(fromDIDDocument, fromPrivateKey);
+
+  if (!fromVerificationMethod) throw new Error("Private key does not match any Verification Method in the DID");
+
+  const cek = await decryptCEKs(encryptedCEK, fromVerificationMethod.id, fromPrivateKey);
+
   return encryptCEKForDID(cek, toDID);
 }
+
+// TODO: Discuss about moving constantly into did:sol resolver code.
+// Solarium uses the x25519 ECDH protocol for e2e encryption,
+// which expects a key in the x25519 format (32-byte secret key)
+// and type 'X25519KeyAgreementKey2019'.
+// 'Sparse' DID documents on solana have an ed25519 key with the type
+// 'Ed25519VerificationKey2018' by default, as this is the key type
+// used to sign solana transactions. These keys are compatible with
+// x25519, but require format conversion. So *unless a keyAgreement key exists*
+// on the document, we artificially augment the document to include
+// the converted key. This saves space on chain by avoiding the need
+// to have the same key stored in two formats.
+export const augmentDIDDocument = (didDocument: DIDDocument): DIDDocument => {
+  // key agreement key already exists, so we can use it
+  if (didDocument.keyAgreement && didDocument.keyAgreement.length)
+    return didDocument;
+
+  if (!didDocument.verificationMethod || !didDocument.verificationMethod.length) {
+    throw Error(
+        'Cannot augment DID document for x25519. The document has no keys'
+    );
+  }
+
+  const keyAgreementKeys = didDocument.verificationMethod
+      .filter(key => key.type === 'Ed25519VerificationKey2018') // only apply to Ed25519
+      .filter(key => !!key.publicKeyBase58) // we currently only support keys in base58
+      .map(key => ({
+        ...key,
+        id: key.id + '_keyAgreement',
+        type: 'X25519KeyAgreementKey2019',
+        publicKeyBase58: bytesToBase58(
+            convertPublicKey(base58ToBytes(key.publicKeyBase58 as string))
+        ),
+      }));
+
+  // add the new key to the document
+  return {
+    ...didDocument,
+    publicKey: [...didDocument.verificationMethod, ...keyAgreementKeys],
+    verificationMethod: [...didDocument.verificationMethod, ...keyAgreementKeys],
+    keyAgreement: keyAgreementKeys.map(key => key.id),
+  };
+};

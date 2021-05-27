@@ -8,7 +8,7 @@ import {
   decryptMessage,
   encryptCEKForVerificationMethod,
   encryptMessage,
-  findKIDForKey
+  findVerificationMethodForKey
 } from "./crypto/ChannelCrypto";
 import {PublicKey} from "@solana/web3.js";
 import {VerificationMethod} from "did-resolver";
@@ -20,7 +20,7 @@ export class Message {
 
 export class Channel {
   constructor(readonly name: string, readonly messages: Message[], readonly address: PublicKey, private cek?: CEK) {}
-  
+
   async encrypt(message: string) {
     if (!this.cek) {
       throw new Error("Cannot encrypt, this channel was loaded without a private key, so no CEK was available")
@@ -44,9 +44,9 @@ export class Channel {
     cluster?: ExtendedCluster
   ): Promise<Channel> {
     const getCEK = async (key: PrivateKey) => {
-      const kid = findKIDForKey(memberDIDDocument, key);
-      if (!kid) throw new Error(`Invalid private key for DID ${memberDIDDocument.id}`);
-      return decryptCEKs(cekAccountData.ceks, kid, key)
+      const verificationMethod = findVerificationMethodForKey(memberDIDDocument, key);
+      if (!verificationMethod) throw new Error(`Invalid private key for DID ${memberDIDDocument.id}`);
+      return decryptCEKs(cekAccountData.ceks, verificationMethod.id, key)
     };
 
     const decrypt = async (message: Message): Promise<Message> => {

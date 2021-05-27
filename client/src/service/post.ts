@@ -1,13 +1,10 @@
 import {Connection, Keypair, PublicKey} from '@solana/web3.js';
 import { arrayOf, didToPublicKey, ExtendedCluster } from '../lib/util';
 import { SolariumTransaction } from '../lib/solana/transaction';
-import { SolariumCrypto } from '../lib/crypto/SolariumCrypto';
 import { MESSAGE_SIZE_BYTES } from '../lib/constants';
-import { compress } from '../lib/compression';
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import {getDirectChannelAccountKey} from "../lib/solana/instruction";
 import {get} from "./get";
-import {decryptCEKs, encryptMessage} from "../lib/crypto/ChannelCrypto";
 
 
 const postToChannel = async (
@@ -21,7 +18,7 @@ const postToChannel = async (
   cluster: ExtendedCluster | undefined) => {
   const channel = await get(channelAddress, connection, senderDID, signer.secretKey, cluster);
   const encryptedMessage = await channel.encrypt(message);
-  
+
   if (encryptedMessage.length > MESSAGE_SIZE_BYTES) {
     throw new Error('Message too long');
   }
@@ -31,7 +28,7 @@ const postToChannel = async (
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
   const senderDIDKey = didToPublicKey(senderDID);
-  
+
   await SolariumTransaction.postMessage(
     channelAddress,
     senderDIDKey,

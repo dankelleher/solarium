@@ -4,9 +4,14 @@ import {
   encryptMessage,
   decryptMessage,
   encryptCEKForVerificationMethod,
-  decryptCEK
+  decryptCEK, augmentDIDDocument
 } from "../../../../src/lib/crypto/ChannelCrypto";
 import {stringToBytes, base64ToBytes} from "../../../../src/lib/crypto/util";
+import {encode} from "bs58";
+import {convertPublicKey} from "ed2curve-esm";
+
+import { sampleDidDoc } from '../fixtures'
+
 
 describe('ChannelCrypto', () => {
 
@@ -37,18 +42,29 @@ describe('ChannelCrypto', () => {
   it('can wrap and unwrap a key', async () => {
     const cekData = await encryptCEKForVerificationMethod(cek, {
       id: 'key0',
-      type: 'Ed25519VerificationKey2018',
       controller: 'did:dummy:alice',
-      publicKeyBase58: aliceKeypair.publicKey.toBase58()
+      type: 'X25519KeyAgreementKey2019',
+      publicKeyBase58: encode(convertPublicKey(aliceKeypair.publicKey.toBytes())),
     })
     // expect(cekData).toEqual('')
 
     console.log(`Secret Key: ${aliceKeypair.secretKey}`)
     console.log(`Secret Key Length: ${aliceKeypair.secretKey.length}`)
 
+    expect(base64ToBytes(cekData.header).length).toEqual(24+12+36)
+    expect(base64ToBytes(cekData.encryptedKey).length).toEqual(32)
+
+
     const decCek = await decryptCEK(cekData, aliceKeypair.secretKey)
     expect(decCek).toEqual(cek)
   });
+
+
+  it('can successfully augment an did document with one or more X25519KeyAgreementKey2019 keys ', async () => {
+    const augmentedDidDocument = augmentDIDDocument(sampleDidDoc)
+    expect(augmentedDidDocument.publicKey?.length).toEqual(2 * sampleDidDoc.publicKey.length)
+    expect(augmentedDidDocument.verificationMethod?.length).toEqual(2 * sampleDidDoc.verificationMethod.length)
+  })
 
 
 });

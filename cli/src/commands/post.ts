@@ -2,12 +2,12 @@ import {Command, flags} from '@oclif/command'
 import * as service from '../service/post'
 
 export default class Post extends Command {
-  static description = 'describe the command here'
+  static description = 'Post to a channel'
 
   static flags = {
     help: flags.help({char: 'h'}),
-    // -r, --recipient=DID
-    recipient: flags.string({char: 'r', description: 'Recipient DID', required: true}),
+    // -c, --channel=<ADDRESS>
+    channel: flags.string({char: 'c', description: 'Channel address', required: true}),
     // -i, --from-stdin
     'from-stdin': flags.boolean({char: 'i'}),
   }
@@ -19,10 +19,10 @@ export default class Post extends Command {
 
     if (flags["from-stdin"]) {
       process.stdin.on('data', async (data:string) => {
-        await service.post(data, flags.recipient);
+        await service.post(data, flags.channel);
       });
     } else {
-      await service.post(args.message, flags.recipient);
+      await service.post(args.message, flags.channel);
     }
   }
 }

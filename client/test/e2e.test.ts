@@ -1,5 +1,6 @@
-import {create, post, read, addKey, Channel} from '../src';
-import { create as createDID } from '../src/lib/did/create';
+import {create, post, read, addKey, Channel, getDirect} from '../src';
+import { create as createDID } from '../src/api/id/create';
+import { get as getDID } from '../src/api/id/get';
 import { SolanaUtil } from '../src/lib/solana/solanaUtil';
 import { Keypair } from '@solana/web3.js';
 import { repeat } from 'ramda';
@@ -39,6 +40,10 @@ describe('E2E', () => {
       owner: alice.secretKey,
       name: channelName
     });
+    
+    const did = await getDID({owner: alice.publicKey.toBase58()});
+    
+    expect(did.id).toEqual(aliceDID);
 
     expect(channel.name).toEqual(channelName);
   });
@@ -46,11 +51,10 @@ describe('E2E', () => {
   it('creates a group channel with by an existing DID', async () => {
     const channelName = "dummy channel" + Date.now();
 
-    await createDID(
-      alice.publicKey,
-      payer.publicKey,
-      defaultSignCallback(payer)
-    );
+    await createDID({
+      payer: payer.secretKey,
+      owner: alice.publicKey.toBase58(),
+    });
 
     channel = await create({
       payer: payer.secretKey,
@@ -60,11 +64,10 @@ describe('E2E', () => {
   });
   
   it('creates a DID and direct channel', async () => {
-    await createDID(
-      bob.publicKey,
-      payer.publicKey,
-      defaultSignCallback(payer)
-    );
+    await createDID({
+      payer: payer.secretKey,
+      owner: bob.publicKey.toBase58(),
+    });
     
     channel = await createDirect({
       payer: payer.secretKey,
@@ -73,6 +76,38 @@ describe('E2E', () => {
     });
     
     expect(channel.name).toContain(bobDID.replace('did:sol:localnet:', ''))
+  });
+
+  it('gets a direct channel as the partner', async () => {
+    // create Bob's DID
+    await createDID({
+      payer: payer.secretKey,
+      owner: bob.publicKey.toBase58(),
+    });
+
+    // Alice creates the channel
+    channel = await createDirect({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      inviteeDID: bobDID
+    });
+    
+    // get as Bob
+    const channelForBob = await getDirect({
+      ownerDID: bobDID,
+      decryptionKey: bob.secretKey,
+      partnerDID: aliceDID
+    })
+
+    // get as Alice
+    const channelForAlice = await getDirect({
+      ownerDID: aliceDID,
+      decryptionKey: alice.secretKey,
+      partnerDID: bobDID
+    })
+
+    expect(channelForAlice!.address).toEqual(channel.address)
+    expect(channelForBob!.address).toEqual(channel.address)
   });
 
   it('sends a message to a group channel', async () => {
@@ -105,11 +140,10 @@ describe('E2E', () => {
   
   it('sends a message to a direct channel', async () => {
     // create bob's did
-    await createDID(
-      bob.publicKey,
-      payer.publicKey,
-      defaultSignCallback(payer)
-    );
+    await createDID({
+      payer: payer.secretKey,
+      owner: bob.publicKey.toBase58(),
+    });
     
     channel = await createDirect({
       payer: payer.secretKey,

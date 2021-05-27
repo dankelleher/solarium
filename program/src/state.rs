@@ -145,11 +145,20 @@ pub fn get_cek_account_address_with_seed(did: &Pubkey, channel: &Pubkey) -> (Pub
     Pubkey::find_program_address(&[&did.to_bytes(), &channel.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED], &id())
 }
 
-/// Get the program-derived channel account address for a direct channel
-pub fn get_channel_address_with_seed(did0: &Pubkey, did1: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[&did0.to_bytes(), &did1.to_bytes(), CHANNEL_ADDRESS_SEED], &id())
+/// To ensure predictable account addresses, sort the DIDs.
+pub fn direct_channel_address_order<'a>(did0: &'a Pubkey, did1: &'a Pubkey) -> [&'a Pubkey; 2] {
+    match *did0 < *did1 {
+        true => [did0, did1],
+        false => [did1, did0]
+    }
 }
 
+/// Get the program-derived channel account address for a direct channel
+pub fn get_channel_address_with_seed(did0: &Pubkey, did1: &Pubkey) -> (Pubkey, u8) {
+    // To ensure predictable account addresses, sort the DIDs.
+    let [a, b] = direct_channel_address_order(did0, did1);
+    Pubkey::find_program_address(&[&a.to_bytes(), &b.to_bytes(), CHANNEL_ADDRESS_SEED], &id())
+}
 
 /// Struct for the Message object
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]

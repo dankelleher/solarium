@@ -6,6 +6,9 @@ import {
 } from '@identity.com/sol-did-client';
 import { DEFAULT_CLUSTER } from './constants';
 import { SignCallback } from './wallet';
+import Debug from 'debug'
+
+export const debug = Debug('solarium-js')
 
 // a 64-byte private key on the X25519 curve.
 // In string form it is base58-encoded
@@ -139,12 +142,27 @@ export type GetRequest = SolanaRequest & {
   channel: PublicKeyBase58
 };
 
+export type GetDirectRequest = SolanaRequest & {
+  ownerDID?: string;
+  partnerDID: string;
+  owner?: PublicKeyBase58;
+  decryptionKey?: PrivateKey;
+};
+
 export type AddKeyRequest = TransactionRequest & {
   ownerDID?: string;
   signer?: PrivateKey;
   newKey: PublicKeyBase58;
   keyIdentifier: string;
   channelsToUpdate: PublicKeyBase58[]
+};
+
+export type CreateDIDRequest = TransactionRequest & {
+  owner?: PublicKeyBase58;
+};
+
+export type GetDIDRequest = SolanaRequest & {
+  owner: PublicKeyBase58;
 };
 
 export const didToPublicKey = (did: string) =>

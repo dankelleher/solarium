@@ -4,6 +4,7 @@ import {createWallet} from "solarium-js";
 import {mkdirSync, writeFileSync} from 'fs';
 import path from "path";
 import {homedir} from "os";
+import {debug} from "./util";
 
 type Config = {
   keypairPath: string
@@ -41,26 +42,26 @@ export const getDefaultSolanaWallet = ():Keypair => {
 export const getSolariumWallet = ():Keypair => {
   const secretKey = require(DEFAULT_KEYPAIR_FILE);
 
-  console.log("Using keypair in $HOME/.solarium");
+  debug("Using keypair in $HOME/.solarium");
 
   return Keypair.fromSecretKey(Buffer.from(secretKey));
 }
 
-export const getWallet = async ():Promise<Keypair> => {
+export const getWallet = async (createIfMissing = true):Promise<Keypair> => {
   try {
     return getDefaultSolanaWallet();
   } catch (defaultSolanaError) {
     if (defaultSolanaError.message.indexOf('command not found')) {
-      console.log("Solana CLI not found on path - looking for a keypair in $HOME/.solarium");
+      debug("Solana CLI not found on path - looking for a keypair in $HOME/.solarium");
 
       try {
         return getSolariumWallet();
       } catch (solariumWalletError) {
         if (solariumWalletError.code === 'MODULE_NOT_FOUND') {
-          console.log("No keypair found in $HOME/.solarium - creating...");
+          debug("No keypair found in $HOME/.solarium - creating...");
           const generatedKeypair = await createWallet()
 
-          mkdirSync(DEFAULT_CONFIG_PATH)
+          mkdirSync(DEFAULT_CONFIG_PATH, { recursive: true })
 
           writeFileSync(DEFAULT_KEYPAIR_FILE, JSON.stringify([...generatedKeypair.secretKey]));
           return generatedKeypair;

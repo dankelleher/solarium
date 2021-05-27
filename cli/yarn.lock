@@ -112,12 +112,12 @@
   resolved "https://registry.yarnpkg.com/@cto.af/textdecoder/-/textdecoder-0.0.0.tgz#e1e8d84c936c30a0f4619971f19ca41941af9fdc"
   integrity sha512-sJpx3F5xcVV/9jNYJQtvimo4Vfld/nD3ph+ZWtQzZ03Zo8rJC7QKQTRcIGS13Rcz80DwFNthCWMrd58vpY4ZAQ==
 
-"@identity.com/sol-did-client@^0.1.5":
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.6.tgz#a47790b626d37468e96c7c9f2557c684759d58a9"
-  integrity sha512-lIB9AYdzURJkBklS3uSTOGC5l33/Mcnxd9/vHPgOygBKHkL/dRAgpEw20xZx9MIUbLCJimDYmB7do0Dl45LfBg==
+"@identity.com/sol-did-client@^0.1.9":
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.9.tgz#e7755121d6f3feaac6ee55a07ac38775295175fd"
+  integrity sha512-Nxgf89bqvS3QMt2M/um7Dro243fKjNZmv9ho5eLMLjyGNjpzpJAZoqs6hjvA4Jo5X1C59wSXPPTYUFxKs9MrZA==
   dependencies:
-    "@solana/web3.js" "^0.93.0"
+    "@solana/web3.js" "^1.11.0"
     bn.js "^4.12.0"
     borsh "^0.3.1"
     bs58 "^4.0.1"
@@ -261,10 +261,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@solana/web3.js@^0.93.0":
-  version "0.93.0"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-0.93.0.tgz#6292efbacdc39c98411669d0c27889c5765b971d"
-  integrity sha512-4OcenII2+VJlJaPwk4yiQAurY4Xk/RX13cYRFsvaVfSay8ZuJ3bnL7kzPO2GKOwrwTZmNqroCUTAYxJETuXouA==
+"@solana/web3.js@^1.10.0":
+  version "1.11.0"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.11.0.tgz#1cc9a25381687c82e444ad0633f028e050a06753"
+  integrity sha512-kmngWxntzp0HNhWInd7/3g2uqxdOrahvaHOyjilcRe+WCiC777gERz3+eIAbxIYx2zAZPjy02MZzLgoRHccZoQ==
   dependencies:
     "@babel/runtime" "^7.12.5"
     bn.js "^5.0.0"
@@ -280,13 +280,14 @@
     superstruct "^0.14.2"
     tweetnacl "^1.0.0"
 
-"@solana/web3.js@^1.10.0":
-  version "1.11.0"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.11.0.tgz#1cc9a25381687c82e444ad0633f028e050a06753"
-  integrity sha512-kmngWxntzp0HNhWInd7/3g2uqxdOrahvaHOyjilcRe+WCiC777gERz3+eIAbxIYx2zAZPjy02MZzLgoRHccZoQ==
+"@solana/web3.js@^1.11.0":
+  version "1.12.0"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.12.0.tgz#c2ecf4b1c677a8881c698871537ae7bfc7cae7b6"
+  integrity sha512-0jb7EDeocFKQOumScE9Rj4Lry5oVpBap4oGPG2yE3n7Dz4nhFUoEjDbhwEliN75M/4wJV69aPHIm2ZPeJ9rUsQ==
   dependencies:
     "@babel/runtime" "^7.12.5"
     bn.js "^5.0.0"
+    borsh "^0.4.0"
     bs58 "^4.0.1"
     buffer "6.0.1"
     buffer-layout "^1.2.0"
@@ -453,6 +454,11 @@
   integrity sha512-ePPA/JuI+X0vb+gSWlPKOY0NdNAie/rPUqX2GUPpbZwiKTkSPhjXWuee47E4MtE54QVzGCQMQkAL6JhV2E1+cQ==
   dependencies:
     "@types/node" "*"
+
+"@types/debug@^4.1.5":
+  version "4.1.5"
+  resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.5.tgz#b14efa8852b7768d898906613c23f688713e02cd"
+  integrity sha512-Q1y515GcOdTHgagaVFhHnIFQ38ygs/kmxdNpvpou+raI9UO3YZcHDngBSYKQklcKlvA7iuQlmIKbzvmxcOE9CQ==
 
 "@types/eslint-visitor-keys@^1.0.0":
   version "1.0.0"
@@ -736,6 +742,16 @@ borsh@^0.3.1:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/borsh/-/borsh-0.3.1.tgz#c31c3a149610e37913deada80e89073fb15cf55b"
   integrity sha512-gJoSTnhwLxN/i2+15Y7uprU8h3CKI+Co4YKZKvrGYUy0FwHWM20x5Sx7eU8Xv4HQqV+7rb4r3P7K1cBIQe3q8A==
+  dependencies:
+    "@types/bn.js" "^4.11.5"
+    bn.js "^5.0.0"
+    bs58 "^4.0.0"
+    text-encoding-utf-8 "^1.0.2"
+
+borsh@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/borsh/-/borsh-0.4.0.tgz#9dd6defe741627f1315eac2a73df61421f6ddb9f"
+  integrity sha512-aX6qtLya3K0AkT66CmYWCCDr77qsE9arV05OmdFpmat9qu8Pg9J5tBUPDztAW5fNh/d/MyVG/OYziP52Ndzx1g==
   dependencies:
     "@types/bn.js" "^4.11.5"
     bn.js "^5.0.0"
@@ -1099,7 +1115,7 @@ debug@^2.2.0:
   dependencies:
     ms "2.0.0"
 
-debug@^4.0.1, debug@^4.1.0, debug@^4.1.1:
+debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.1.tgz#f0d229c505e0c6d8c49ac553d1b13dc183f6b2ee"
   integrity sha512-doEwdvm4PCeK4K3RQN2ZC2BYUBaxwLARCqZmMjtF8a51J2Rb0xpVloFRnCODwqjpwnAoao4pelN8l3RJdv3gRQ==
@@ -2925,6 +2941,11 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
+rxjs-stream@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/rxjs-stream/-/rxjs-stream-3.2.1.tgz#928e356150a917d6f741e2e08339414fdcbd71f1"
+  integrity sha512-SbubqPmtaEU1YZEU3HChFutKCKc4uB3kMykaciP+yH7hoq9UY5zC85OoviCf+woWMngXBUfEziFNRwsh59mgJA==
+
 rxjs@^6.4.0:
   version "6.6.7"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.6.7.tgz#90ac018acabf491bf65044235d5863c4dab804c9"
@@ -3023,17 +3044,18 @@ slice-ansi@^2.1.0:
     astral-regex "^1.0.0"
     is-fullwidth-code-point "^2.0.0"
 
-solarium-js@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.0.4.tgz#9a4563e182b52708af008c2dab911649f7865e05"
-  integrity sha512-1irfvpbCHMdjFV8HN9YEoJAMcTqZ4ehlaei4EzwmpuSCIva1HixUFZrDUmEe0TyjVx+hMj00zZSRPhAK9yKCyA==
+solarium-js@^0.1.7:
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.7.tgz#833b6ffafa71ceeae0e45fcfe688d0e44b2c0ad3"
+  integrity sha512-Jf0muTOtjixAblh6I9m0uMkYN04L7dNSfOjQqmv3RxqmxmxcsS5lq5wPDF6jh56A/apAGAk3UY5s2Bsy18DEDQ==
   dependencies:
-    "@identity.com/sol-did-client" "^0.1.5"
-    "@solana/web3.js" "^1.10.0"
+    "@identity.com/sol-did-client" "^0.1.9"
+    "@solana/web3.js" "^1.11.0"
     borsh "^0.3.1"
     browserify-zlib "^0.2.0"
     bs58 "^4.0.1"
     cbor "^7.0.5"
+    debug "^4.3.1"
     did-jwt "npm:did-jwt-multikey@^5.2.0"
     did-resolver "^3.1.0"
     ed2curve-esm "^0.3.0-alpha-1"

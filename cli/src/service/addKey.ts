@@ -8,5 +8,6 @@ export const addKey = async (keyIdentifier: string, newKey: string) => {
     payer: wallet.secretKey,
     keyIdentifier,
     newKey,
+    channelsToUpdate: [] // TODO add addressbook
   })
 }

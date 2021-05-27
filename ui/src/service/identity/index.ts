@@ -1,11 +1,11 @@
-import {Connection, Keypair, PublicKey} from "@solana/web3.js";
-import {useCallback, useEffect, useState} from "react";
+import {Keypair, PublicKey} from "@solana/web3.js";
+import {useEffect, useState} from "react";
 import {useLocalStorageKey, useLocalStorageState} from "../storage";
 import {useWallet} from "../wallet/wallet";
 import {useConnection, useConnectionConfig} from "../web3/connection";
 import {ClusterType, DIDDocument, resolve} from '@identity.com/sol-did-client';
-import {keyToIdentifier} from "solarium-js";
-import {addKey} from "../inbox/solarium";
+import {keyToIdentifier, createDID, getDID} from "solarium-js";
+import {addKey} from "../channels/solarium";
 
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
   doc.verificationMethod?.find(verificationMethod => verificationMethod.publicKeyBase58 === key.toBase58())
@@ -27,7 +27,6 @@ export function useIdentity():IdentityProps {
   // load the DID document whenever the did is changed
   useEffect(() => { if (did) resolve(did).then(setDocument) }, [did]);
 
-
   // attempt to get the default DID when the wallet is loaded if none is set
   useEffect(() => {
     if (wallet && connected && !did) {
@@ -36,7 +35,7 @@ export function useIdentity():IdentityProps {
     }
   }, [wallet, connectionConfig, did, setDID]);
 
-  // check the loaded DID for the decryption key. rompt to add it if not present
+  // check the loaded DID for the decryption key. prompt to add it if not present
   useEffect(()  => {
     console.log("Checking keys");
     if (document && decryptionKey) {
@@ -67,8 +66,6 @@ export function useIdentity():IdentityProps {
       console.log("No document or decryption key available yet");
     }
   }, [document, decryptionKey, did, setReady, wallet, connected])
-
-  const createNew  = () => {}
 
   return {
     ready,

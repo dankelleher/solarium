@@ -23,8 +23,8 @@ import Avatar from "./components/Avatar";
 import Button from "./components/Button";
 import WalletBar from './components/WalletBar'
 import {WalletProvider} from "./service/wallet/wallet";
-import {InboxProvider} from "./service/inbox/inbox";
-import InboxView from "./components/InboxView";
+import {ChannelProvider} from "./service/channels/channel";
+import ChannelView from "./components/ChannelView";
 
 const user = {
   name: 'Chelsea Hagon',
@@ -50,7 +50,7 @@ function classNames(...classes: string[]) {
 export default function App() {
   return (
     <WalletProvider>
-      <InboxProvider>
+      <ChannelProvider>
         <div className="min-h-screen bg-gray-100">
           <Popover as="header" className="pb-24 bg-indigo-600">
             {({ open }) => (
@@ -353,7 +353,7 @@ export default function App() {
               {/* Main 3 column grid */}
               <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-3 lg:gap-8">
                 {/* Left column */}
-                <InboxView/>
+                <ChannelView/>
                 {/* Right column */}
                 <div className="grid grid-cols-1 gap-4">
                   <section aria-labelledby="section-2-title">
@@ -377,7 +377,7 @@ export default function App() {
             </div>
           </footer>
         </div>
-      </InboxProvider>
+      </ChannelProvider>
     </WalletProvider>
   )
 }

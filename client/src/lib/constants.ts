@@ -5,7 +5,7 @@ import { ClusterType } from '@identity.com/sol-did-client';
 export const PROGRAM_ID: PublicKey = new PublicKey(
   'boxndjnzQZEWbBku3YipL4pchYRc1zi4nNSrFUwawWo'
 );
-export const SOLANA_COMMITMENT: Commitment = 'single'; // for an inbox, the focus is speed rather than safety
+export const SOLANA_COMMITMENT: Commitment = 'single'; // for message channels, the focus is speed rather than safety
 
 // must match get_cek_account_address_with_seed in state.rs
 export const CEK_ACCOUNT_NONCE_SEED_STRING = 'solarium_cek_account';

@@ -1240,24 +1240,12 @@
   resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-1.0.1.tgz#66d25f6441920bd5c2146ea27fd33995885452dd"
   integrity sha512-uikw2gKCmqnvjVxitecWfFLMOKyL9BTFcU4VM3hHj9OMwpkCr5Ke+MRMyY2/aQVmsYs4VTq7NCFX05MYwAHi3g==
 
-"@identity.com/sol-did-client@^0.1.6":
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.6.tgz#a47790b626d37468e96c7c9f2557c684759d58a9"
-  integrity sha512-lIB9AYdzURJkBklS3uSTOGC5l33/Mcnxd9/vHPgOygBKHkL/dRAgpEw20xZx9MIUbLCJimDYmB7do0Dl45LfBg==
+"@identity.com/sol-did-client@^0.1.9":
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.9.tgz#e7755121d6f3feaac6ee55a07ac38775295175fd"
+  integrity sha512-Nxgf89bqvS3QMt2M/um7Dro243fKjNZmv9ho5eLMLjyGNjpzpJAZoqs6hjvA4Jo5X1C59wSXPPTYUFxKs9MrZA==
   dependencies:
-    "@solana/web3.js" "^0.93.0"
-    bn.js "^4.12.0"
-    borsh "^0.3.1"
-    bs58 "^4.0.1"
-    did-resolver "^3.0.1"
-    ramda "^0.27.1"
-
-"@identity.com/sol-did-client@^0.1.7":
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/@identity.com/sol-did-client/-/sol-did-client-0.1.7.tgz#33ba228a8fdf53ff0540bd55ace62197612bcf65"
-  integrity sha512-OmACO8SU/t9XWLEAeM7c9picqKhdAozIxOmE+ml6c2JFOauD3Fy48nT1nKwTlKW7Y8DAzQ+7tdOfh7YksXFvJQ==
-  dependencies:
-    "@solana/web3.js" "^0.93.0"
+    "@solana/web3.js" "^1.11.0"
     bn.js "^4.12.0"
     borsh "^0.3.1"
     bs58 "^4.0.1"
@@ -1557,10 +1545,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@solana/web3.js@^0.93.0":
-  version "0.93.0"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-0.93.0.tgz#6292efbacdc39c98411669d0c27889c5765b971d"
-  integrity sha512-4OcenII2+VJlJaPwk4yiQAurY4Xk/RX13cYRFsvaVfSay8ZuJ3bnL7kzPO2GKOwrwTZmNqroCUTAYxJETuXouA==
+"@solana/web3.js@^1.10.1":
+  version "1.10.1"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.10.1.tgz#b3e7197a2628c26c54227963741b1788bb67f7ff"
+  integrity sha512-5zepm+AaVfC6uao/WxKT7SlemqgGEp+x7XUv+018RURIx+XEcF+G2ZgjrIbjy5OoXJyfz+wGw8Or2fxsypderA==
   dependencies:
     "@babel/runtime" "^7.12.5"
     bn.js "^5.0.0"
@@ -1576,13 +1564,14 @@
     superstruct "^0.14.2"
     tweetnacl "^1.0.0"
 
-"@solana/web3.js@^1.10.0", "@solana/web3.js@^1.10.1":
-  version "1.10.1"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.10.1.tgz#b3e7197a2628c26c54227963741b1788bb67f7ff"
-  integrity sha512-5zepm+AaVfC6uao/WxKT7SlemqgGEp+x7XUv+018RURIx+XEcF+G2ZgjrIbjy5OoXJyfz+wGw8Or2fxsypderA==
+"@solana/web3.js@^1.11.0":
+  version "1.14.0"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.14.0.tgz#6bda2a4ab4fc1dd825769d910c8c303243d998ed"
+  integrity sha512-CtGvJQbhUR6mNOGUYX3f0XJCgW2c5UM7pL8MZbv7Pc6vflh+hiKBd1vzi8HvBr9dKhyNDvq7jHgZ6zezz0y9Cw==
   dependencies:
     "@babel/runtime" "^7.12.5"
     bn.js "^5.0.0"
+    borsh "^0.4.0"
     bs58 "^4.0.1"
     buffer "6.0.1"
     buffer-layout "^1.2.0"
@@ -3327,6 +3316,16 @@ borsh@^0.3.1:
     bs58 "^4.0.0"
     text-encoding-utf-8 "^1.0.2"
 
+borsh@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/borsh/-/borsh-0.4.0.tgz#9dd6defe741627f1315eac2a73df61421f6ddb9f"
+  integrity sha512-aX6qtLya3K0AkT66CmYWCCDr77qsE9arV05OmdFpmat9qu8Pg9J5tBUPDztAW5fNh/d/MyVG/OYziP52Ndzx1g==
+  dependencies:
+    "@types/bn.js" "^4.11.5"
+    bn.js "^5.0.0"
+    bs58 "^4.0.0"
+    text-encoding-utf-8 "^1.0.2"
+
 boxen@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/boxen/-/boxen-4.2.0.tgz#e411b62357d6d6d36587c8ac3d5d974daa070e64"
@@ -4728,7 +4727,7 @@ debug@^3.1.1, debug@^3.2.6:
   dependencies:
     ms "^2.1.1"
 
-debug@^4.0.1, debug@^4.1.0, debug@^4.1.1:
+debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.1.tgz#f0d229c505e0c6d8c49ac553d1b13dc183f6b2ee"
   integrity sha512-doEwdvm4PCeK4K3RQN2ZC2BYUBaxwLARCqZmMjtF8a51J2Rb0xpVloFRnCODwqjpwnAoao4pelN8l3RJdv3gRQ==
@@ -12313,17 +12312,18 @@ sockjs@^0.3.21:
     uuid "^3.4.0"
     websocket-driver "^0.7.4"
 
-solarium-js@^0.0.13:
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.0.13.tgz#2c0369ec1200e52dbcbf2aa189391850e5a9af26"
-  integrity sha512-sYRgZu8kG+4EnkzBW3ryu4X7cEF4dlGOIpuL05p1X2kyRohGNK5kM1nRsakWr9Veeq3M16pmapubUfQdLszfiA==
+solarium-js@^0.1.8:
+  version "0.1.8"
+  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.8.tgz#0554ea898f66b808098b729a99cd7fa2810204f3"
+  integrity sha512-HTJwXPrHVFH5nj+esYGcnicvOLSrjLujuQop//ghswgVfJ7Xx7d/Bq4mb0vlgLnvDQ8AAF3awLY+bdQcYGwQkg==
   dependencies:
-    "@identity.com/sol-did-client" "^0.1.6"
-    "@solana/web3.js" "^1.10.0"
+    "@identity.com/sol-did-client" "^0.1.9"
+    "@solana/web3.js" "^1.11.0"
     borsh "^0.3.1"
     browserify-zlib "^0.2.0"
     bs58 "^4.0.1"
     cbor "^7.0.5"
+    debug "^4.3.1"
     did-jwt "npm:did-jwt-multikey@^5.2.0"
     did-resolver "^3.1.0"
     ed2curve-esm "^0.3.0-alpha-1"

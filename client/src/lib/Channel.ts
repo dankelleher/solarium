@@ -5,7 +5,7 @@ import {CEKAccountData} from "./solana/models/CEKAccountData";
 import {
   CEK,
   decryptCEKs,
-  decryptMessage,
+  decryptMessage, encryptCEKForDID,
   encryptCEKForVerificationMethod,
   encryptMessage,
   findVerificationMethodForKey
@@ -28,7 +28,14 @@ export class Channel {
     return encryptMessage(message, this.cek);
   }
 
-  async encryptCek(verificationMethod: VerificationMethod):Promise<CEKData> {
+  async encryptCEKForDID(did: string):Promise<CEKData[]> {
+    if (!this.cek) {
+      throw new Error("Cannot encrypt, this channel was loaded without a private key, so no CEK was available")
+    }
+    return encryptCEKForDID(this.cek, did);
+  }
+
+  async encryptCEK(verificationMethod: VerificationMethod):Promise<CEKData> {
     if (!this.cek) {
       throw new Error("Cannot encrypt, this channel was loaded without a private key, so no CEK was available")
     }

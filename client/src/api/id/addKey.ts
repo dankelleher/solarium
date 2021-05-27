@@ -25,7 +25,7 @@ const didFromKey = (request: AddKeyRequest): Promise<string> => {
 };
 
 /**
- * Add an owner to an inbox
+ * Add an owner to an DID, and all known channels the DID is in
  * @param request
  */
 export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
@@ -36,16 +36,13 @@ export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
   // since the payer is only needed when request.signCallback is missing
   // this is a messy API which needs to be cleaned up TODO
   const payerOrUndefined = isKeypair(payer) ? payer : undefined;
-  const signer = (request.signer && makeKeypair(request.signer)) as
-    | Keypair
-    | undefined;
-  const signerKey = signer || pubkeyOf(payer);
+  const signer = makeKeypair(request.signer);
   const newKey = new PublicKey(request.newKey);
   const didDocument = await addKeyToDID(
     did,
     request.keyIdentifier,
     newKey,
-    signerKey,
+    signer,
     payerOrUndefined,
     request.signCallback,
     request.cluster
@@ -53,7 +50,7 @@ export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
 
   const updateChannel = (channelAddress: PublicKeyBase58) => {
     return updateCEKAccount(
-      signerKey,
+      signer,
       payer,
       new PublicKey(channelAddress),
       newKey,

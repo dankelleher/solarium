@@ -1,14 +1,11 @@
-import {create, post, read, addKey, Channel, getDirect} from '../src';
+import {create, createDirect, post, postDirect, read, addKey, Channel, getDirect, get, addToChannel} from '../src';
 import { create as createDID } from '../src/api/id/create';
 import { get as getDID } from '../src/api/id/get';
 import { SolanaUtil } from '../src/lib/solana/solanaUtil';
 import { Keypair } from '@solana/web3.js';
 import { repeat } from 'ramda';
 import { DEFAULT_MAX_MESSAGE_COUNT } from '../src/lib/constants';
-import { defaultSignCallback } from '../src/lib/wallet';
-import {createDirect} from "../src/api/create";
 import {ClusterType, keyToIdentifier} from "@identity.com/sol-did-client";
-import {postDirect} from "../src/api/post";
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
@@ -63,6 +60,36 @@ describe('E2E', () => {
     });
   });
 
+  it('adds a user to a group channel', async () => {
+    const channelName = "dummy channel" + Date.now();
+    channel = await create({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: channelName
+    });
+
+    // create Bob's DID
+    await createDID({
+      payer: payer.secretKey,
+      owner: bob.publicKey.toBase58(),
+    });
+
+    await addToChannel({
+      payer: payer.secretKey,
+      decryptionKey: alice.secretKey,
+      channel: channel.address.toBase58(),
+      inviteeDID: bobDID
+    })
+
+    // get as Bob
+    const channelForBob = await get({
+      ownerDID: bobDID,
+      channel: channel.address.toBase58(),
+      decryptionKey: bob.secretKey,
+    })
+    expect(channelForBob.address).toEqual(channel.address);
+  });
+  
   it('creates a DID and direct channel', async () => {
     await createDID({
       payer: payer.secretKey,
@@ -190,7 +217,7 @@ describe('E2E', () => {
       name: 'dummy'
     });
 
-    // send one more message than the inbox can hold
+    // send one more message than the channel can hold
     for (let i = 0; i < channelSize + 1; i++) {
       console.log(`Posting message ${i}`);
       await post({

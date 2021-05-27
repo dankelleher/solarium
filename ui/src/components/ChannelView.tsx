@@ -1,20 +1,22 @@
 import Feed from "./Feed";
 import Post from "./Post";
-import {useInbox} from "../service/inbox/inbox";
+import {useChannel} from "../service/channels/channel";
+import {PublicKey} from "@solana/web3.js";
 
 export default () => {
-  const { messages, post, inbox } = useInbox();
-  const recipient = 'did:sol:devnet:Egv3x852G9BSWSSe6c1aGnVBVrLVHhGKEz7R9pv1ueJr';
-
+  const { messages, post, channel, setCurrentChannel } = useChannel();
+  
+  // setCurrentChannel(new PublicKey('DPSy76HebCr5TajEmXSh5ABNbL1KgM6T7Trvv2cao2aE'))
+  
   return (
     <div className="grid grid-cols-1 gap-4 lg:col-span-2">
       <section aria-labelledby="section-1-title">
         <h2 className="sr-only" id="section-1-title">
-          Section title
+          {channel?.name || ''}
         </h2>
         <div className="rounded-lg bg-white overflow-hidden shadow mb-3">
           <div className="p-6">
-            <Post post={post} recipient={recipient} disabled={!inbox}/>
+            <Post post={post} disabled={!channel}/>
           </div>
         </div>
         <div className="rounded-lg bg-white overflow-hidden shadow">

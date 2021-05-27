@@ -6,6 +6,7 @@ export const addKey = async (keyIdentifier: string, newKey: string) => {
 
   await solarium.addKey({
     payer: wallet.secretKey,
+    signer: wallet.secretKey,
     keyIdentifier,
     newKey,
     channelsToUpdate: [] // TODO add addressbook

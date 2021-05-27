@@ -151,10 +151,17 @@ export type GetDirectRequest = SolanaRequest & {
 
 export type AddKeyRequest = TransactionRequest & {
   ownerDID?: string;
-  signer?: PrivateKey;
+  signer: PrivateKey;
   newKey: PublicKeyBase58;
   keyIdentifier: string;
   channelsToUpdate: PublicKeyBase58[]
+};
+
+export type AddToChannelRequest = TransactionRequest & {
+  ownerDID?: string;
+  inviteeDID: string;
+  decryptionKey: PrivateKey;
+  channel: PublicKeyBase58
 };
 
 export type CreateDIDRequest = TransactionRequest & {

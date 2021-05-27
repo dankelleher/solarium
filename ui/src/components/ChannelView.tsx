@@ -1,9 +1,12 @@
 import Feed from "./Feed";
 import Post from "./Post";
 import {useChannel} from "../service/channels/channel";
+import {PublicKey} from "@solana/web3.js";
 
 export default () => {
-  const { messages, post, channel } = useChannel();
+  const { messages, post, channel, setCurrentChannel } = useChannel();
+  
+  // setCurrentChannel(new PublicKey('DPSy76HebCr5TajEmXSh5ABNbL1KgM6T7Trvv2cao2aE'))
   
   return (
     <div className="grid grid-cols-1 gap-4 lg:col-span-2">

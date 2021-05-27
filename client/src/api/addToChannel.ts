@@ -1,10 +1,11 @@
 import {
-  currentCluster,
-  makeKeypair,
+  AddToChannelRequest,
+  currentCluster, GetDirectRequest, GetRequest,
+  makeKeypair, pubkeyOf,
   PublicKeyBase58,
-  ReadRequest,
+  ReadRequest, toSolanaKeyMaterial,
 } from '../lib/util';
-import * as service from '../service/get';
+import * as service from '../service/addToChannel';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import {
   DecentralizedIdentifier,
@@ -15,68 +16,40 @@ import { from, Observable } from 'rxjs';
 import { PublicKey } from '@solana/web3.js';
 import { Channel } from '../lib/Channel';
 
-type Message = {
-  sender: PublicKeyBase58;
-  content: string;
-};
 
-const didFromKey = (request: ReadRequest): Promise<string> => {
-  if (request.memberDID) return Promise.resolve(request.memberDID);
-  if (request.member)
+const didFromKey = (request: AddToChannelRequest): Promise<string> => {
+  if (request.ownerDID) return Promise.resolve(request.ownerDID);
+  if (request.decryptionKey)
     return keyToIdentifier(
-      new PublicKey(request.member),
+      makeKeypair(request.decryptionKey).publicKey,
       currentCluster(request.cluster)
     );
-  return keyToIdentifier(
-    makeKeypair(request.decryptionKey).publicKey,
-    currentCluster(request.cluster)
+  if (request.payer)
+    return keyToIdentifier(
+      pubkeyOf(toSolanaKeyMaterial(request.payer)),
+      currentCluster(request.cluster)
+    );
+  
+  throw new Error(
+    'Unable to obtain DID from request - set either the owner or decryption key'
   );
 };
 
 /**
- * Reads an channel
+ * Adds a DID to a channel
  * @param request
  */
-export const read = async (request: ReadRequest): Promise<Message[]> => {
-  const connection = SolanaUtil.getConnection(request.cluster);
+export const addToChannel = async (request: AddToChannelRequest): Promise<void> => {
+  const ownerDID = await didFromKey(request);
 
-  const memberDID = await didFromKey(request);
-
-  const channel = await service.get(
+  await service.addToChannel(
+    ownerDID,
+    makeKeypair(request.decryptionKey),
+    toSolanaKeyMaterial(request.payer),
     new PublicKey(request.channel),
-    connection,
-    memberDID,
-    request.decryptionKey,
+    request.inviteeDID,
+    request.signCallback,
     request.cluster
   );
 
-  if (!channel) throw new Error('No channel found');
-
-  return channel.messages;
-};
-
-/**
- * Subscribe to channel updates
- * @param request
- */
-export const readStream = (request: ReadRequest): Observable<Message> => {
-  const connection = SolanaUtil.getConnection(request.cluster);
-
-  const memberDID$ = from(didFromKey(request));
-
-  return memberDID$.pipe(
-    switchMap((memberDID: string) => {
-      const channel$ = service.getStream(
-        new PublicKey(request.channel),
-        connection,
-        memberDID,
-        request.decryptionKey,
-        request.cluster
-      );
-      const uniqueKey = (m: Message) => m.content + m.sender; // TODO add timestamp
-
-      return channel$
-        .pipe(switchMap((channel: Channel) => channel.messages))
-        .pipe(distinct(uniqueKey)); // only emit a message once
-    }));
 };

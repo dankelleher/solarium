@@ -41,14 +41,13 @@ const getOrCreateDID = async (
 };
 
 const getChannel = async (
-  owner: Keypair | PublicKey,
+  owner: Keypair,
   ownerDID: string,
   channelAddress: PublicKey,
   connection: Connection,
   cluster?: ExtendedCluster
 ): Promise<Channel> => {
-  const ownerKey = isKeypair(owner) ? owner.secretKey : undefined;
-  const channel = await get(channelAddress, connection, ownerDID, ownerKey, cluster);
+  const channel = await get(channelAddress, connection, ownerDID, owner.secretKey, cluster);
 
   if (!channel) {
     throw new Error('Error retrieving created channel');
@@ -67,7 +66,7 @@ const getChannel = async (
  * @param cluster
  */
 export const updateCEKAccount = async (
-  owner: Keypair | PublicKey,
+  owner: Keypair,
   payer: Keypair | PublicKey,
   channel: PublicKey,
   newKey: PublicKey,
@@ -93,7 +92,7 @@ export const updateCEKAccount = async (
   if (!foundVerificationMethod) throw new Error('New key was not found on the DID')
   
   const channelObject = await getChannel(owner, ownerDIDDocument.id, channel, connection, cluster)
-  const newCEK = await channelObject.encryptCek(foundVerificationMethod);
+  const newCEK = await channelObject.encryptCEK(foundVerificationMethod);
 
   await SolariumTransaction.addCEKToAccount(
     channel,

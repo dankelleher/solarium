@@ -34,7 +34,7 @@ const didFromKey = (request: ReadRequest): Promise<string> => {
 };
 
 /**
- * Reads an channel
+ * Reads a channel
  * @param request
  */
 export const read = async (request: ReadRequest): Promise<Message[]> => {

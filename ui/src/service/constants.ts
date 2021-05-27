@@ -1,7 +1,7 @@
 import {clusterApiUrl, Commitment, PublicKey} from "@solana/web3.js";
 import {ExtendedCluster} from "solarium-js";
 
-export const INBOX_PROGRAM_ID = new PublicKey(
+export const SOLARIUM_PROGRAM_ID = new PublicKey(
   "boxndjnzQZEWbBku3YipL4pchYRc1zi4nNSrFUwawWo"
 );
 

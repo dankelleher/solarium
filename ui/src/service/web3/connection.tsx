@@ -12,7 +12,7 @@ import {ExtendedCluster, SignCallback} from "solarium-js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 
 // Default to Devnet
-const DEFAULT_ENDPOINT_INDEX = 2;
+export const DEFAULT_ENDPOINT_INDEX = 2;
 
 const DEFAULT_ENDPOINT = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].endpoint;
 

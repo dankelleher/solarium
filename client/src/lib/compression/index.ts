@@ -1,6 +1,7 @@
 import { JWE } from 'did-jwt';
 import * as cbor from 'cbor';
 import * as zlib from 'browserify-zlib';
+import {debug} from "../util";
 
 export const compress = (message: JWE): Buffer => {
   const encodedBytes = cbor.encode(message);

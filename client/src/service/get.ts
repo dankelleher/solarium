@@ -8,7 +8,7 @@ import {switchMap} from "rxjs/operators";
 import {CEKAccountData} from "../lib/solana/models/CEKAccountData";
 
 /**
- * Gets an channel
+ * Gets a channel
  * @param channel
  * @param connection
  * @param memberDID

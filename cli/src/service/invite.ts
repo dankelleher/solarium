@@ -1,7 +1,7 @@
 import {getWallet} from "../lib/config";
 import * as solarium from 'solarium-js';
 
-export const create = async (channelAddress: string, inviteeDID: string) => {
+export const invite = async (inviteeDID: string, channelAddress: string) => {
   const wallet = await getWallet();
 
   return solarium.addToChannel({

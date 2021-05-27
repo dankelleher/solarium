@@ -8,7 +8,8 @@ import {
   get,
   getDirect,
   readStream,
-  addKey as addKeyToDID
+  addKey as addKeyToDID,
+  addToChannel as addDIDToChannel
 } from 'solarium-js'
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
@@ -17,7 +18,7 @@ import {Observable} from "rxjs";
 
 const cluster = process.env.REACT_APP_CLUSTER as ExtendedCluster | undefined;
 
-export const createChannel = (  
+export const createChannel = (
   connection: Connection,
   wallet: Wallet,
   name: string
@@ -44,29 +45,34 @@ export const createDirectChannel = (
 export const getChannel = (
   connection: Connection,
   wallet: Wallet,
-  channelAddress: string
+  channelAddress: string,
+  decryptionKey?: Keypair,
 ):Promise<Channel | null> =>
   get({
     channel: channelAddress,
-    cluster
+    cluster,
+    decryptionKey: decryptionKey?.secretKey
   })
 
 export const getDirectChannel = (
   connection: Connection,
   wallet: Wallet,
   partnerDID: string,
+  decryptionKey?: Keypair,
 ):Promise<Channel | null> =>
   getDirect({
     partnerDID,
-    cluster
+    cluster,
+    decryptionKey: decryptionKey?.secretKey
   })
 
 export const getOrCreateDirectChannel = async (
   connection: Connection,
   wallet: Wallet,
   partnerDID: string,
+  decryptionKey?: Keypair,
 ): Promise<Channel> => {
-  const channel = await getDirectChannel(connection, wallet, partnerDID)
+  const channel = await getDirectChannel(connection, wallet, partnerDID, decryptionKey)
 
   if (channel) return channel;
 
@@ -83,9 +89,10 @@ export const getOrCreateChannel = async (
   wallet: Wallet,
   name: string,
   address: string,
+  decryptionKey?: Keypair,
 ): Promise<Channel> => {
-  const channel = await getChannel(connection, wallet, address);
-  
+  const channel = await getChannel(connection, wallet, address, decryptionKey);
+
   if (channel) return channel;
 
   return create({
@@ -99,6 +106,7 @@ export const getOrCreateChannel = async (
 export const addKey = async (
   connection: Connection,
   wallet: Wallet,
+  decryptionKey: Keypair,
   newKey: PublicKey,
   ownerDID?: string,
 ):Promise<void> => {
@@ -108,6 +116,7 @@ export const addKey = async (
     payer: wallet.publicKey.toBase58()
   });
   await addKeyToDID({
+    signer: decryptionKey.secretKey,
     channelsToUpdate: [], // TODO
     payer: wallet.publicKey,
     ownerDID,
@@ -146,3 +155,19 @@ export const readChannel = (
     decryptionKey: decryptionKey.secretKey,
     cluster
   })
+
+export const addToChannel = (
+  connection: Connection,
+  wallet: Wallet,
+  channel: Channel,
+  inviteAuthority: Keypair,
+  did: string,
+  inviteeDID: string
+) => addDIDToChannel({
+  channel: channel.address.toBase58(),
+  decryptionKey: inviteAuthority.secretKey,
+  inviteeDID,
+  payer: wallet.publicKey,
+  signCallback: sign(connection, wallet),
+  cluster
+})

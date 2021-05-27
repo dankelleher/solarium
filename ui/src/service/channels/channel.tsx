@@ -1,31 +1,50 @@
-import React, {useCallback, useContext, useEffect, useMemo, useState} from "react";
-import {useLocalStorageKey, useLocalStorageState} from "../storage";
+import React, {useCallback, useContext, useEffect, useState} from "react";
 import {useWallet} from "../wallet/wallet";
-import {Keypair} from "@solana/web3.js";
-import {keyToIdentifier, Message, Channel} from "solarium-js";
+import {PublicKey} from "@solana/web3.js";
+import {Message, Channel} from "solarium-js";
 import {useConnection} from "../web3/connection";
 import {useIdentity} from "../identity";
-import {postToChannel, readChannel} from "./solarium";
+import {postToChannel, readChannel, getChannel} from "./solarium";
+import {useLocalStorageState} from "../storage";
 
 type ChannelProps = {
   messages: Message[],
-  post: (message:string) => Promise<void>,
+  post: (message: string) => Promise<void>,
   channel?: Channel
+  setCurrentChannel: (channelAddress: PublicKey) => void
 }
+
 const ChannelContext = React.createContext<ChannelProps>({
   post: (): Promise<void> => Promise.resolve(undefined),
   messages: [],
+  setCurrentChannel: (channelAddress: PublicKey) => {}
 });
-
 export function ChannelProvider({ children = null as any }) {
   const {wallet, connected} = useWallet();
   const connection = useConnection();
   const { ready: identityReady, decryptionKey, did} = useIdentity();
   const [channel, setChannel] = useState<Channel>();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [currentChannelInState, setCurrentChannelInState] = useLocalStorageState<string>('channel');
+
+  const setCurrentChannel = async (channelAddress: PublicKey) => {
+    setCurrentChannelInState(channelAddress.toBase58())
+    await loadChannel(channelAddress);
+  }
+  
+  const loadChannel = async (channelAddress: PublicKey) => {
+    if (!wallet || !connected || !identityReady) return;
+    const channel = await getChannel(connection, wallet, channelAddress.toBase58())
+    if (!channel) throw new Error('Could not find channel ' + channelAddress.toBase58())
+    setChannel(channel)
+  }
 
   useEffect(() => {
     if (channel || !wallet || !connected || !identityReady) return;
+    
+    if (currentChannelInState) {
+      loadChannel(new PublicKey(currentChannelInState));
+    }
 
     // console.log("Check exists");
     // get(did)
@@ -62,6 +81,7 @@ export function ChannelProvider({ children = null as any }) {
     <ChannelContext.Provider value={{
       messages,
       post,
+      setCurrentChannel
     }}>
       {children}
     </ChannelContext.Provider>
@@ -73,6 +93,7 @@ export function useChannel():ChannelProps {
   return {
     messages: context.messages,
     post: context.post,
-    channel: context.channel
+    channel: context.channel,
+    setCurrentChannel: context.setCurrentChannel
   };
 }

@@ -1,7 +1,7 @@
 {
   "name": "solarium-cli",
   "description": "CLI for Solarium: The E2E-encrypted messenger on Solana",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "author": "dankelleher @dankelleher",
   "bin": {
     "solarium": "./bin/run"

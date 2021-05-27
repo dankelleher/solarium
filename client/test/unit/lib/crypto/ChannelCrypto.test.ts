@@ -6,8 +6,7 @@ import {
   encryptCEKForVerificationMethod,
   decryptCEK, augmentDIDDocument
 } from "../../../../src/lib/crypto/ChannelCrypto";
-import {stringToBytes, base64ToBytes} from "../../../../src/lib/crypto/util";
-import {encode} from "bs58";
+import {stringToBytes, base64ToBytes, bytesToBase58} from "../../../../src/lib/crypto/utils";
 import {convertPublicKey} from "ed2curve-esm";
 
 import { sampleDidDoc } from '../fixtures'
@@ -44,7 +43,7 @@ describe('ChannelCrypto', () => {
       id: 'key0',
       controller: 'did:dummy:alice',
       type: 'X25519KeyAgreementKey2019',
-      publicKeyBase58: encode(convertPublicKey(aliceKeypair.publicKey.toBytes())),
+      publicKeyBase58: bytesToBase58(convertPublicKey(aliceKeypair.publicKey.toBytes())),
     })
     // expect(cekData).toEqual('')
 

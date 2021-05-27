@@ -1,7 +1,6 @@
-import { JWE } from 'did-jwt';
 import {compress, decompress} from "../../../../src/lib/compression";
 
-const sampleJWE: JWE = {
+const sampleJWE = {
   protected: 'eyJlbmMiOiJYQzIwUC9',
   iv: 'aPQ4rfWw7af1nGtv8Rqb8bXoSvu55lop',
   ciphertext: '1ctlLUzUzXeSQEAWlaFjZ29DIA',
@@ -24,7 +23,7 @@ const sampleJWE: JWE = {
   ],
 };
 
-const sampleBigJWE:JWE = {
+const sampleBigJWE = {
   "protected": "eyJlbmMiOiJYQzIwUCJ9",
   "iv": "s_pNicoLjYx-X-H44NFrWqchebrmBg-9",
   "ciphertext": "PQ2boDNqVWmO9Qve-iAq9pOMi7Ka",

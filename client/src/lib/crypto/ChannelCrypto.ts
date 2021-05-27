@@ -2,23 +2,22 @@ import { resolve } from '@identity.com/sol-did-client';
 import {VerificationMethod} from "did-resolver/src/resolver";
 import {DIDDocument} from "did-resolver";
 import {CEKData} from "../solana/models/CEKData";
-import {debug, isPublicKey, makeKeypair, PrivateKey} from "../util";
+import {isPublicKey, makeKeypair, PrivateKey} from "../util";
 import { randomBytes } from '@stablelib/random'
-import {x25519Decrypter, x25519Encrypter, xc20pDirDecrypter, xc20pDirEncrypter} from "./xc20pEncryption";
 import {
-  base58ToBytes,
-  base64ToBytes,
-  bytesToBase64,
-  bytesToBase64url,
-  bytesToString,
-  stringToBytes,
-} from "./util";
+  x25519xc20pKeyWrap,
+  x25519xc20pKeyUnwrap,
+  XC20P_IV_LENGTH,
+  XC20P_TAG_LENGTH,
+  xc20pDecrypter,
+  xc20pEncrypter
+} from "./xc20pEncryption";
+
 import * as u8a from 'uint8arrays'
 
-import {Recipient} from "./JWE";
 import { convertPublicKey, convertSecretKey } from 'ed2curve-esm';
-import {decode, encode} from "bs58";
 import {PublicKey} from "@solana/web3.js";
+import {base64ToBytes, bytesToBase64, bytesToString, stringToBytes, base58ToBytes, bytesToBase58} from "./utils";
 
 export type CEK = Uint8Array;
 
@@ -37,7 +36,6 @@ const getVerificationMethod = (vmOrRef: VerificationMethod | string, document: D
   );
 
   if (!foundKey) throw new Error(`Missing key ${vmOrRef}`);
-
   return foundKey;
 }
 
@@ -51,28 +49,20 @@ export const encryptCEKForDID = async (cek: CEK, did:string):Promise<CEKData[]> 
 }
 
 export const encryptCEKForVerificationMethod = async (cek: CEK, key: VerificationMethod) => {
-  debug(`Encrypting ${cek} with ${key}`);
-
   if (!key.publicKeyBase58) {
     throw Error('Currently we expect the recipient key to be encoded as base58')
   }
 
-  // @ts-ignore
-  const recipient = await x25519Encrypter(base58ToBytes(key.publicKeyBase58), key.id).encryptCek(cek);
+  const res = await x25519xc20pKeyWrap(base58ToBytes(key.publicKeyBase58))(cek);
 
-  // encode all header information within a string
-  // Received: {"encrypted_key": "dDClXNoduuCOERuxcpocX5lz7e7jE_8n4P4sl6K5VCk", "header": {"alg": "ECDH-ES+XC20PKW", "epk": {"crv": "X25519", "kty": "OKP", "x": "rMHFFnBhe5o13OQlxhnSIhLDs2wKUpd9fQ5mHK_GG0I"}, "iv": "Lwinhb_oEmetqwMM6G7EHDoOdjG6IPeh", "kid": "key0", "tag": "Pu9P4DWQI8bIGHc5euAlvA"}, "kid": "key0"}
-  // iv: bytesToBase64url(res.iv),
-  //     tag: bytesToBase64url(res.tag),
-  //     epk: { kty: 'OKP', crv, x: bytesToBase64url(epk.publicKey) }
   // header.iv + header.tag + header.epk.x
-  const concatByteArray = u8a.concat([base64ToBytes(recipient.header.iv), base64ToBytes(recipient.header.tag), base64ToBytes(recipient.header.epk?.x)])
+  const concatByteArray = u8a.concat([res.iv, res.tag, res.epPubKey])
   const header = bytesToBase64(concatByteArray)
 
   return new CEKData({
     kid: key.id,
     header,
-    encryptedKey: recipient.encrypted_key
+    encryptedKey: bytesToBase64(res.encryptedKey)
   });
 };
 
@@ -96,27 +86,13 @@ export const createEncryptedCEK = async (did:string):Promise<CEKData[]> => {
 
 // Decrypt an encrypted CEK for the with the key that was used to encrypt it
 export const decryptCEK = async (encryptedCEK: CEKData, key: PrivateKey):Promise<CEK> => {
-  debug(`Decrypting ${encryptedCEK} with ${key}`);  // TODO remove once done to avoid leaking private key
-
   // decode information from CEKData
-
   const encodedHeader = base64ToBytes(encryptedCEK.header)
   // iv (24), tag (16), epk PubKey (rest)
-  const iv = encodedHeader.subarray(0, 24)
-  const tag = encodedHeader.subarray(24, 24+16)
-  const epkPub = encodedHeader.subarray(24+16)
-  const alg = 'ECDH-ES+XC20PKW'
-  const crv = 'X25519'
-
-  const recipient: Recipient = {
-    header: {
-      alg,
-      iv: bytesToBase64url(iv),
-      tag: bytesToBase64url(tag),
-      epk: { kty: 'OKP', crv, x: bytesToBase64url(epkPub) }
-    },
-    encrypted_key: encryptedCEK.encryptedKey
-  }
+  const iv = encodedHeader.subarray(0, XC20P_IV_LENGTH)
+  const tag = encodedHeader.subarray(XC20P_IV_LENGTH, XC20P_IV_LENGTH+XC20P_TAG_LENGTH)
+  const epkPub = encodedHeader.subarray(XC20P_IV_LENGTH+XC20P_TAG_LENGTH)
+  const encryptedKey = base64ToBytes(encryptedCEK.encryptedKey)
 
   // normalise the key into an uint array
   const ed25519Key = makeKeypair(key).secretKey;
@@ -132,7 +108,7 @@ export const decryptCEK = async (encryptedCEK: CEKData, key: PrivateKey):Promise
 
 
   // @ts-ignore
-  const cek = await x25519Decrypter(curve25519Key).decryptCek(recipient);
+  const cek = await x25519xc20pKeyUnwrap(curve25519Key)(encryptedKey, tag, iv, epkPub);
   if (cek === null) {
     throw Error('There was a problem decrypting the CEK')
   }
@@ -152,11 +128,7 @@ export const decryptCEKs = async (encryptedCEKs: CEKData[], kid: string, key: Pr
 
 // Encrypt a message with a CEK
 export const encryptMessage = async(message: string, cek: CEK):Promise<string> => {
-  debug(`Encrypting ${message} with ${cek}`);   // TODO remove once done to avoid leaking private key
-
-  const encryptMessage = await xc20pDirEncrypter(cek).encrypt(stringToBytes(message))
-  // we return a single bytearray in base64
-  // Static lengths:
+  const encryptMessage = await xc20pEncrypter(cek)(stringToBytes(message))
   // iv (24), ciphertext (var), tag (16)
   const encodedEncMessage = bytesToBase64(u8a.concat([encryptMessage.iv, encryptMessage.ciphertext, encryptMessage.tag]))
 
@@ -165,15 +137,13 @@ export const encryptMessage = async(message: string, cek: CEK):Promise<string> =
 
 // Decrypt a message with the CEK used to encrypt it
 export const decryptMessage = async(encryptedMessage: string, cek: CEK):Promise<string> => {
-  debug(`Decrypting ${encryptedMessage} with ${cek}`);  // TODO remove once done to avoid leaking private key
-
-
   const encMessage = base64ToBytes(encryptedMessage)
   // iv (24), ciphertext (var), tag (16)
-  const iv = encMessage.subarray(0, 24)
-  const sealed = encMessage.subarray(24)
+  const iv = encMessage.subarray(0, XC20P_IV_LENGTH)
+  const ciphertext = encMessage.subarray(XC20P_IV_LENGTH, -XC20P_TAG_LENGTH)
+  const tag = encMessage.subarray(-XC20P_TAG_LENGTH)
 
-  const binMessage = await xc20pDirDecrypter(cek).decrypt(sealed, iv)
+  const binMessage = await xc20pDecrypter(cek)(ciphertext, tag, iv)
   if (binMessage === null) {
     throw new Error('There was an error decoding the message!')
   }
@@ -193,7 +163,7 @@ export const findVerificationMethodForKey = (didDoc: DIDDocument, key: PrivateKe
     key = keypair.publicKey
   }
   // operate on x25519 curve PubKey
-  const pubkey = encode(convertPublicKey(key.toBytes()))
+  const pubkey = bytesToBase58(convertPublicKey(key.toBytes()))
 
   const foundVerificationMethod = (augmentedDIDDoc.verificationMethod || [])
     .find(verificationMethod => verificationMethod.publicKeyBase58 === pubkey);
@@ -249,8 +219,8 @@ export const augmentDIDDocument = (didDocument: DIDDocument): DIDDocument => {
         ...key,
         id: key.id + '_keyAgreement',
         type: 'X25519KeyAgreementKey2019',
-        publicKeyBase58: encode(
-            convertPublicKey(decode(key.publicKeyBase58 as string))
+        publicKeyBase58: bytesToBase58(
+            convertPublicKey(base58ToBytes(key.publicKeyBase58 as string))
         ),
       }));
 

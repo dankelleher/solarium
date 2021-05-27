@@ -13,6 +13,7 @@ import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import {Channel} from "../lib/Channel";
 import {get} from "./get";
+import {findVerificationMethodForKey} from "../lib/crypto/ChannelCrypto";
 
 /**
  * If a DID was already registered for this owner, return its document. Else create one
@@ -86,11 +87,10 @@ export const updateCEKAccount = async (
   );
   const didKey = didToPublicKey(ownerDIDDocument.id);
 
-  const foundVerificationMethod = (ownerDIDDocument.verificationMethod || [])
-    .find(verificationMethod => verificationMethod.publicKeyBase58 === newKey.toBase58());
-  
+  const foundVerificationMethod = findVerificationMethodForKey(ownerDIDDocument, newKey)
+
   if (!foundVerificationMethod) throw new Error('New key was not found on the DID')
-  
+
   const channelObject = await getChannel(owner, ownerDIDDocument.id, channel, connection, cluster)
   const newCEK = await channelObject.encryptCEK(foundVerificationMethod);
 

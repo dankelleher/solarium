@@ -1,6 +1,6 @@
 import { BinaryReader, BorshError, Schema, serialize } from 'borsh';
 import {PublicKey} from "@solana/web3.js";
-import {encode} from "bs58";
+import {bytesToBase58} from "../crypto/utils";
 
 // Class wrapping a plain object
 export abstract class Assignable {
@@ -130,7 +130,7 @@ export class AssignablePublicKey extends Assignable {
   }
 
   toString(): string {
-    return encode(this.bytes);
+    return bytesToBase58(Uint8Array.from(this.bytes));
   }
 
   static parse(pubkey: string): AssignablePublicKey {

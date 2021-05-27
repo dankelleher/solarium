@@ -33,7 +33,7 @@ const didFromKey = (request: GetRequest | GetDirectRequest): Promise<string> => 
 export const get = async (request: GetRequest): Promise<Channel> => {
   const connection = SolanaUtil.getConnection(request.cluster);
   const ownerDID = await didFromKey(request);
-  
+
   return service.get(
     new PublicKey(request.channel),
     connection,
@@ -56,7 +56,7 @@ export const getDirect = async (request: GetDirectRequest): Promise<Channel | nu
   const channel = await getDirectChannelAccountKey(ownerDIDKey, partnerDIDKey);
 
   return service.get(
-    new PublicKey(channel),
+    channel,
     connection,
     ownerDID,
     request.decryptionKey,

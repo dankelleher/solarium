@@ -12,10 +12,10 @@ describe('E2E', () => {
   let payer: Keypair;
   let alice: Keypair;
   let bob: Keypair;
-  
+
   let aliceDID: string;
   let bobDID: string;
-  
+
   let channel: Channel;
 
   beforeAll(async () => {
@@ -25,7 +25,7 @@ describe('E2E', () => {
   beforeEach(async () => {
     alice = Keypair.generate();
     bob = Keypair.generate();
-    
+
     aliceDID = await keyToIdentifier(alice.publicKey, ClusterType.development())
     bobDID = await keyToIdentifier(bob.publicKey, ClusterType.development())
   });
@@ -37,9 +37,9 @@ describe('E2E', () => {
       owner: alice.secretKey,
       name: channelName
     });
-    
+
     const did = await getDID({owner: alice.publicKey.toBase58()});
-    
+
     expect(did.id).toEqual(aliceDID);
 
     expect(channel.name).toEqual(channelName);
@@ -95,13 +95,13 @@ describe('E2E', () => {
       payer: payer.secretKey,
       owner: bob.publicKey.toBase58(),
     });
-    
+
     channel = await createDirect({
       payer: payer.secretKey,
       owner: alice.secretKey,
       inviteeDID: bobDID
     });
-    
+
     expect(channel.name).toContain(bobDID.replace('did:sol:localnet:', ''))
   });
 
@@ -118,7 +118,7 @@ describe('E2E', () => {
       owner: alice.secretKey,
       inviteeDID: bobDID
     });
-    
+
     // get as Bob
     const channelForBob = await getDirect({
       ownerDID: bobDID,
@@ -163,15 +163,15 @@ describe('E2E', () => {
     expect(messages[0].content).toEqual(message);
     expect(messages[0].sender).toEqual(aliceDID);
   });
-  
-  
+
+
   it('sends a message to a direct channel', async () => {
     // create bob's did
     await createDID({
       payer: payer.secretKey,
       owner: bob.publicKey.toBase58(),
     });
-    
+
     channel = await createDirect({
       payer: payer.secretKey,
       owner: alice.secretKey,
@@ -197,7 +197,7 @@ describe('E2E', () => {
     expect(messagesForBob).toHaveLength(1);
     expect(messagesForBob[0].content).toEqual(message);
     expect(messagesForBob[0].sender).toEqual(aliceDID);
-    
+
     // read as Alice
     const messagesForAlice = await read({
       channel: channel.address.toBase58(),
@@ -257,10 +257,14 @@ describe('E2E', () => {
 
     return expect(shouldFail).rejects.toThrow(/Message too long/);
   });
-  
+
   // This test checks that if a user adds a key to their DID,
   // they can read messages in channels they belong to with this new key
   it('adds a key to the DID', async () => {
+
+    // increase timeout from 5000 to
+    jest.setTimeout(30000);
+
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
@@ -292,7 +296,7 @@ describe('E2E', () => {
       message,
     });
 
-    // Check Alice can read the channel with the new key 
+    // Check Alice can read the channel with the new key
     const messagesWithNewKey = await read({
       channel: channel.address.toBase58(),
       memberDID: aliceDID,

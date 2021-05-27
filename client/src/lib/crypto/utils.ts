@@ -24,27 +24,14 @@ export function concatKDF(secret: Uint8Array, keyLen: number, alg: string): Uint
   return hash(u8a.concat([writeUint32BE(roundNumber), secret, value]))
 }
 
-export function base64ToBytes(s: string): Uint8Array {
-  const inputBase64Url = s.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-  return u8a.fromString(inputBase64Url, 'base64url')
-}
+export const base64ToBytes = (s: string) => u8a.fromString(s, 'base64pad')
 
-export function bytesToBase64(b: Uint8Array): string {
-  return u8a.toString(b, 'base64pad')
-}
+export const bytesToBase64 = (b: Uint8Array) => u8a.toString(b, 'base64pad')
 
-export function stringToBytes(s: string): Uint8Array {
-  return u8a.fromString(s)
-}
+export const stringToBytes = (s: string) => u8a.fromString(s)
 
-export function bytesToString(s: Uint8Array): string  {
-  return u8a.toString(s)
-}
+export const bytesToString = (s: Uint8Array) => u8a.toString(s)
 
-export function base58ToBytes(s: string): Uint8Array {
-  return u8a.fromString(s, 'base58btc')
-}
+export const base58ToBytes = (s: string) => u8a.fromString(s, 'base58btc')
 
-export function bytesToBase58(b: Uint8Array): string {
-  return u8a.toString(b, 'base58btc')
-}
+export const bytesToBase58 = (b: Uint8Array) => u8a.toString(b, 'base58btc')

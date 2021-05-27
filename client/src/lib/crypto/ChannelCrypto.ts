@@ -2,7 +2,7 @@ import { resolve } from '@identity.com/sol-did-client';
 import {VerificationMethod} from "did-resolver/src/resolver";
 import {DIDDocument} from "did-resolver";
 import {CEKData} from "../solana/models/CEKData";
-import {isPublicKey, makeKeypair, PrivateKey} from "../util";
+import {debug, isPublicKey, makeKeypair, PrivateKey} from "../util";
 import { randomBytes } from '@stablelib/random'
 import {x25519Decrypter, x25519Encrypter, xc20pDirDecrypter, xc20pDirEncrypter} from "./xc20pEncryption";
 import {
@@ -51,7 +51,7 @@ export const encryptCEKForDID = async (cek: CEK, did:string):Promise<CEKData[]> 
 }
 
 export const encryptCEKForVerificationMethod = async (cek: CEK, key: VerificationMethod) => {
-  console.log(`Encrypting ${cek} with ${key}`);
+  debug(`Encrypting ${cek} with ${key}`);
 
   if (!key.publicKeyBase58) {
     throw Error('Currently we expect the recipient key to be encoded as base58')
@@ -96,7 +96,7 @@ export const createEncryptedCEK = async (did:string):Promise<CEKData[]> => {
 
 // Decrypt an encrypted CEK for the with the key that was used to encrypt it
 export const decryptCEK = async (encryptedCEK: CEKData, key: PrivateKey):Promise<CEK> => {
-  console.log(`Decrypting ${encryptedCEK} with ${key}`);  // TODO remove once done to avoid leaking private key
+  debug(`Decrypting ${encryptedCEK} with ${key}`);  // TODO remove once done to avoid leaking private key
 
   // decode information from CEKData
 
@@ -152,7 +152,7 @@ export const decryptCEKs = async (encryptedCEKs: CEKData[], kid: string, key: Pr
 
 // Encrypt a message with a CEK
 export const encryptMessage = async(message: string, cek: CEK):Promise<string> => {
-  console.log(`Encrypting ${message} with ${cek}`);   // TODO remove once done to avoid leaking private key
+  debug(`Encrypting ${message} with ${cek}`);   // TODO remove once done to avoid leaking private key
 
   const encryptMessage = await xc20pDirEncrypter(cek).encrypt(stringToBytes(message))
   // we return a single bytearray in base64
@@ -165,7 +165,7 @@ export const encryptMessage = async(message: string, cek: CEK):Promise<string> =
 
 // Decrypt a message with the CEK used to encrypt it
 export const decryptMessage = async(encryptedMessage: string, cek: CEK):Promise<string> => {
-  console.log(`Decrypting ${encryptedMessage} with ${cek}`);  // TODO remove once done to avoid leaking private key
+  debug(`Decrypting ${encryptedMessage} with ${cek}`);  // TODO remove once done to avoid leaking private key
 
 
   const encMessage = base64ToBytes(encryptedMessage)

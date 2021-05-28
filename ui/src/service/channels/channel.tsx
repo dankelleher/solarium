@@ -27,11 +27,6 @@ export function ChannelProvider({ children = null as any }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentChannelInState, setCurrentChannelInState] = useLocalStorageState<string>('channel');
 
-  const setCurrentChannel = async (channelAddress: PublicKey) => {
-    setCurrentChannelInState(channelAddress.toBase58())
-    await loadChannel(channelAddress);
-  }
-  
   const loadChannel = async (channelAddress: PublicKey) => {
     if (!wallet || !connected || !identityReady) return;
     const channel = await getChannel(connection, wallet, channelAddress.toBase58())
@@ -39,7 +34,13 @@ export function ChannelProvider({ children = null as any }) {
     setChannel(channel)
   }
 
+  const setCurrentChannel = async (channelAddress: PublicKey) => {
+    setCurrentChannelInState(channelAddress.toBase58())
+    await loadChannel(channelAddress);
+  }
+
   useEffect(() => {
+
     if (channel || !wallet || !connected || !identityReady) return;
     
     if (currentChannelInState) {
@@ -50,7 +51,7 @@ export function ChannelProvider({ children = null as any }) {
     // get(did)
     //   .then((foundChannel) => foundChannel || create())
     //   .then(setChannel);
-  }, [wallet, connected, channel, setChannel]);
+  }, [wallet, connected, channel, setChannel, currentChannelInState, identityReady]);
 
   useEffect(() => {
     if (!wallet || !connected || !channel) return;
@@ -69,13 +70,13 @@ export function ChannelProvider({ children = null as any }) {
 
     // return unsubscribe method to execute when component unmounts
     // return subscription.unsubscribe;
-  }, [wallet, connected, channel]);
+  }, [wallet, connected, channel, did, decryptionKey]);
 
   const post = useCallback((message: string) => {
       if (!wallet || !connected || !channel) throw new Error("Posting unavailable.");
       return postToChannel(connection, wallet, channel, did, decryptionKey, message);
     },
-    [connection, wallet, did, decryptionKey, channel])
+    [connection, wallet, did, decryptionKey, channel, connected])
 
   return (
     <ChannelContext.Provider value={{

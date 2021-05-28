@@ -1,10 +1,12 @@
 import Feed from "./Feed";
 import Post from "./Post";
 import {useChannel} from "../service/channels/channel";
-import {PublicKey} from "@solana/web3.js";
+// import {PublicKey} from "@solana/web3.js";
 
-export default () => {
-  const { messages, post, channel, setCurrentChannel } = useChannel();
+const ChannelView = () => {
+  const { messages, post, channel,
+    // setCurrentChannel
+  } = useChannel();
   
   // setCurrentChannel(new PublicKey('DPSy76HebCr5TajEmXSh5ABNbL1KgM6T7Trvv2cao2aE'))
   
@@ -29,3 +31,5 @@ export default () => {
 
   );
 }
+
+export default ChannelView

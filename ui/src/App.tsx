@@ -18,7 +18,6 @@ import { Fragment } from 'react'
 import { Menu, Popover, Transition } from '@headlessui/react'
 import { BellIcon, MenuIcon, XIcon } from '@heroicons/react/outline'
 import { SearchIcon } from '@heroicons/react/solid'
-import Feed from "./components/Feed";
 import Avatar from "./components/Avatar";
 import Button from "./components/Button";
 import WalletBar from './components/WalletBar'
@@ -59,7 +58,7 @@ export default function App() {
                   <div className="relative py-5 flex items-center justify-center lg:justify-between">
                     {/* Logo */}
                     <div className="absolute left-0 flex-shrink-0 lg:static">
-                      <a href="#">
+                      <a href="#workflow">
                         <span className="sr-only">Workflow</span>
                         <img
                           className="h-8 w-auto"
@@ -105,7 +104,7 @@ export default function App() {
                                 <Menu.Item>
                                   {({ active }) => (
                                     <a
-                                      href="#"
+                                      href="#profile"
                                       className={classNames(
                                         active ? 'bg-gray-100' : '',
                                         'block px-4 py-2 text-sm text-gray-700'
@@ -118,7 +117,7 @@ export default function App() {
                                 <Menu.Item>
                                   {({ active }) => (
                                     <a
-                                      href="#"
+                                      href="#settings"
                                       className={classNames(
                                         active ? 'bg-gray-100' : '',
                                         'block px-4 py-2 text-sm text-gray-700'
@@ -131,7 +130,7 @@ export default function App() {
                                 <Menu.Item>
                                   {({ active }) => (
                                     <a
-                                      href="#"
+                                      href="#signout"
                                       className={classNames(
                                         active ? 'bg-gray-100' : '',
                                         'block px-4 py-2 text-sm text-gray-700'
@@ -189,7 +188,7 @@ export default function App() {
                           {navLinks.map((link) => (
                             <a
                               key={link.title}
-                              href="#"
+                              href={`#${link.title}`}
                               className={classNames(
                                 link.active ? 'text-white' : 'text-indigo-100',
                                 'text-sm font-medium rounded-md bg-white bg-opacity-0 px-3 py-2 hover:bg-opacity-10'
@@ -271,31 +270,31 @@ export default function App() {
                             </div>
                             <div className="mt-3 px-2 space-y-1">
                               <a
-                                href="#"
+                                href="#home"
                                 className="block rounded-md px-3 py-2 text-base text-gray-900 font-medium hover:bg-gray-100 hover:text-gray-800"
                               >
                                 Home
                               </a>
                               <a
-                                href="#"
+                                href="#profile"
                                 className="block rounded-md px-3 py-2 text-base text-gray-900 font-medium hover:bg-gray-100 hover:text-gray-800"
                               >
                                 Profile
                               </a>
                               <a
-                                href="#"
+                                href="#resources"
                                 className="block rounded-md px-3 py-2 text-base text-gray-900 font-medium hover:bg-gray-100 hover:text-gray-800"
                               >
                                 Resources
                               </a>
                               <a
-                                href="#"
+                                href="#company-directory"
                                 className="block rounded-md px-3 py-2 text-base text-gray-900 font-medium hover:bg-gray-100 hover:text-gray-800"
                               >
                                 Company Directory
                               </a>
                               <a
-                                href="#"
+                                href="#openings"
                                 className="block rounded-md px-3 py-2 text-base text-gray-900 font-medium hover:bg-gray-100 hover:text-gray-800"
                               >
                                 Openings
@@ -320,19 +319,19 @@ export default function App() {
                             </div>
                             <div className="mt-3 px-2 space-y-1">
                               <a
-                                href="#"
+                                href="#profile"
                                 className="block rounded-md px-3 py-2 text-base text-gray-900 font-medium hover:bg-gray-100 hover:text-gray-800"
                               >
                                 Your Profile
                               </a>
                               <a
-                                href="#"
+                                href="#settings"
                                 className="block rounded-md px-3 py-2 text-base text-gray-900 font-medium hover:bg-gray-100 hover:text-gray-800"
                               >
                                 Settings
                               </a>
                               <a
-                                href="#"
+                                href="#signout"
                                 className="block rounded-md px-3 py-2 text-base text-gray-900 font-medium hover:bg-gray-100 hover:text-gray-800"
                               >
                                 Sign out

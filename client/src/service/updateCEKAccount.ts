@@ -14,6 +14,7 @@ import { SolanaUtil } from '../lib/solana/solanaUtil';
 import {Channel} from "../lib/Channel";
 import {get} from "./get";
 import {findVerificationMethodForKey} from "../lib/crypto/ChannelCrypto";
+import {resolve} from "@identity.com/sol-did-client";
 
 /**
  * If a DID was already registered for this owner, return its document. Else create one
@@ -59,6 +60,7 @@ const getChannel = async (
 
 /**
  * Adds a key to a CEK account for a channel
+ * @param ownerDID
  * @param owner
  * @param payer
  * @param channel
@@ -67,6 +69,7 @@ const getChannel = async (
  * @param cluster
  */
 export const updateCEKAccount = async (
+  ownerDID: string,
   owner: Keypair,
   payer: Keypair | PublicKey,
   channel: PublicKey,
@@ -79,19 +82,14 @@ export const updateCEKAccount = async (
     signCallback || (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
-  const ownerDIDDocument = await getOrCreateDID(
-    pubkeyOf(owner),
-    payer,
-    createSignedTx,
-    cluster
-  );
-  const didKey = didToPublicKey(ownerDIDDocument.id);
+  const ownerDIDDocument = await resolve(ownerDID);
+  const didKey = didToPublicKey(ownerDID);
 
   const foundVerificationMethod = findVerificationMethodForKey(ownerDIDDocument, newKey)
 
   if (!foundVerificationMethod) throw new Error('New key was not found on the DID')
 
-  const channelObject = await getChannel(owner, ownerDIDDocument.id, channel, connection, cluster)
+  const channelObject = await getChannel(owner, ownerDID, channel, connection, cluster)
   const newCEK = await channelObject.encryptCEK(foundVerificationMethod);
 
   await SolariumTransaction.addCEKToAccount(

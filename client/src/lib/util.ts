@@ -151,7 +151,7 @@ export type GetDirectRequest = SolanaRequest & {
 
 export type AddKeyRequest = TransactionRequest & {
   ownerDID?: string;
-  signer: PrivateKey;
+  signer: KeyMaterial;
   newKey: PublicKeyBase58;
   keyIdentifier: string;
   channelsToUpdate: PublicKeyBase58[]

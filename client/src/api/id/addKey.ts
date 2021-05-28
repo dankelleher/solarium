@@ -24,6 +24,10 @@ const didFromKey = (request: AddKeyRequest): Promise<string> => {
   );
 };
 
+function isEmpty(array: any[]) {
+  return !array || array.length === 0;
+}
+
 /**
  * Add an owner to an DID, and all known channels the DID is in
  * @param request
@@ -31,12 +35,18 @@ const didFromKey = (request: AddKeyRequest): Promise<string> => {
 export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
   const did = request.ownerDID || (await didFromKey(request));
   const payer = toSolanaKeyMaterial(request.payer);
+  const signer = toSolanaKeyMaterial(request.signer);
+  
   // The API requires a payer either as a keypair or a pubkey but
   // In this case, the payer must either be a keypair or not present at all,
   // since the payer is only needed when request.signCallback is missing
   // this is a messy API which needs to be cleaned up TODO
   const payerOrUndefined = isKeypair(payer) ? payer : undefined;
-  const signer = makeKeypair(request.signer);
+  
+  if (isEmpty(request.channelsToUpdate) && !isKeypair(signer)) {
+    throw new Error("A decryption key is required when updating channels");
+  } 
+  
   const newKey = new PublicKey(request.newKey);
   const didDocument = await addKeyToDID(
     did,
@@ -50,7 +60,8 @@ export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
 
   const updateChannel = (channelAddress: PublicKeyBase58) => {
     return updateCEKAccount(
-      signer,
+      did,
+      signer as Keypair,
       payer,
       new PublicKey(channelAddress),
       newKey,

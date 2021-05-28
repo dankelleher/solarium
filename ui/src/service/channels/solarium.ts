@@ -106,18 +106,24 @@ export const getOrCreateChannel = async (
 export const addKey = async (
   connection: Connection,
   wallet: Wallet,
-  decryptionKey: Keypair,
   newKey: PublicKey,
   ownerDID?: string,
+  decryptionKey?: Keypair,
+  channelsToUpdate: Channel[] = [] // TODO
 ):Promise<void> => {
   console.log("Adding key", {
     newKey: newKey.toBase58(),
     ownerDID,
     payer: wallet.publicKey.toBase58()
   });
+
+  if (channelsToUpdate.length > 0 && !decryptionKey) {
+    throw new Error("Decryption key required to update channels with ew key")
+  }
+  
   await addKeyToDID({
-    signer: decryptionKey.secretKey,
-    channelsToUpdate: [], // TODO
+    signer: decryptionKey?.secretKey || wallet.publicKey,
+    channelsToUpdate: channelsToUpdate.map(c => c.address.toBase58()),
     payer: wallet.publicKey,
     ownerDID,
     keyIdentifier: 'browser',

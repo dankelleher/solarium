@@ -9,7 +9,7 @@ export const addKey = async (
   did: string,
   keyIdentifier: string,
   key: PublicKey,
-  signer: Keypair,
+  signer: Keypair | PublicKey,
   payer?: Keypair,
   signCallback?: SignCallback,
   cluster?: ExtendedCluster
@@ -17,7 +17,7 @@ export const addKey = async (
   // if a signCallback is not specified, both the payer and signer private keys need to be provided
   const createSignedTx =
     signCallback ||
-    (payer && defaultSignCallback(payer, signer));
+    (payer && isKeypair(signer) && defaultSignCallback(payer, signer));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
   const keyDID = did + '#' + keyIdentifier;

@@ -4,7 +4,7 @@ import {useLocalStorageKey, useLocalStorageState} from "../storage";
 import {useWallet} from "../wallet/wallet";
 import {useConnection, useConnectionConfig} from "../web3/connection";
 import {ClusterType, DIDDocument, resolve} from '@identity.com/sol-did-client';
-import {keyToIdentifier, createDID, getDID} from "solarium-js";
+import {keyToIdentifier} from "solarium-js";
 import {addKey} from "../channels/solarium";
 
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
@@ -33,7 +33,7 @@ export function useIdentity():IdentityProps {
       console.log("LOAD WALLET DID HERE ", ClusterType.parse(connectionConfig.env));
       keyToIdentifier(wallet.publicKey, ClusterType.parse(connectionConfig.env)).then(setDID)
     }
-  }, [wallet, connectionConfig, did, setDID]);
+  }, [wallet, connectionConfig, did, setDID, connected]);
 
   // check the loaded DID for the decryption key. prompt to add it if not present
   useEffect(()  => {
@@ -65,7 +65,7 @@ export function useIdentity():IdentityProps {
     } else {
       console.log("No document or decryption key available yet");
     }
-  }, [document, decryptionKey, did, setReady, wallet, connected])
+  }, [document, decryptionKey, did, setReady, wallet, connected, connection])
 
   return {
     ready,

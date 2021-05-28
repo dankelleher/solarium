@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction, useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {Keypair} from "@solana/web3.js";
 
 export function useLocalStorageState<T>(key: string, defaultState?: string):[T, (newT:T)=>void] {
@@ -37,13 +37,13 @@ export function useLocalStorageKey(name: string, defaultState: Keypair):[Keypair
   
   const setLocalStorageKey = useCallback((newKey: Keypair)  => {
     setKeystring(serialise(newKey))
-  },[keyString, setKeystring])
+  },[setKeystring])
   
   useEffect(() => {
     if (!keyString && defaultState) {
       setLocalStorageKey(defaultState)
     }
-  }, [keyString])
+  }, [keyString, defaultState, setLocalStorageKey])
   
   return [
     key,

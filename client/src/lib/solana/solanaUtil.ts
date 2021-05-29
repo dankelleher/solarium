@@ -3,7 +3,7 @@ import {
   Connection,
   Transaction,
   TransactionSignature,
-  sendAndConfirmRawTransaction,
+  sendAndConfirmRawTransaction, PublicKey,
 } from '@solana/web3.js';
 import { SOLANA_COMMITMENT } from '../constants';
 import { ExtendedCluster, getClusterEndpoint } from '../util';
@@ -35,13 +35,18 @@ export class SolanaUtil {
     lamports: number = 1000000
   ): Promise<Keypair> {
     const keypair = Keypair.generate();
+    await this.airdrop(connection, keypair.publicKey, lamports)
 
+    return keypair;
+  }
+
+  static async airdrop(connection: Connection, publicKey: PublicKey, lamports: number = 1000000):Promise<void> {
     let retries = 30;
-    await connection.requestAirdrop(keypair.publicKey, lamports);
-    for (;;) {
+    await connection.requestAirdrop(publicKey, lamports);
+    for (; ;) {
       await this.sleep(500);
-      const balance = await connection.getBalance(keypair.publicKey);
-      if (lamports <= balance) return keypair;
+      const balance = await connection.getBalance(publicKey);
+      if (lamports <= balance) return;
       if (--retries <= 0) break;
     }
     throw new Error(`Airdrop of ${lamports} failed`);

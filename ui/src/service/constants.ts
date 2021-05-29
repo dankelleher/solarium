@@ -16,3 +16,6 @@ export const ENDPOINTS = [
   { name: "devnet" as ExtendedCluster, endpoint: clusterApiUrl("devnet") },
   { name: "localnet" as ExtendedCluster, endpoint: "http://127.0.0.1:8899" },
 ];
+
+// The minimum wallet balance. If a wallet goes below this, actions trigger an airdrop (on non-mainnet)
+export const MIN_BALANCE = 500000000

@@ -6,18 +6,21 @@ import {useConnection} from "../web3/connection";
 import {useIdentity} from "../identity";
 import {postToChannel, readChannel, getChannel} from "./solarium";
 import {useLocalStorageState} from "../storage";
+import {AddressBookConfig, AddressBookManager, emptyAddressBookConfig} from "./addressBook";
 
 type ChannelProps = {
   messages: Message[],
   post: (message: string) => Promise<void>,
   channel?: Channel
   setCurrentChannel: (channelAddress: PublicKey) => void
+  addressBook: AddressBookManager
 }
 
 const ChannelContext = React.createContext<ChannelProps>({
   post: (): Promise<void> => Promise.resolve(undefined),
   messages: [],
-  setCurrentChannel: (channelAddress: PublicKey) => {}
+  setCurrentChannel: (channelAddress: PublicKey) => {},
+  addressBook: AddressBookManager
 });
 export function ChannelProvider({ children = null as any }) {
   const {wallet, connected} = useWallet();
@@ -25,14 +28,16 @@ export function ChannelProvider({ children = null as any }) {
   const { ready: identityReady, decryptionKey, did} = useIdentity();
   const [channel, setChannel] = useState<Channel>();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [addressBook, setAddressBook] = useState<AddressBookManager>([]);
   const [currentChannelInState, setCurrentChannelInState] = useLocalStorageState<string>('channel');
+  const [addressBookStore, setAddressBookStore] = useLocalStorageState<AddressBookConfig>('addressBook', emptyAddressBookConfig);
 
-  const loadChannel = async (channelAddress: PublicKey) => {
+  const loadChannel = useCallback(async (channelAddress: PublicKey) => {
     if (!wallet || !connected || !identityReady) return;
-    const channel = await getChannel(connection, wallet, channelAddress.toBase58())
-    if (!channel) throw new Error('Could not find channel ' + channelAddress.toBase58())
-    setChannel(channel)
-  }
+    const loadedChannel = await getChannel(connection, wallet, did, channelAddress.toBase58(), decryptionKey)
+    if (!loadedChannel) throw new Error('Could not find channel ' + channelAddress.toBase58())
+    setChannel(loadedChannel)
+  }, [setChannel, wallet, connected, connection, identityReady, did, decryptionKey])
 
   const setCurrentChannel = async (channelAddress: PublicKey) => {
     setCurrentChannelInState(channelAddress.toBase58())
@@ -40,7 +45,18 @@ export function ChannelProvider({ children = null as any }) {
   }
 
   useEffect(() => {
+    if (!wallet || !connected || !identityReady) return;
 
+    const loadedAddressBook = AddressBookManager.load(addressBookStore, connection, wallet, did);
+    setAddressBook(loadedAddressBook)
+
+    // console.log("Check exists");
+    // get(did)
+    //   .then((foundChannel) => foundChannel || create())
+    //   .then(setChannel);
+  }, [wallet, connected, connection, addressBookStore, identityReady, did]);
+
+  useEffect(() => {
     if (channel || !wallet || !connected || !identityReady) return;
     
     if (currentChannelInState) {
@@ -51,7 +67,7 @@ export function ChannelProvider({ children = null as any }) {
     // get(did)
     //   .then((foundChannel) => foundChannel || create())
     //   .then(setChannel);
-  }, [wallet, connected, channel, setChannel, currentChannelInState, identityReady]);
+  }, [wallet, connected, channel, setChannel, currentChannelInState, identityReady, loadChannel]);
 
   useEffect(() => {
     if (!wallet || !connected || !channel) return;
@@ -82,7 +98,8 @@ export function ChannelProvider({ children = null as any }) {
     <ChannelContext.Provider value={{
       messages,
       post,
-      setCurrentChannel
+      setCurrentChannel,
+      addressBook
     }}>
       {children}
     </ChannelContext.Provider>
@@ -95,6 +112,7 @@ export function useChannel():ChannelProps {
     messages: context.messages,
     post: context.post,
     channel: context.channel,
-    setCurrentChannel: context.setCurrentChannel
+    setCurrentChannel: context.setCurrentChannel,
+    addressBook: context.addressBook
   };
 }

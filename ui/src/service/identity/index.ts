@@ -5,7 +5,7 @@ import {useWallet} from "../wallet/wallet";
 import {useConnection, useConnectionConfig} from "../web3/connection";
 import {ClusterType, DIDDocument, resolve} from '@identity.com/sol-did-client';
 import {keyToIdentifier} from "solarium-js";
-import {addKey} from "../channels/solarium";
+import {addKey, createIdentity} from "../channels/solarium";
 
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
   doc.verificationMethod?.find(verificationMethod => verificationMethod.publicKeyBase58 === key.toBase58())
@@ -25,15 +25,32 @@ export function useIdentity():IdentityProps {
   const [ready, setReady] = useState<boolean>(false);
 
   // load the DID document whenever the did is changed
-  useEffect(() => { if (did) resolve(did).then(setDocument) }, [did]);
+  useEffect(() => { if (did) resolve(did).then(setDocument).catch(error => {
+    console.log("No DID registered yet");
+  }) }, [did]);
 
   // attempt to get the default DID when the wallet is loaded if none is set
   useEffect(() => {
     if (wallet && connected && !did) {
       console.log("LOAD WALLET DID HERE ", ClusterType.parse(connectionConfig.env));
-      keyToIdentifier(wallet.publicKey, ClusterType.parse(connectionConfig.env)).then(setDID)
+      keyToIdentifier(wallet.publicKey, ClusterType.parse(connectionConfig.env))
+        .then(resolve)
+        .then(document => {
+          setDID(document.id);
+          setDocument(document)
+        })
+        .catch(error => {
+          if (error.message.startsWith("No DID found")) {
+            console.log("Prompt to create DID");
+            // TODO trigger this only after prompt. This is just to get us to the "ready" phase
+            createIdentity(connection, wallet).then(document => {
+              setDID(document.id);
+              setDocument(document)
+            })
+          }
+        })
     }
-  }, [wallet, connectionConfig, did, setDID, connected]);
+  }, [wallet, connectionConfig, did, setDID, setDocument, connected, connection]);
 
   // check the loaded DID for the decryption key. prompt to add it if not present
   useEffect(()  => {
@@ -64,6 +81,16 @@ export function useIdentity():IdentityProps {
       }
     } else {
       console.log("No document or decryption key available yet");
+      if (wallet && connected) {
+        if (!document) {
+          // console.log("Creating new DID");
+          // register({}).then(document => {
+          //   console.log(document);
+          //   //setDocument(document)
+          // })
+        }
+
+      }
     }
   }, [document, decryptionKey, did, setReady, wallet, connected, connection])
 

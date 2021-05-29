@@ -9,16 +9,42 @@ import {
   getDirect,
   readStream,
   addKey as addKeyToDID,
-  addToChannel as addDIDToChannel
+  addToChannel as addDIDToChannel,
+  createDID,
+  airdrop
 } from 'solarium-js'
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {sign} from "../web3/connection";
 import {Observable} from "rxjs";
+import {MIN_BALANCE} from "../constants";
 
-const cluster = process.env.REACT_APP_CLUSTER as ExtendedCluster | undefined;
+export const cluster = process.env.REACT_APP_CLUSTER as ExtendedCluster | undefined;
 
-export const createChannel = (
+export const airdropIfNeeded = async (
+  connection: Connection,
+  wallet: Wallet
+):Promise<void> => {
+  const balance = await connection.getBalance(wallet.publicKey)
+
+  if (balance < MIN_BALANCE) {
+    console.log("Airdropping...");
+    await airdrop(
+      connection,
+      wallet.publicKey,
+      MIN_BALANCE * 2
+    )
+  }
+};
+
+const withAirdrop = <T extends Array<any>, U>(fn: (...args: T) => Promise<U>) => {
+  return async (...args: T): Promise<U> => {
+    await airdropIfNeeded(args[0], args[1]);
+    return fn(...args)
+  }
+}
+
+export const createChannel = withAirdrop((
   connection: Connection,
   wallet: Wallet,
   name: string
@@ -28,9 +54,9 @@ export const createChannel = (
     payer: wallet.publicKey,
     signCallback: sign(connection, wallet),
     cluster
-  })
+  }))
 
-export const createDirectChannel = (
+export const createDirectChannel = withAirdrop((
   connection: Connection,
   wallet: Wallet,
   inviteeDID: string,
@@ -40,16 +66,18 @@ export const createDirectChannel = (
     payer: wallet.publicKey,
     signCallback: sign(connection, wallet),
     cluster
-  })
+  }))
 
 export const getChannel = (
   connection: Connection,
   wallet: Wallet,
+  ownerDID: string,
   channelAddress: string,
   decryptionKey?: Keypair,
 ):Promise<Channel | null> =>
   get({
     channel: channelAddress,
+    ownerDID,
     cluster,
     decryptionKey: decryptionKey?.secretKey
   })
@@ -66,7 +94,7 @@ export const getDirectChannel = (
     decryptionKey: decryptionKey?.secretKey
   })
 
-export const getOrCreateDirectChannel = async (
+export const getOrCreateDirectChannel = withAirdrop(async (
   connection: Connection,
   wallet: Wallet,
   partnerDID: string,
@@ -82,16 +110,17 @@ export const getOrCreateDirectChannel = async (
     signCallback: sign(connection, wallet),
     cluster
   });
-}
+})
 
-export const getOrCreateChannel = async (
+export const getOrCreateChannel = withAirdrop(async (
   connection: Connection,
   wallet: Wallet,
+  did: string,
   name: string,
   address: string,
   decryptionKey?: Keypair,
 ): Promise<Channel> => {
-  const channel = await getChannel(connection, wallet, address, decryptionKey);
+  const channel = await getChannel(connection, wallet, did, address, decryptionKey);
 
   if (channel) return channel;
 
@@ -101,9 +130,9 @@ export const getOrCreateChannel = async (
     signCallback: sign(connection, wallet),
     cluster
   });
-}
+})
 
-export const addKey = async (
+export const addKey = withAirdrop(async (
   connection: Connection,
   wallet: Wallet,
   newKey: PublicKey,
@@ -118,9 +147,9 @@ export const addKey = async (
   });
 
   if (channelsToUpdate.length > 0 && !decryptionKey) {
-    throw new Error("Decryption key required to update channels with ew key")
+    throw new Error("Decryption key required to update channels with new key")
   }
-  
+
   await addKeyToDID({
     signer: decryptionKey?.secretKey || wallet.publicKey,
     channelsToUpdate: channelsToUpdate.map(c => c.address.toBase58()),
@@ -131,9 +160,9 @@ export const addKey = async (
     signCallback: sign(connection, wallet),
     cluster
   });
-}
+});
 
-export const postToChannel = (
+export const postToChannel = withAirdrop((
   connection: Connection,
   wallet: Wallet,
   channel: Channel,
@@ -148,7 +177,7 @@ export const postToChannel = (
     message,
     signCallback: sign(connection, wallet, signer),
     cluster
-  })
+  }))
 
 export const readChannel = (
   did: string,
@@ -162,18 +191,27 @@ export const readChannel = (
     cluster
   })
 
-export const addToChannel = (
+export const addToChannel = withAirdrop((
   connection: Connection,
   wallet: Wallet,
-  channel: Channel,
+  channelAddress: string,
   inviteAuthority: Keypair,
-  did: string,
   inviteeDID: string
 ) => addDIDToChannel({
-  channel: channel.address.toBase58(),
+  channel: channelAddress,
   decryptionKey: inviteAuthority.secretKey,
   inviteeDID,
   payer: wallet.publicKey,
   signCallback: sign(connection, wallet),
   cluster
-})
+}));
+
+export const createIdentity = withAirdrop((
+  connection: Connection,
+  wallet: Wallet
+) =>
+  createDID({
+    payer: wallet.publicKey,
+    signCallback: sign(connection, wallet),
+    cluster,
+  }))

@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useState} from "react";
 import {Keypair} from "@solana/web3.js";
 
-export function useLocalStorageState<T>(key: string, defaultState?: string):[T, (newT:T)=>void] {
+export function useLocalStorageState<T>(key: string, defaultState?: T):[T, (newT:T)=>void] {
   const [state, setState] = useState<T>(() => {
     const storedState = localStorage.getItem(key);
     if (storedState) return JSON.parse(storedState);

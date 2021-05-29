@@ -11,3 +11,5 @@ export { Channel, Message } from './lib/Channel';
 export { create as createWallet, SignCallback } from './lib/wallet';
 export { ExtendedCluster } from './lib/util';
 export { keyToIdentifier } from '@identity.com/sol-did-client';
+
+export { airdrop } from './lib/solana/solanaUtil';

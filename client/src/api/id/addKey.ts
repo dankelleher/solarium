@@ -43,7 +43,7 @@ export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
   // this is a messy API which needs to be cleaned up TODO
   const payerOrUndefined = isKeypair(payer) ? payer : undefined;
   
-  if (isEmpty(request.channelsToUpdate) && !isKeypair(signer)) {
+  if (!isEmpty(request.channelsToUpdate) && !isKeypair(signer)) {
     throw new Error("A decryption key is required when updating channels");
   } 
   

@@ -1,25 +1,30 @@
 import React, {useCallback, useContext, useEffect, useState} from "react";
 import {useWallet} from "../wallet/wallet";
-import {PublicKey} from "@solana/web3.js";
 import {Message, Channel} from "solarium-js";
 import {useConnection} from "../web3/connection";
 import {useIdentity} from "../identity";
-import {postToChannel, readChannel, getChannel} from "./solarium";
+import {postToChannel, readChannel} from "./solarium";
 import {useLocalStorageState} from "../storage";
-import {AddressBookConfig, AddressBookManager, emptyAddressBookConfig} from "./addressBook";
+import {
+  AddressBookConfig,
+  AddressBookManager,
+  emptyAddressBookConfig, isGroupChannel,
+  publicChannelConfigByName
+} from "./addressBook";
+import {DEFAULT_CHANNEL} from "../constants";
 
 type ChannelProps = {
   messages: Message[],
   post: (message: string) => Promise<void>,
   channel?: Channel
-  setCurrentChannel: (channelAddress: PublicKey) => void
+  setCurrentChannel: (channel: Channel) => void
   addressBook: AddressBookManager | undefined
 }
 
 const ChannelContext = React.createContext<ChannelProps>({
   post: (): Promise<void> => Promise.resolve(undefined),
   messages: [],
-  setCurrentChannel: (channelAddress: PublicKey) => {},
+  setCurrentChannel: () => {},
   addressBook: undefined
 });
 export function ChannelProvider({ children = null as any }) {
@@ -32,37 +37,70 @@ export function ChannelProvider({ children = null as any }) {
   const [currentChannelInState, setCurrentChannelInState] = useLocalStorageState<string>('channel');
   const [addressBookStore, setAddressBookStore] = useLocalStorageState<AddressBookConfig>('addressBook', emptyAddressBookConfig);
 
-  const loadChannel = useCallback(async (channelAddress: PublicKey) => {
-    if (!wallet || !connected || !identityReady) return;
-    const loadedChannel = await getChannel(connection, wallet, did, channelAddress.toBase58(), decryptionKey)
-    if (!loadedChannel) throw new Error('Could not find channel ' + channelAddress.toBase58())
-    setChannel(loadedChannel)
-  }, [setChannel, wallet, connected, connection, identityReady, did, decryptionKey])
+  // const loadChannel = useCallback(async (channelAddress: PublicKey) => {
+  //   if (!wallet || !connected || !identityReady) return;
+  //   const loadedChannel = await getChannel(connection, wallet, did, channelAddress.toBase58(), decryptionKey)
+  //   if (!loadedChannel) throw new Error('Could not find channel ' + channelAddress.toBase58())
+  //   setChannel(loadedChannel)
+  // }, [setChannel, wallet, connected, connection, identityReady, did, decryptionKey])
+  //
+  // const setCurrentChannel = async (channelAddress: PublicKey) => {
+  //   setCurrentChannelInState(channelAddress.toBase58())
+  //   await loadChannel(channelAddress);
+  // }
 
-  const setCurrentChannel = async (channelAddress: PublicKey) => {
-    setCurrentChannelInState(channelAddress.toBase58())
-    await loadChannel(channelAddress);
-  }
+  const setCurrentChannel = useCallback(async (newChannel: Channel | undefined) => {
+    if (!newChannel) return;
+    setCurrentChannelInState(newChannel.address.toBase58());
+    setChannel(newChannel)
+  }, [setChannel, setCurrentChannelInState]);
+
+  const joinLobby = useCallback(() => {
+    if (!addressBook?.getChannelByName(DEFAULT_CHANNEL)) {
+      // not in lobby- try to join it.
+      const lobbyConfig = publicChannelConfigByName(DEFAULT_CHANNEL);
+
+      if (!lobbyConfig) {
+        throw new Error(`No channel named ${DEFAULT_CHANNEL} found in config`)
+      }
+
+      return addressBook?.joinChannel(lobbyConfig)
+    } // else already in the lobby
+  },  [addressBook])
 
   useEffect(() => {
     if (!wallet || !connected || !identityReady) return;
 
     AddressBookManager.load(addressBookStore, connection, wallet, did, decryptionKey)
-      .then(setAddressBook);
-  }, [wallet, connected, connection, addressBookStore, identityReady, did, decryptionKey]);
+      .then(setAddressBook)
+      // .then(joinLobby) // TODO Lobby key is broken -  check and recreate
+      .then(() => {
+        if (!currentChannelInState && addressBook) {
+          return setCurrentChannel(addressBook.getChannelByName(DEFAULT_CHANNEL));
+        }
+      });
+  }, [
+    wallet, connected, connection, 
+    addressBook, addressBookStore,
+    identityReady, did, decryptionKey,
+    currentChannelInState, joinLobby, setCurrentChannel
+  ]);
 
   useEffect(() => {
-    if (channel || !wallet || !connected || !identityReady) return;
-    
-    if (currentChannelInState) {
-      loadChannel(new PublicKey(currentChannelInState));
-    }
+    if (channel || !wallet || !connected || !identityReady || !addressBook) return;
 
-    // console.log("Check exists");
-    // get(did)
-    //   .then((foundChannel) => foundChannel || create())
-    //   .then(setChannel);
-  }, [wallet, connected, channel, setChannel, currentChannelInState, identityReady, loadChannel]);
+    if (currentChannelInState) {
+      const groupOrDirectChannel = addressBook.getGroupOrDirectChannelByAddress(currentChannelInState);
+      
+      if (groupOrDirectChannel) {
+        if (isGroupChannel(groupOrDirectChannel)) {
+          setChannel(groupOrDirectChannel);
+        } else {
+          setChannel(groupOrDirectChannel.channel);
+        }
+      }
+    }
+  }, [wallet, connected, addressBook, channel, setChannel, currentChannelInState, identityReady]);
 
   useEffect(() => {
     if (!wallet || !connected || !channel) return;

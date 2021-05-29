@@ -1,17 +1,21 @@
 import {ENDPOINTS} from "../constants";
 import {DEFAULT_ENDPOINT_INDEX} from "../web3/connection";
-import {getChannel, getDirectChannel} from "./solarium";
+import {addToChannel, cluster, getChannel, getDirectChannel} from "./solarium";
 import {Connection, Keypair} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {Channel} from "solarium-js";
 
 type PublicChannelConfig = { [key: string]: GroupChannelConfig[] }
-const publicChannelConfig: PublicChannelConfig = require('./publicChannels.json');
+export const publicChannelConfig: PublicChannelConfig = require('./publicChannels.json');
+
+export const publicChannelConfigByName = (name:string) => 
+  publicChannelConfig[cluster!]
+    .find(config => config.name === name)
 
 type GroupChannelConfig ={
   name: string,
   address: string,
-  inviteAuthority: string
+  inviteAuthority?: string
 }
 type ContactConfig = {
   alias: string,
@@ -31,10 +35,58 @@ export type DirectChannel = {
   channel: Channel
 }
 
+export const isGroupChannel = 
+  (groupOrDirectChannel: Channel | DirectChannel): groupOrDirectChannel is Channel =>
+    Object.prototype.hasOwnProperty.call(groupOrDirectChannel, 'address')
+
 export class AddressBookManager {
-  constructor(readonly groupChannels: Channel[], readonly directChannels: DirectChannel[]) {
+  constructor(
+    private connection: Connection,
+    private wallet: Wallet,
+    private did: string,
+    private decryptionKey: Keypair,
+    readonly groupChannels: Channel[],
+    readonly directChannels: DirectChannel[]) {
   }
   
+  getChannelByName(name: string): Channel | undefined {
+    return this.groupChannels.find(c => c.name === name);
+  }
+
+  getDirectChannelByContactDID(did: string): DirectChannel | undefined {
+    return this.directChannels.find(c => c.contact.did === did);
+  }
+
+  getDirectChannelByContactAlias(alias: string): DirectChannel | undefined {
+    return this.directChannels.find(c => c.contact.alias === alias);
+  }
+  
+  getGroupOrDirectChannelByAddress(address: string) : Channel | DirectChannel | undefined {
+    const groupChannel = this.groupChannels.find(c => c.address.toBase58() === address);
+    if (groupChannel) return groupChannel;
+
+    const directChannel = this.directChannels.find(dc => dc.channel.address.toBase58() === address);
+    if (directChannel) return directChannel;
+  }
+
+  async joinChannel(channelConfig: GroupChannelConfig): Promise<Channel> {
+    if (!channelConfig.inviteAuthority) {
+      throw new Error("Cannot join " + channelConfig.name + " - no invite authority");
+    }
+    
+    const inviteAuthorityKeypair = Keypair.fromSecretKey(Buffer.from(channelConfig.inviteAuthority, 'base64'));
+
+    await addToChannel(this.connection, this.wallet, channelConfig.address, inviteAuthorityKeypair, this.did)
+    
+    const channel = await getChannel(this.connection, this.wallet, this.did, channelConfig.address, this.decryptionKey);
+    
+    if (!channel) throw new Error("Unable to retrieve channel " + channelConfig.name);
+    
+    this.groupChannels.push(channel);
+    
+    return channel;
+  }
+
   static async load(store: AddressBookConfig, connection: Connection, wallet: Wallet, did: string, decryptionKey: Keypair): Promise<AddressBookManager> {
     const currentCluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
 
@@ -70,6 +122,13 @@ export class AddressBookManager {
     
     const directChannels = await Promise.all(directChannelsPromises);
     
-    return new AddressBookManager(groupChannels, directChannels)
+    return new AddressBookManager(
+      connection,
+      wallet,
+      did,
+      decryptionKey,
+      groupChannels,
+      directChannels
+    )
   }
 }

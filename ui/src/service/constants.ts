@@ -19,3 +19,5 @@ export const ENDPOINTS = [
 
 // The minimum wallet balance. If a wallet goes below this, actions trigger an airdrop (on non-mainnet)
 export const MIN_BALANCE = 500000000
+
+export const DEFAULT_CHANNEL = 'lobby';

@@ -19,7 +19,7 @@ import {sign} from "../web3/connection";
 import {Observable} from "rxjs";
 import {MIN_BALANCE} from "../constants";
 
-const cluster = process.env.REACT_APP_CLUSTER as ExtendedCluster | undefined;
+export const cluster = process.env.REACT_APP_CLUSTER as ExtendedCluster | undefined;
 
 export const airdropIfNeeded = async (
   connection: Connection,
@@ -194,12 +194,11 @@ export const readChannel = (
 export const addToChannel = withAirdrop((
   connection: Connection,
   wallet: Wallet,
-  channel: Channel,
+  channelAddress: string,
   inviteAuthority: Keypair,
-  did: string,
   inviteeDID: string
 ) => addDIDToChannel({
-  channel: channel.address.toBase58(),
+  channel: channelAddress,
   decryptionKey: inviteAuthority.secretKey,
   inviteeDID,
   payer: wallet.publicKey,

@@ -9,13 +9,14 @@ import {
   getDirect,
   readStream,
   addKey as addKeyToDID,
-  addToChannel as addDIDToChannel, createDID
+  addToChannel as addDIDToChannel,
+  createDID,
+  airdrop
 } from 'solarium-js'
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {sign} from "../web3/connection";
 import {Observable} from "rxjs";
-import {airdrop} from "../../../../client/src";
 import {MIN_BALANCE} from "../constants";
 
 const cluster = process.env.REACT_APP_CLUSTER as ExtendedCluster | undefined;
@@ -203,7 +204,7 @@ export const addToChannel = withAirdrop((
   payer: wallet.publicKey,
   signCallback: sign(connection, wallet),
   cluster
-}))
+}));
 
 export const createIdentity = withAirdrop((
   connection: Connection,

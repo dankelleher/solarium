@@ -40,7 +40,7 @@ export class SolanaUtil {
     return keypair;
   }
 
-  static async airdrop(connection: Connection, publicKey: PublicKey, lamports: number = 1000000):Promise<void> {
+  static async airdrop(connection: Connection, publicKey: PublicKey, lamports: number = 1000000): Promise<void> {
     let retries = 30;
     await connection.requestAirdrop(publicKey, lamports);
     for (; ;) {
@@ -56,3 +56,7 @@ export class SolanaUtil {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+
+export const airdrop =
+  (connection: Connection, publicKey: PublicKey, lamports: number = 1000000): Promise<void> => 
+    SolanaUtil.airdrop(connection,publicKey,lamports) 

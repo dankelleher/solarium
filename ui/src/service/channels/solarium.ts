@@ -28,6 +28,7 @@ export const airdropIfNeeded = async (
   const balance = await connection.getBalance(wallet.publicKey)
 
   if (balance < MIN_BALANCE) {
+    console.log("Airdropping...");
     await airdrop(
       connection,
       wallet.publicKey,
@@ -146,7 +147,7 @@ export const addKey = withAirdrop(async (
   });
 
   if (channelsToUpdate.length > 0 && !decryptionKey) {
-    throw new Error("Decryption key required to update channels with ew key")
+    throw new Error("Decryption key required to update channels with new key")
   }
 
   await addKeyToDID({

@@ -3,8 +3,8 @@ import {useEffect, useState} from "react";
 import {useLocalStorageKey, useLocalStorageState} from "../storage";
 import {useWallet} from "../wallet/wallet";
 import {useConnection, useConnectionConfig} from "../web3/connection";
-import {ClusterType, DIDDocument, resolve, register} from '@identity.com/sol-did-client';
-import {keyToIdentifier, createDID} from "solarium-js";
+import {ClusterType, DIDDocument, resolve} from '@identity.com/sol-did-client';
+import {keyToIdentifier} from "solarium-js";
 import {addKey, createIdentity} from "../channels/solarium";
 
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
@@ -23,7 +23,11 @@ export function useIdentity():IdentityProps {
   const [did, setDID] = useLocalStorageState<string>('did', undefined);
   const [document, setDocument] = useState<DIDDocument>();
   const [ready, setReady] = useState<boolean>(false);
-  
+
+  // load the DID document whenever the did is changed
+  useEffect(() => { if (did) resolve(did).then(setDocument).catch(error => {
+    console.log("No DID registered yet");
+  }) }, [did]);
 
   // attempt to get the default DID when the wallet is loaded if none is set
   useEffect(() => {
@@ -46,7 +50,7 @@ export function useIdentity():IdentityProps {
           }
         })
     }
-  }, [wallet, connectionConfig, did, setDID, setDocument, connected]);
+  }, [wallet, connectionConfig, did, setDID, setDocument, connected, connection]);
 
   // check the loaded DID for the decryption key. prompt to add it if not present
   useEffect(()  => {

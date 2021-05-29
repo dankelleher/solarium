@@ -13,14 +13,14 @@ type ChannelProps = {
   post: (message: string) => Promise<void>,
   channel?: Channel
   setCurrentChannel: (channelAddress: PublicKey) => void
-  addressBook: AddressBookManager
+  addressBook: AddressBookManager | undefined
 }
 
 const ChannelContext = React.createContext<ChannelProps>({
   post: (): Promise<void> => Promise.resolve(undefined),
   messages: [],
   setCurrentChannel: (channelAddress: PublicKey) => {},
-  addressBook: AddressBookManager
+  addressBook: undefined
 });
 export function ChannelProvider({ children = null as any }) {
   const {wallet, connected} = useWallet();
@@ -28,7 +28,7 @@ export function ChannelProvider({ children = null as any }) {
   const { ready: identityReady, decryptionKey, did} = useIdentity();
   const [channel, setChannel] = useState<Channel>();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [addressBook, setAddressBook] = useState<AddressBookManager>([]);
+  const [addressBook, setAddressBook] = useState<AddressBookManager>();
   const [currentChannelInState, setCurrentChannelInState] = useLocalStorageState<string>('channel');
   const [addressBookStore, setAddressBookStore] = useLocalStorageState<AddressBookConfig>('addressBook', emptyAddressBookConfig);
 
@@ -47,14 +47,9 @@ export function ChannelProvider({ children = null as any }) {
   useEffect(() => {
     if (!wallet || !connected || !identityReady) return;
 
-    const loadedAddressBook = AddressBookManager.load(addressBookStore, connection, wallet, did);
-    setAddressBook(loadedAddressBook)
-
-    // console.log("Check exists");
-    // get(did)
-    //   .then((foundChannel) => foundChannel || create())
-    //   .then(setChannel);
-  }, [wallet, connected, connection, addressBookStore, identityReady, did]);
+    AddressBookManager.load(addressBookStore, connection, wallet, did, decryptionKey)
+      .then(setAddressBook);
+  }, [wallet, connected, connection, addressBookStore, identityReady, did, decryptionKey]);
 
   useEffect(() => {
     if (channel || !wallet || !connected || !identityReady) return;
@@ -85,7 +80,7 @@ export function ChannelProvider({ children = null as any }) {
     });
 
     // return unsubscribe method to execute when component unmounts
-    // return subscription.unsubscribe;
+    return subscription.unsubscribe;
   }, [wallet, connected, channel, did, decryptionKey]);
 
   const post = useCallback((message: string) => {

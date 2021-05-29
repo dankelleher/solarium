@@ -4,6 +4,7 @@ import {addToChannel, cluster, getChannel, getDirectChannel} from "./solarium";
 import {Connection, Keypair} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {Channel} from "solarium-js";
+import * as u8a from 'uint8arrays'
 
 type PublicChannelConfig = { [key: string]: GroupChannelConfig[] }
 export const publicChannelConfig: PublicChannelConfig = require('./publicChannels.json');
@@ -38,6 +39,8 @@ export type DirectChannel = {
 export const isGroupChannel = 
   (groupOrDirectChannel: Channel | DirectChannel): groupOrDirectChannel is Channel =>
     Object.prototype.hasOwnProperty.call(groupOrDirectChannel, 'address')
+
+const base58ToBytes = (s: string) => u8a.fromString(s, 'base58btc')
 
 export class AddressBookManager {
   constructor(
@@ -74,7 +77,7 @@ export class AddressBookManager {
       throw new Error("Cannot join " + channelConfig.name + " - no invite authority");
     }
     
-    const inviteAuthorityKeypair = Keypair.fromSecretKey(Buffer.from(channelConfig.inviteAuthority, 'base64'));
+    const inviteAuthorityKeypair = Keypair.fromSecretKey(base58ToBytes(channelConfig.inviteAuthority));
 
     await addToChannel(this.connection, this.wallet, channelConfig.address, inviteAuthorityKeypair, this.did)
     

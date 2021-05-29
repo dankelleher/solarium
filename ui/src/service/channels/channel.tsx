@@ -73,7 +73,7 @@ export function ChannelProvider({ children = null as any }) {
 
     AddressBookManager.load(addressBookStore, connection, wallet, did, decryptionKey)
       .then(setAddressBook)
-      // .then(joinLobby) // TODO Lobby key is broken -  check and recreate
+      .then(joinLobby)
       .then(() => {
         if (!currentChannelInState && addressBook) {
           return setCurrentChannel(addressBook.getChannelByName(DEFAULT_CHANNEL));

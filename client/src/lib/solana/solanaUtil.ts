@@ -59,4 +59,8 @@ export class SolanaUtil {
 
 export const airdrop =
   (connection: Connection, publicKey: PublicKey, lamports: number = 1000000): Promise<void> => 
-    SolanaUtil.airdrop(connection,publicKey,lamports) 
+    SolanaUtil.airdrop(connection,publicKey,lamports)
+
+export const getConnection =
+  (cluster?: ExtendedCluster): Connection =>
+    SolanaUtil.getConnection(cluster) 

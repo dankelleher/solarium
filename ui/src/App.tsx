@@ -1,19 +1,3 @@
-/*
-  This example requires Tailwind CSS v2.0+ 
-  
-  This example requires some changes to your config:
-  
-  ```
-  // tailwind.config.js
-  module.exports = {
-    // ...
-    plugins: [
-      // ...
-      require('@tailwindcss/forms'),
-    ]
-  }
-  ```
-*/
 import { Fragment } from 'react'
 import { Menu, Popover, Transition } from '@headlessui/react'
 import { BellIcon, MenuIcon, XIcon } from '@heroicons/react/outline'
@@ -25,15 +9,6 @@ import {WalletProvider} from "./service/wallet/wallet";
 import {ChannelProvider} from "./service/channels/channel";
 import ChannelView from "./components/ChannelView";
 
-const user = {
-  name: 'Chelsea Hagon',
-  handle: 'chelseahagon',
-  email: 'chelseahagon@example.com',
-  role: 'Human Resources Manager',
-  imageId: '1550525811-e5869dd03032',
-  imageUrl:
-    'https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-}
 const navLinks = [
   { title: 'Home', active: true },
   { title: 'Profile', active: false },
@@ -59,11 +34,11 @@ export default function App() {
                     {/* Logo */}
                     <div className="absolute left-0 flex-shrink-0 lg:static">
                       <a href="#workflow">
-                        <span className="sr-only">Workflow</span>
+                        <span className="sr-only">Solarium</span>
                         <img
                           className="h-8 w-auto"
                           src="https://tailwindui.com/img/logos/workflow-mark-indigo-300.svg"
-                          alt="Workflow"
+                          alt="Solarium"
                         />
                       </a>
                     </div>
@@ -304,13 +279,6 @@ export default function App() {
                           <div className="pt-4 pb-2">
                             <div className="flex items-center px-5">
                               <div className="flex-shrink-0">
-                                <img className="h-10 w-10 rounded-full" src={user.imageUrl} alt="" />
-                              </div>
-                              <div className="ml-3 min-w-0 flex-1">
-                                <div className="text-base font-medium text-gray-800 truncate">Rebecca Nicholas</div>
-                                <div className="text-sm font-medium text-gray-500 truncate">
-                                  rebecca.nicholas@example.com
-                                </div>
                               </div>
                               <button className="ml-auto flex-shrink-0 bg-white p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 <span className="sr-only">View notifications</span>
@@ -348,7 +316,7 @@ export default function App() {
           </Popover>
           <main className="-mt-24 pb-8">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-              <h1 className="sr-only">Page title</h1>
+              <h1 className="sr-only">Solarium</h1>
               {/* Main 3 column grid */}
               <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-3 lg:gap-8">
                 {/* Left column */}
@@ -357,7 +325,7 @@ export default function App() {
                 <div className="grid grid-cols-1 gap-4">
                   <section aria-labelledby="section-2-title">
                     <h2 className="sr-only" id="section-2-title">
-                      Section title
+                      Channels
                     </h2>
                     <div className="rounded-lg bg-white overflow-hidden shadow">
                       <div className="p-6">{/* Your content */}</div>

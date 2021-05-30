@@ -25,7 +25,10 @@ export function useIdentity():IdentityProps {
   const [ready, setReady] = useState<boolean>(false);
 
   // load the DID document whenever the did is changed
-  useEffect(() => { if (did) resolve(did).then(setDocument).catch(error => {
+  useEffect(() => { if (did) resolve(did).then(doc => {
+    setDocument(doc)
+    console.log(doc);
+  }).catch(error => {
     console.log("No DID registered yet");
   }) }, [did]);
 

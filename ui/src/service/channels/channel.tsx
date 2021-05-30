@@ -127,6 +127,7 @@ export function ChannelProvider({ children = null as any }) {
     <ChannelContext.Provider value={{
       messages,
       post,
+      channel,
       setCurrentChannel,
       addressBook
     }}>

@@ -13,3 +13,14 @@
 /* Stop purging. */
 
 /* Your own custom utilities */
+/* CSS HEX */
+:root {
+    --turquoise: #65D8C1ff;
+    --myrtle-green: #326F66ff;
+    --black: #000000ff;
+    --aero-blue: #B8F9ECff;
+    --myrtle-green-2: #326F66ff;
+}
+html {
+    @apply text-turquoise
+}

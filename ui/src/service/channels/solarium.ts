@@ -1,7 +1,6 @@
 import {
   create,
   createDirect,
-  ExtendedCluster,
   Channel,
   Message,
   post,
@@ -15,11 +14,11 @@ import {
 } from 'solarium-js'
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
-import {sign} from "../web3/connection";
+import {DEFAULT_ENDPOINT_INDEX, sign} from "../web3/connection";
 import {Observable} from "rxjs";
-import {MIN_BALANCE} from "../constants";
+import {ENDPOINTS, MIN_BALANCE} from "../constants";
 
-export const cluster = process.env.REACT_APP_CLUSTER as ExtendedCluster | undefined;
+const cluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
 
 export const airdropIfNeeded = async (
   connection: Connection,

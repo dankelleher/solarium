@@ -1,7 +1,6 @@
 import { Fragment } from 'react'
 import { Menu, Popover, Transition } from '@headlessui/react'
 import { BellIcon, MenuIcon, XIcon } from '@heroicons/react/outline'
-import { SearchIcon } from '@heroicons/react/solid'
 import Avatar from "./components/Avatar";
 import Button from "./components/Button";
 import WalletBar from './components/WalletBar'
@@ -30,12 +29,12 @@ export default function App() {
                       <a href="#solarium">
                         <span className="sr-only">Solarium</span>
                         <img
-                          className="h-20 w-auto float-left"
+                          className="h-20 w-auto float-left flex-grow-0 inline-block"
                           src={logo}
                           alt="Solarium Logo"
                         />
                         <img
-                          className="h-20 w-auto py-4"
+                          className="h-20 w-auto py-4 flex-grow inline-block"
                           src={logoText}
                           alt="Solarium"
                         />

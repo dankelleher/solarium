@@ -15,7 +15,7 @@ import {VerificationMethod} from "did-resolver";
 import {CEKData} from "./solana/models/CEKData";
 
 export class Message {
-  constructor(readonly sender: string, readonly content: string) {}
+  constructor(readonly sender: string, readonly content: string, readonly timestamp: number) {}
 }
 
 export class Channel {
@@ -76,7 +76,9 @@ export class Channel {
             m.sender.toPublicKey(),
             currentCluster(cluster)
           ).toString(),
-          m.content)
+          m.content,
+          m.timestamp.toNumber()
+        )
       )
       .map(decrypt);
 

@@ -1,8 +1,9 @@
 import {Assignable, AssignablePublicKey, SCHEMA} from "../solanaBorsh";
 import {PublicKey} from "@solana/web3.js";
+import BN from "bn.js";
 
 export class MessageData extends Assignable {
-  timestamp: number
+  timestamp: BN
   sender: AssignablePublicKey;
   content: string;
   

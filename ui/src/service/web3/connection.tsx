@@ -36,9 +36,7 @@ export function ConnectionProvider({ children = undefined as any }) {
     ENDPOINTS[DEFAULT_ENDPOINT_INDEX].endpoint
   );
 
-  const connection = useMemo(() => getConnection(ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name), [
-    endpoint,
-  ]);
+  const connection = useMemo(() => getConnection(ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name), []);
 
   const env =
     ENDPOINTS.find((end) => end.endpoint === endpoint)?.name ||

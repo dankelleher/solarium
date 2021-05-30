@@ -8,6 +8,8 @@ import WalletBar from './components/WalletBar'
 import {WalletProvider} from "./service/wallet/wallet";
 import {ChannelProvider} from "./service/channels/channel";
 import ChannelView from "./components/ChannelView";
+import logo from './logo-only.png'
+import logoText from './logo-text.png'
 
 const navLinks = [
   { title: 'Home', active: true },
@@ -25,31 +27,36 @@ export default function App() {
   return (
     <WalletProvider>
       <ChannelProvider>
-        <div className="min-h-screen bg-gray-100">
-          <Popover as="header" className="pb-24 bg-indigo-600">
+        <div className="min-h-screen bg-black font-white">
+          <Popover as="header" className="pb-24 bg-black">
             {({ open }) => (
               <>
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
                   <div className="relative py-5 flex items-center justify-center lg:justify-between">
                     {/* Logo */}
                     <div className="absolute left-0 flex-shrink-0 lg:static">
-                      <a href="#workflow">
+                      <a href="#solarium">
                         <span className="sr-only">Solarium</span>
                         <img
-                          className="h-8 w-auto"
-                          src="https://tailwindui.com/img/logos/workflow-mark-indigo-300.svg"
+                          className="h-20 w-auto float-left"
+                          src={logo}
+                          alt="Solarium Logo"
+                        />
+                        <img
+                          className="h-20 w-auto py-4"
+                          src={logoText}
                           alt="Solarium"
                         />
                       </a>
                     </div>
 
                     {/* Right section on desktop */}
-                    <div className="hidden lg:ml-4 lg:flex lg:items-center lg:pr-0.5">
+                    <div className="hidden lg:ml-4 lg:flex lg:items-center lg:pr-0.5 text-turquoise">
                       <WalletBar/>
                       <Button icon={BellIcon} text="View notifications"/>
                       {/*<button*/}
                       {/*  type="button"*/}
-                      {/*  className="flex-shrink-0 p-1 text-indigo-200 rounded-full hover:text-white hover:bg-white hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-white"*/}
+                      {/*  className="flex-shrink-0 p-1 text-aeroBlue-200 rounded-full hover:text-white hover:bg-white hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-white"*/}
                       {/*>*/}
                       {/*  <span className="sr-only">View notifications</span>*/}
                       {/*  <BellIcon className="h-6 w-6" aria-hidden="true" />*/}
@@ -60,7 +67,7 @@ export default function App() {
                         {({ open }) => (
                           <>
                             <div>
-                              <Menu.Button className="bg-white rounded-full flex text-sm ring-2 ring-white ring-opacity-20 focus:outline-none focus:ring-opacity-100">
+                              <Menu.Button className="bg-white rounded-full flex text-sm ring-2 ring-white text-white ring-opacity-20 focus:outline-none focus:ring-opacity-100">
                                 <span className="sr-only">Open user menu</span>
                                 <Avatar className="h-8 w-8" address={"myAddressGoesHere"}/>
                               </Menu.Button>
@@ -74,7 +81,7 @@ export default function App() {
                             >
                               <Menu.Items
                                 static
-                                className="origin-top-right z-40 absolute -right-2 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                className="origin-top-right z-40 absolute -right-2 mt-2 w-48 rounded-md shadow-lg py-1 bg-myrtleGreen ring-1 ring-black ring-opacity-5 focus:outline-none"
                               >
                                 <Menu.Item>
                                   {({ active }) => (
@@ -122,31 +129,10 @@ export default function App() {
                       </Menu>
                     </div>
 
-                    {/* Search */}
-                    <div className="flex-1 min-w-0 px-12 lg:hidden">
-                      <div className="max-w-xs w-full mx-auto">
-                        <label htmlFor="search" className="sr-only">
-                          Search
-                        </label>
-                        <div className="relative text-white focus-within:text-gray-600">
-                          <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                            <SearchIcon className="h-5 w-5" aria-hidden="true" />
-                          </div>
-                          <input
-                            id="search"
-                            className="block w-full bg-white bg-opacity-20 py-2 pl-10 pr-3 border border-transparent rounded-md leading-5 text-gray-900 placeholder-white focus:outline-none focus:bg-opacity-100 focus:border-transparent focus:placeholder-gray-500 focus:ring-0 sm:text-sm"
-                            placeholder="Search"
-                            type="search"
-                            name="search"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Menu button */}
                     <div className="absolute right-0 flex-shrink-0 lg:hidden">
                       {/* Mobile menu button */}
-                      <Popover.Button className="bg-transparent p-2 rounded-md inline-flex items-center justify-center text-indigo-200 hover:text-white hover:bg-white hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-white">
+                      <Popover.Button className="bg-transparent p-2 rounded-md inline-flex items-center justify-center text-aeroBlue-200 hover:text-white hover:bg-white hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-white">
                         <span className="sr-only">Open main menu</span>
                         {open ? (
                           <XIcon className="block h-6 w-6" aria-hidden="true" />
@@ -156,7 +142,7 @@ export default function App() {
                       </Popover.Button>
                     </div>
                   </div>
-                  <div className="hidden lg:block border-t border-white border-opacity-20 py-5">
+                  <div className="hidden lg:block border-t border-white text-white border-opacity-20 py-5">
                     <div className="grid grid-cols-3 gap-8 items-center">
                       <div className="col-span-2">
                         <nav className="flex space-x-4">
@@ -165,8 +151,8 @@ export default function App() {
                               key={link.title}
                               href={`#${link.title}`}
                               className={classNames(
-                                link.active ? 'text-white' : 'text-indigo-100',
-                                'text-sm font-medium rounded-md bg-white bg-opacity-0 px-3 py-2 hover:bg-opacity-10'
+                                link.active ? 'bg-myrtleGreen-lightest' : 'bg-myrtleGreen-dark',
+                                'text-sm font-medium rounded-md bg-opacity-0 px-3 py-2 hover:bg-opacity-10'
                               )}
                               aria-current={link.active ? 'page' : 'false'}
                             >
@@ -237,7 +223,7 @@ export default function App() {
                                 />
                               </div>
                               <div className="-mr-2">
-                                <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                                <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-aeroBlue-500">
                                   <span className="sr-only">Close menu</span>
                                   <XIcon className="h-6 w-6" aria-hidden="true" />
                                 </Popover.Button>
@@ -280,7 +266,7 @@ export default function App() {
                             <div className="flex items-center px-5">
                               <div className="flex-shrink-0">
                               </div>
-                              <button className="ml-auto flex-shrink-0 bg-white p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                              <button className="ml-auto flex-shrink-0 bg-white p-1 text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aeroBlue-500">
                                 <span className="sr-only">View notifications</span>
                                 <BellIcon className="h-6 w-6" aria-hidden="true" />
                               </button>

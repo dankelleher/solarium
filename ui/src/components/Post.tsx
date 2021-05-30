@@ -24,7 +24,7 @@ const Post = ({post, disabled}: Props) => {
                     type="text"
                     name="message"
                     id="message"
-                    className="disabled:opacity-50 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="disabled:opacity-50 shadow-sm focus:ring-aeroBlue-500 focus:border-aeroBlue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     placeholder="message"
                     onChange={event => setMessage(event.target.value)}
                     disabled={disabled}

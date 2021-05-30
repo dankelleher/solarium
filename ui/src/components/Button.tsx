@@ -12,7 +12,7 @@ const Button = ({text, icon, onClick}:Props) => {
       <button
           type="button"
           onClick={onClick}
-          className="flex-shrink-0 p-1 text-indigo-200 rounded-full hover:text-white hover:bg-white hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-white"
+          className="flex-shrink-0 p-1 text-aeroBlue-200 rounded-full hover:text-white hover:bg-white hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-white"
       >
         <span className="sr-only">{text}</span>
         <Icon className="h-6 w-6" aria-hidden="true"/>

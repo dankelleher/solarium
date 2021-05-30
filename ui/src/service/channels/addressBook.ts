@@ -73,6 +73,7 @@ export class AddressBookManager {
   }
 
   async joinChannel(channelConfig: GroupChannelConfig): Promise<Channel> {
+    console.log(`Joining channel ${channelConfig.name}`);
     if (!channelConfig.inviteAuthority) {
       throw new Error("Cannot join " + channelConfig.name + " - no invite authority");
     }

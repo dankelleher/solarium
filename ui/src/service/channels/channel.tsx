@@ -37,26 +37,17 @@ export function ChannelProvider({ children = null as any }) {
   const [currentChannelInState, setCurrentChannelInState] = useLocalStorageState<string>('channel');
   const [addressBookStore, setAddressBookStore] = useLocalStorageState<AddressBookConfig>('addressBook', emptyAddressBookConfig);
 
-  // const loadChannel = useCallback(async (channelAddress: PublicKey) => {
-  //   if (!wallet || !connected || !identityReady) return;
-  //   const loadedChannel = await getChannel(connection, wallet, did, channelAddress.toBase58(), decryptionKey)
-  //   if (!loadedChannel) throw new Error('Could not find channel ' + channelAddress.toBase58())
-  //   setChannel(loadedChannel)
-  // }, [setChannel, wallet, connected, connection, identityReady, did, decryptionKey])
-  //
-  // const setCurrentChannel = async (channelAddress: PublicKey) => {
-  //   setCurrentChannelInState(channelAddress.toBase58())
-  //   await loadChannel(channelAddress);
-  // }
-
   const setCurrentChannel = useCallback(async (newChannel: Channel | undefined) => {
-    if (!newChannel) return;
+    if (!newChannel || newChannel.address.toBase58() === currentChannelInState) return;
     setCurrentChannelInState(newChannel.address.toBase58());
     setChannel(newChannel)
-  }, [setChannel, setCurrentChannelInState]);
+  }, [currentChannelInState, setChannel, setCurrentChannelInState]);
 
   const joinLobby = useCallback(() => {
-    if (!addressBook?.getChannelByName(DEFAULT_CHANNEL)) {
+    if (!addressBook) return Promise.resolve();
+    
+    const defaultChannel = addressBook?.getChannelByName(DEFAULT_CHANNEL);
+    if (!defaultChannel) {
       // not in lobby- try to join it.
       const lobbyConfig = publicChannelConfigByName(DEFAULT_CHANNEL);
 
@@ -66,24 +57,29 @@ export function ChannelProvider({ children = null as any }) {
 
       return addressBook?.joinChannel(lobbyConfig)
     } // else already in the lobby
+    return Promise.resolve(defaultChannel)
   },  [addressBook])
+  
+  // when the addressbook is loaded
+  useEffect(() => {
+    if (!addressBook || !joinLobby || !setCurrentChannel) return;
+
+    joinLobby().then(() => {
+      if (!currentChannelInState && addressBook) {
+        return setCurrentChannel(addressBook.getChannelByName(DEFAULT_CHANNEL));
+      }
+    });
+  }, [addressBook, joinLobby, currentChannelInState, setCurrentChannel])
 
   useEffect(() => {
-    if (!wallet || !connected || !identityReady) return;
+    if (!wallet || !connected || !identityReady || addressBook) return;
 
     AddressBookManager.load(addressBookStore, connection, wallet, did, decryptionKey)
       .then(setAddressBook)
-      .then(joinLobby)
-      .then(() => {
-        if (!currentChannelInState && addressBook) {
-          return setCurrentChannel(addressBook.getChannelByName(DEFAULT_CHANNEL));
-        }
-      });
   }, [
     wallet, connected, connection, 
-    addressBook, addressBookStore,
+    addressBookStore,
     identityReady, did, decryptionKey,
-    currentChannelInState, joinLobby, setCurrentChannel
   ]);
 
   useEffect(() => {

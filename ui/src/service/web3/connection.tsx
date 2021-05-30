@@ -7,8 +7,8 @@ import {
 } from "@solana/web3.js";
 import React, { useContext, useEffect, useMemo } from "react";
 import { notify } from "../notification";
-import {DEFAULT_COMMITMENT, ENDPOINTS} from "../constants";
-import {ExtendedCluster, SignCallback} from "solarium-js";
+import {ENDPOINTS} from "../constants";
+import {ExtendedCluster, SignCallback, getConnection} from "solarium-js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 
 // Default to Devnet
@@ -26,7 +26,7 @@ interface ConnectionConfig {
 const ConnectionContext = React.createContext<ConnectionConfig>({
   endpoint: DEFAULT_ENDPOINT,
   setEndpoint: () => {},
-  connection: new Connection(DEFAULT_ENDPOINT, DEFAULT_COMMITMENT),
+  connection: getConnection(ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name),
   env: ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name,
 });
 
@@ -36,7 +36,7 @@ export function ConnectionProvider({ children = undefined as any }) {
     ENDPOINTS[DEFAULT_ENDPOINT_INDEX].endpoint
   );
 
-  const connection = useMemo(() => new Connection(endpoint, DEFAULT_COMMITMENT), [
+  const connection = useMemo(() => getConnection(ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name), [
     endpoint,
   ]);
 

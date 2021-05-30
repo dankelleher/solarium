@@ -150,6 +150,7 @@ export const addKey = withAirdrop(async (
     throw new Error("Decryption key required to update channels with new key")
   }
 
+  const signCallback = decryptionKey ? sign(connection, wallet, decryptionKey) : sign(connection, wallet);
   await addKeyToDID({
     signer: decryptionKey?.secretKey || wallet.publicKey,
     channelsToUpdate: channelsToUpdate.map(c => c.address.toBase58()),
@@ -157,7 +158,7 @@ export const addKey = withAirdrop(async (
     ownerDID,
     keyIdentifier: 'browser',
     newKey: newKey.toBase58(),
-    signCallback: sign(connection, wallet),
+    signCallback,
     cluster
   });
 });
@@ -202,7 +203,7 @@ export const addToChannel = withAirdrop((
   decryptionKey: inviteAuthority.secretKey,
   inviteeDID,
   payer: wallet.publicKey,
-  signCallback: sign(connection, wallet),
+  signCallback: sign(connection, wallet, inviteAuthority),
   cluster
 }));
 

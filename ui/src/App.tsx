@@ -11,14 +11,6 @@ import ChannelView from "./components/ChannelView";
 import logo from './logo-only.png'
 import logoText from './logo-text.png'
 
-const navLinks = [
-  { title: 'Home', active: true },
-  { title: 'Profile', active: false },
-  { title: 'Resources', active: false },
-  { title: 'Company Directory', active: false },
-  { title: 'Openings', active: false },
-]
-
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
@@ -140,46 +132,6 @@ export default function App() {
                           <MenuIcon className="block h-6 w-6" aria-hidden="true" />
                         )}
                       </Popover.Button>
-                    </div>
-                  </div>
-                  <div className="hidden lg:block border-t border-white text-white border-opacity-20 py-5">
-                    <div className="grid grid-cols-3 gap-8 items-center">
-                      <div className="col-span-2">
-                        <nav className="flex space-x-4">
-                          {navLinks.map((link) => (
-                            <a
-                              key={link.title}
-                              href={`#${link.title}`}
-                              className={classNames(
-                                link.active ? 'bg-myrtleGreen-lightest' : 'bg-myrtleGreen-dark',
-                                'text-sm font-medium rounded-md bg-opacity-0 px-3 py-2 hover:bg-opacity-10'
-                              )}
-                              aria-current={link.active ? 'page' : 'false'}
-                            >
-                              {link.title}
-                            </a>
-                          ))}
-                        </nav>
-                      </div>
-                      <div>
-                        <div className="max-w-md w-full mx-auto">
-                          <label htmlFor="search" className="sr-only">
-                            Search
-                          </label>
-                          <div className="relative text-white focus-within:text-gray-600">
-                            <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                              <SearchIcon className="h-5 w-5" aria-hidden="true" />
-                            </div>
-                            <input
-                              id="search"
-                              className="block w-full bg-white bg-opacity-20 py-2 pl-10 pr-3 border border-transparent rounded-md leading-5 text-gray-900 placeholder-white focus:outline-none focus:bg-opacity-100 focus:border-transparent focus:placeholder-gray-500 focus:ring-0 sm:text-sm"
-                              placeholder="Search"
-                              type="search"
-                              name="search"
-                            />
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>

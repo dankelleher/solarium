@@ -7,7 +7,7 @@ type Props = {
 const MyAvatar = (props:Props) => {
   const { did } = useIdentity();
   
-  return <Avatar {...props} address={did}/>
+  return <Avatar {...props} address={did || ''}/>
 }
 
 export default MyAvatar

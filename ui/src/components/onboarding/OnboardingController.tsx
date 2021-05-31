@@ -4,6 +4,7 @@ import {useChannel} from "../../service/channels/channel";
 import {useWallet} from "../../service/wallet/wallet";
 import {useIdentity} from "../../service/identity";
 import Loader from "../Loader";
+import {DEFAULT_CHANNEL} from "../../service/constants";
 
 enum StepType {
   CONNECT_WALLET = 'Connect Wallet',
@@ -36,48 +37,63 @@ export type OnboardingStep = {
   type: StepType,
   description: string,
   action: () => Promise<void>,
+  skipCondition: () => boolean,
 }
 
-type OnboardingStepTemplate = Omit<OnboardingStep, 'action'>
+type OnboardingStepTemplate = Omit<OnboardingStep, 'action' | 'skipCondition'>
 
 const OnboardingController = () => {
   const {wallet, connected} = useWallet();
-  const { ready: identityReady, decryptionKey, did} = useIdentity();
-  const {} = useChannel()
+  const { ready: identityReady, decryptionKey, did, createIdentity, addKey} = useIdentity();
+  const { addressBook, joinPublicChannel } = useChannel()
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const [title, setTitle] = useState<string>(titleNewUser)
   
   useEffect(() => {
     const connectWalletAction = wallet.connect;
-    const createIdentityAction = async () => { };
-    const addKeyAction = async () => { };
-    const joinPublicChannelAction = async () => { };
+    const createIdentityAction = createIdentity;
+    const addKeyAction = addKey;
+    const joinPublicChannelAction = joinPublicChannel;
     const doneAction = async () => { };
+    
+    const connectWalletSkipCondition = () => connected;
+    const createIdentitySkipCondition = () => !!did;
+    const addKeySkipCondition = () => identityReady;
+    const joinPublicChannelSkipCondition = () => !!addressBook?.getChannelByName(DEFAULT_CHANNEL)
+    
     const populateStep = (templateStep:OnboardingStepTemplate):OnboardingStep => {
       switch (templateStep.type) {
-        case StepType.CONNECT_WALLET: return { ...templateStep, action: connectWalletAction}
-        case StepType.CREATE_IDENTITY: return { ...templateStep, action: createIdentityAction}
-        case StepType.ADD_KEY: return { ...templateStep, action: addKeyAction}
-        case StepType.JOIN_PUBLIC_CHANNEL: return { ...templateStep, action: joinPublicChannelAction}
-        case StepType.DONE:return { ...templateStep, action: doneAction}
+        case StepType.CONNECT_WALLET: return { ...templateStep, action: connectWalletAction, skipCondition: connectWalletSkipCondition}
+        case StepType.CREATE_IDENTITY: return { ...templateStep, action: createIdentityAction, skipCondition: createIdentitySkipCondition}
+        case StepType.ADD_KEY: return { ...templateStep, action: addKeyAction, skipCondition: addKeySkipCondition}
+        case StepType.JOIN_PUBLIC_CHANNEL: return { ...templateStep, action: joinPublicChannelAction, skipCondition: joinPublicChannelSkipCondition}
+        case StepType.DONE:return { ...templateStep, action: doneAction, skipCondition: () => false}
       }
     }
     const populateSteps = (templateSteps:OnboardingStepTemplate[]):OnboardingStep[] => templateSteps.map(populateStep);
     
-    const isNewUser = !did;
+    const isNewUser = true; //!did;
     const stepTemplates = isNewUser ? firstTimeSteps : returnUserSteps;
     
     const populatedSteps = populateSteps(stepTemplates) 
 
     setTitle(isNewUser ? titleNewUser : titleReturnUser)
     setSteps(populatedSteps)
-  }, [did, identityReady, decryptionKey, wallet, connected])
+  }, [
+    did, identityReady, decryptionKey, addKey, createIdentity,
+    wallet, connected,
+    addressBook, joinPublicChannel])
 
   const nextStep = useCallback(
     () => {
       steps[currentStepIndex].action().then(() => {
-        setCurrentStepIndex(currentStepIndex + 1)  
+        console.log("STEP " + currentStepIndex + " DONE");
+        let nextStep = currentStepIndex;
+        do {
+          nextStep++;
+        } while (steps.length > nextStep && steps[nextStep].skipCondition())
+        setCurrentStepIndex(nextStep)
       })
     }, 
     [currentStepIndex, setCurrentStepIndex, steps]

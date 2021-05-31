@@ -19,18 +19,20 @@ type ChannelProps = {
   channel?: Channel
   setCurrentChannel: (channel: Channel) => void
   addressBook: AddressBookManager | undefined
+  joinPublicChannel: () => Promise<void>
 }
 
 const ChannelContext = React.createContext<ChannelProps>({
   post: (): Promise<void> => Promise.resolve(undefined),
   messages: [],
   setCurrentChannel: () => {},
-  addressBook: undefined
+  addressBook: undefined,
+  joinPublicChannel: async () => {}
 });
 export function ChannelProvider({ children = null as any }) {
   const {wallet, connected} = useWallet();
   const connection = useConnection();
-  const { ready: identityReady, decryptionKey, did} = useIdentity();
+  const { ready: identityReady, decryptionKey, did, document} = useIdentity();
   const [channel, setChannel] = useState<Channel>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [addressBook, setAddressBook] = useState<AddressBookManager>();
@@ -43,10 +45,10 @@ export function ChannelProvider({ children = null as any }) {
     setChannel(newChannel)
   }, [currentChannelInState, setChannel, setCurrentChannelInState]);
 
-  const joinLobby = useCallback(() => {
-    if (!addressBook) return Promise.resolve();
+  const joinPublicChannel = useCallback(() => {
+    if (!addressBook) throw new Error("Load address book first");
     
-    const defaultChannel = addressBook?.getChannelByName(DEFAULT_CHANNEL);
+    const defaultChannel = addressBook.getChannelByName(DEFAULT_CHANNEL);
     if (!defaultChannel) {
       // not in lobby- try to join it.
       const lobbyConfig = publicChannelConfigByName(DEFAULT_CHANNEL);
@@ -55,31 +57,35 @@ export function ChannelProvider({ children = null as any }) {
         throw new Error(`No channel named ${DEFAULT_CHANNEL} found in config`)
       }
 
-      return addressBook?.joinChannel(lobbyConfig)
+      return addressBook.joinChannel(lobbyConfig)
     } // else already in the lobby
     return Promise.resolve(defaultChannel)
   },  [addressBook])
   
-  // when the addressbook is loaded
-  useEffect(() => {
-    if (!addressBook || !joinLobby || !setCurrentChannel) return;
-
-    joinLobby().then(() => {
+  const joinPublicChannelAndSetDefault = useCallback(() => 
+    joinPublicChannel().then(async () => {
       if (!currentChannelInState && addressBook) {
-        return setCurrentChannel(addressBook.getChannelByName(DEFAULT_CHANNEL));
+        await setCurrentChannel(addressBook.getChannelByName(DEFAULT_CHANNEL));
       }
-    });
-  }, [addressBook, joinLobby, currentChannelInState, setCurrentChannel])
-
+    })
+  , [joinPublicChannel, currentChannelInState, addressBook, setCurrentChannel])
+  
+  console.log("identityReady " + identityReady);
+  // load addressbook when identity ready
   useEffect(() => {
+    console.log("Address book loader");
     if (!wallet || !connected || !identityReady || addressBook) return;
 
-    AddressBookManager.load(addressBookStore, connection, wallet, did, decryptionKey)
+    console.log("Loading address book...");
+
+    AddressBookManager
+      .load(addressBookStore, connection, wallet, did, decryptionKey)
       .then(setAddressBook)
   }, [
     wallet, connected, connection, 
     addressBookStore,
     identityReady, did, decryptionKey,
+    document, addressBook
   ]);
 
   useEffect(() => {
@@ -129,7 +135,8 @@ export function ChannelProvider({ children = null as any }) {
       post,
       channel,
       setCurrentChannel,
-      addressBook
+      addressBook,
+      joinPublicChannel: joinPublicChannelAndSetDefault
     }}>
       {children}
     </ChannelContext.Provider>
@@ -143,6 +150,7 @@ export function useChannel():ChannelProps {
     post: context.post,
     channel: context.channel,
     setCurrentChannel: context.setCurrentChannel,
-    addressBook: context.addressBook
+    addressBook: context.addressBook,
+    joinPublicChannel: context.joinPublicChannel
   };
 }

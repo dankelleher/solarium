@@ -9,6 +9,7 @@ import {ChannelProvider} from "./service/channels/channel";
 import ChannelView from "./components/ChannelView";
 import logo from './logo-only.png'
 import logoText from './logo-text.png'
+import ChannelList from "./components/ChannelList";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
@@ -251,7 +252,7 @@ export default function App() {
               </>
             )}
           </Popover>
-          <main className="-mt-24 pb-8">
+          <main className="pb-8">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
               <h1 className="sr-only">Solarium</h1>
               {/* Main 3 column grid */}
@@ -260,14 +261,7 @@ export default function App() {
                 <ChannelView/>
                 {/* Right column */}
                 <div className="grid grid-cols-1 gap-4">
-                  <section aria-labelledby="section-2-title">
-                    <h2 className="sr-only" id="section-2-title">
-                      Channels
-                    </h2>
-                    <div className="rounded-lg bg-white overflow-hidden shadow">
-                      <div className="p-6">{/* Your content */}</div>
-                    </div>
-                  </section>
+                  <ChannelList/>
                 </div>
               </div>
             </div>

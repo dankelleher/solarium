@@ -94,9 +94,6 @@ export function useIdentity():IdentityProps {
       }
     }
   }, [document, decryptionKey, did, setReady, wallet, connected, connection])
-  // Note to useEffect run after EVERY Render, but SKIPS if none of the deps values have changed.
-  // THEREFORE: useeffect always runs once after render on initial state.
-  // And then for every changed value.
 
   return {
     ready,

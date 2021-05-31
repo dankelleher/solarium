@@ -1,11 +1,11 @@
 import {Keypair, PublicKey} from "@solana/web3.js";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useLocalStorageKey, useLocalStorageState} from "../storage";
 import {useWallet} from "../wallet/wallet";
 import {useConnection, useConnectionConfig} from "../web3/connection";
 import {ClusterType, DIDDocument, resolve} from '@identity.com/sol-did-client';
 import {keyToIdentifier} from "solarium-js";
-import {addKey, createIdentity} from "../channels/solarium";
+import {addKey as addKeyToDID, createIdentity as createDID} from "../channels/solarium";
 
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
   doc.verificationMethod?.find(verificationMethod => verificationMethod.publicKeyBase58 === key.toBase58())
@@ -13,7 +13,10 @@ const docHasKey = (doc: DIDDocument, key: PublicKey) =>
 type IdentityProps = {
   ready: boolean,
   decryptionKey: Keypair,
-  did: string
+  did: string,
+  createIdentity: () => Promise<void>,
+  addKey: () => Promise<void>,
+  document: DIDDocument | undefined
 }
 export function useIdentity():IdentityProps {
   const {wallet, connected} = useWallet();
@@ -24,6 +27,17 @@ export function useIdentity():IdentityProps {
   const [document, setDocument] = useState<DIDDocument>();
   const [ready, setReady] = useState<boolean>(false);
 
+  const createIdentity = useCallback(() =>
+    createDID(connection, wallet).then(document => setDID(document.id))
+  , [connection, wallet, setDID])
+  
+  const addKey = useCallback(() => 
+    addKeyToDID(connection, wallet, decryptionKey.publicKey, did).then(() => {
+      console.log("Key Added. Ready? " + ready);
+      setReady(true)
+    })
+  , [connection, wallet, decryptionKey, did, setReady, ready ])
+  
   // load the DID document whenever the did is changed
   useEffect(() => { if (did) resolve(did).then(doc => {
     setDocument(doc)
@@ -31,7 +45,7 @@ export function useIdentity():IdentityProps {
   }).catch(error => {
     console.log("No DID registered yet");
   }) }, [did]);
-
+  
   // attempt to get the default DID when the wallet is loaded if none is set
   useEffect(() => {
     if (wallet && connected && !did) {
@@ -43,11 +57,11 @@ export function useIdentity():IdentityProps {
         })
         .catch(error => {
           if (error.message.startsWith("No DID found")) {
-            console.log("Prompt to create DID");
-            // TODO trigger this only after prompt. This is just to get us to the "ready" phase
-            createIdentity(connection, wallet).then(document => {
-              setDID(document.id);
-            })
+            // console.log("Prompt to create DID");
+            // // TODO trigger this only after prompt. This is just to get us to the "ready" phase
+            // createIdentity(connection, wallet).then(document => {
+            //   setDID(document.id);
+            // })
           }
         })
     }
@@ -58,17 +72,18 @@ export function useIdentity():IdentityProps {
     console.log("Checking keys");
     if (document && decryptionKey) {
       console.log("Checking if decryption key is on document");
+      console.log(document);
+      console.log(decryptionKey.publicKey.toBase58());
       if (!docHasKey(document, decryptionKey.publicKey)) {
         if (wallet && connected) {
           console.log("Checking if wallet key is on document");
           if (docHasKey(document, wallet.publicKey)) {
-            console.log("Asking to add decryption key");
-            if (window.confirm(`Add key to ${did}?`)) {
-              addKey(connection, wallet, decryptionKey.publicKey, did).then(() => setReady(true))
-            } else {
-              // handle no decryption possible
-              console.log("Add decryption key rejected");
-            }
+            // if (window.confirm(`Add key to ${did}?`)) {
+            //   addKeyToDID(connection, wallet, decryptionKey.publicKey, did).then(() => setReady(true))
+            // } else {
+            //   // handle no decryption possible
+            //   console.log("Add decryption key rejected");
+            // }
           } else {
             console.log("This DID does not belong to the wallet");
             // prompt to request add key
@@ -98,6 +113,9 @@ export function useIdentity():IdentityProps {
   return {
     ready,
     decryptionKey,
-    did
+    did,
+    createIdentity,
+    addKey,
+    document
   }
 }

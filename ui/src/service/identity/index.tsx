@@ -1,5 +1,5 @@
 import {Keypair, PublicKey} from "@solana/web3.js";
-import {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useContext, useEffect, useState} from "react";
 import {useLocalStorageKey, useLocalStorageState} from "../storage";
 import {useWallet} from "../wallet/wallet";
 import {useConnection, useConnectionConfig} from "../web3/connection";
@@ -12,13 +12,21 @@ const docHasKey = (doc: DIDDocument, key: PublicKey) =>
 
 type IdentityProps = {
   ready: boolean,
-  decryptionKey: Keypair,
-  did: string,
+  decryptionKey?: Keypair,
+  did?: string,
   createIdentity: () => Promise<void>,
   addKey: () => Promise<void>,
-  document: DIDDocument | undefined
+  document?: DIDDocument
 }
-export function useIdentity():IdentityProps {
+const IdentityContext = React.createContext<IdentityProps>({
+  ready: false,
+  decryptionKey: undefined,
+  did: undefined,
+  createIdentity: async () => {},
+  addKey: async  () => {},
+  document: undefined
+});
+export function IdentityProvider({ children = null as any }) {
   const {wallet, connected} = useWallet();
   const connection = useConnection();
   const connectionConfig = useConnectionConfig();
@@ -28,16 +36,16 @@ export function useIdentity():IdentityProps {
   const [ready, setReady] = useState<boolean>(false);
 
   const createIdentity = useCallback(() =>
-    createDID(connection, wallet).then(document => setDID(document.id))
-  , [connection, wallet, setDID])
-  
-  const addKey = useCallback(() => 
-    addKeyToDID(connection, wallet, decryptionKey.publicKey, did).then(() => {
-      console.log("Key Added. Ready? " + ready);
-      setReady(true)
-    })
-  , [connection, wallet, decryptionKey, did, setReady, ready ])
-  
+      createDID(connection, wallet).then(document => setDID(document.id))
+    , [connection, wallet, setDID])
+
+  const addKey = useCallback(() =>
+      addKeyToDID(connection, wallet, decryptionKey.publicKey, did).then(() => {
+        console.log("Key Added. Ready? " + ready);
+        setReady(true)
+      })
+    , [connection, wallet, decryptionKey, did, setReady, ready ])
+
   // load the DID document whenever the did is changed
   useEffect(() => { if (did) resolve(did).then(doc => {
     setDocument(doc)
@@ -45,7 +53,7 @@ export function useIdentity():IdentityProps {
   }).catch(error => {
     console.log("No DID registered yet");
   }) }, [did]);
-  
+
   // attempt to get the default DID when the wallet is loaded if none is set
   useEffect(() => {
     if (wallet && connected && !did) {
@@ -108,14 +116,30 @@ export function useIdentity():IdentityProps {
 
       }
     }
-  }, [document, decryptionKey, did, setReady, wallet, connected, connection])
+  }, [document, decryptionKey, did, setReady, ready, wallet, connected, connection])
 
+  return (
+    <IdentityContext.Provider value={{
+      ready,
+      decryptionKey,
+      did,
+      createIdentity,
+      addKey,
+      document
+    }}>
+      {children}
+    </IdentityContext.Provider>
+  )
+}
+
+export function useIdentity():IdentityProps {
+  const context = useContext(IdentityContext);
   return {
-    ready,
-    decryptionKey,
-    did,
-    createIdentity,
-    addKey,
-    document
-  }
+    ready: context.ready,
+    decryptionKey: context.decryptionKey,
+    did: context.did,
+    createIdentity: context.createIdentity,
+    addKey: context.addKey,
+    document: context.document
+  };
 }

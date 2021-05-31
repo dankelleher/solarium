@@ -74,7 +74,7 @@ export function ChannelProvider({ children = null as any }) {
   // load addressbook when identity ready
   useEffect(() => {
     console.log("Address book loader");
-    if (!wallet || !connected || !identityReady || addressBook) return;
+    if (!wallet || !connected || !identityReady || !did || !decryptionKey || addressBook) return;
 
     console.log("Loading address book...");
 
@@ -105,7 +105,7 @@ export function ChannelProvider({ children = null as any }) {
   }, [wallet, connected, addressBook, channel, setChannel, currentChannelInState, identityReady]);
 
   useEffect(() => {
-    if (!wallet || !connected || !channel) return;
+    if (!wallet || !connected || !channel || !did || !decryptionKey) return;
     console.log("READING!");
     // subscribe to channel messages
     const subscription = readChannel(did, channel, decryptionKey).subscribe(message => {
@@ -124,7 +124,7 @@ export function ChannelProvider({ children = null as any }) {
   }, [wallet, connected, channel, did, decryptionKey]);
 
   const post = useCallback((message: string) => {
-      if (!wallet || !connected || !channel) throw new Error("Posting unavailable.");
+      if (!wallet || !connected || !channel || !did || !decryptionKey) throw new Error("Posting unavailable.");
       return postToChannel(connection, wallet, channel, did, decryptionKey, message);
     },
     [connection, wallet, did, decryptionKey, channel, connected])

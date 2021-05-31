@@ -2,9 +2,9 @@ import OnboardingModal from "./OnboardingModal";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {useChannel} from "../../service/channels/channel";
 import {useWallet} from "../../service/wallet/wallet";
-import {useIdentity} from "../../service/identity";
 import Loader from "../Loader";
 import {DEFAULT_CHANNEL} from "../../service/constants";
+import {useIdentity} from "../../service/identity";
 
 enum StepType {
   CONNECT_WALLET = 'Connect Wallet',
@@ -37,7 +37,7 @@ export type OnboardingStep = {
   type: StepType,
   description: string,
   action: () => Promise<void>,
-  skipCondition: () => boolean,
+  skipCondition: boolean,
 }
 
 type OnboardingStepTemplate = Omit<OnboardingStep, 'action' | 'skipCondition'>
@@ -57,10 +57,14 @@ const OnboardingController = () => {
     const joinPublicChannelAction = joinPublicChannel;
     const doneAction = async () => { };
     
-    const connectWalletSkipCondition = () => connected;
-    const createIdentitySkipCondition = () => !!did;
-    const addKeySkipCondition = () => identityReady;
-    const joinPublicChannelSkipCondition = () => !!addressBook?.getChannelByName(DEFAULT_CHANNEL)
+    console.log("address book");
+    console.log(addressBook);
+    console.log("has channel", addressBook?.getChannelByName(DEFAULT_CHANNEL));
+    
+    const connectWalletSkipCondition = connected;
+    const createIdentitySkipCondition = !!did;
+    const addKeySkipCondition = identityReady;
+    const joinPublicChannelSkipCondition = !!addressBook?.getChannelByName(DEFAULT_CHANNEL)
     
     const populateStep = (templateStep:OnboardingStepTemplate):OnboardingStep => {
       switch (templateStep.type) {
@@ -68,32 +72,41 @@ const OnboardingController = () => {
         case StepType.CREATE_IDENTITY: return { ...templateStep, action: createIdentityAction, skipCondition: createIdentitySkipCondition}
         case StepType.ADD_KEY: return { ...templateStep, action: addKeyAction, skipCondition: addKeySkipCondition}
         case StepType.JOIN_PUBLIC_CHANNEL: return { ...templateStep, action: joinPublicChannelAction, skipCondition: joinPublicChannelSkipCondition}
-        case StepType.DONE:return { ...templateStep, action: doneAction, skipCondition: () => false}
+        case StepType.DONE: return { ...templateStep, action: doneAction, skipCondition: false}
       }
     }
+    
     const populateSteps = (templateSteps:OnboardingStepTemplate[]):OnboardingStep[] => templateSteps.map(populateStep);
     
     const isNewUser = true; //!did;
     const stepTemplates = isNewUser ? firstTimeSteps : returnUserSteps;
     
-    const populatedSteps = populateSteps(stepTemplates) 
+    const populatedSteps = populateSteps(stepTemplates)
+
+    console.log(populatedSteps);
 
     setTitle(isNewUser ? titleNewUser : titleReturnUser)
     setSteps(populatedSteps)
+    skipSteps()
   }, [
     did, identityReady, decryptionKey, addKey, createIdentity,
     wallet, connected,
     addressBook, joinPublicChannel])
+  
+  const skipSteps = useCallback((startAt = currentStepIndex) => {
+    console.log("STEP " + currentStepIndex + " DONE");
+    let nextStep = startAt;
+    while (steps.length > nextStep && steps[nextStep].skipCondition) {
+      nextStep++;
+    }
+    console.log({ nextStep, currentStepIndex, startAt});
+    if (nextStep > currentStepIndex) setCurrentStepIndex(nextStep);
+  }, [currentStepIndex, steps, setCurrentStepIndex])
 
   const nextStep = useCallback(
     () => {
       steps[currentStepIndex].action().then(() => {
-        console.log("STEP " + currentStepIndex + " DONE");
-        let nextStep = currentStepIndex;
-        do {
-          nextStep++;
-        } while (steps.length > nextStep && steps[nextStep].skipCondition())
-        setCurrentStepIndex(nextStep)
+        skipSteps(currentStepIndex + 1)
       })
     }, 
     [currentStepIndex, setCurrentStepIndex, steps]

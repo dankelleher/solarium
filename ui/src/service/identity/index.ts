@@ -39,8 +39,7 @@ export function useIdentity():IdentityProps {
       keyToIdentifier(wallet.publicKey, ClusterType.parse(connectionConfig.env))
         .then(resolve)
         .then(document => {
-          setDID(document.id);
-          setDocument(document)
+          setDID(document.id); // this will already update the doc via useEffect on DID
         })
         .catch(error => {
           if (error.message.startsWith("No DID found")) {
@@ -48,7 +47,6 @@ export function useIdentity():IdentityProps {
             // TODO trigger this only after prompt. This is just to get us to the "ready" phase
             createIdentity(connection, wallet).then(document => {
               setDID(document.id);
-              setDocument(document)
             })
           }
         })
@@ -96,6 +94,9 @@ export function useIdentity():IdentityProps {
       }
     }
   }, [document, decryptionKey, did, setReady, wallet, connected, connection])
+  // Note to useEffect run after EVERY Render, but SKIPS if none of the deps values have changed.
+  // THEREFORE: useeffect always runs once after render on initial state.
+  // And then for every changed value.
 
   return {
     ready,

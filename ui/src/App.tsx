@@ -1,23 +1,22 @@
-import { Fragment } from 'react'
-import { Menu, Popover, Transition } from '@headlessui/react'
-import { BellIcon, MenuIcon, XIcon } from '@heroicons/react/outline'
+import {Fragment} from 'react'
+import {Menu, Popover, Transition} from '@headlessui/react'
+import {BellIcon, MenuIcon, XIcon} from '@heroicons/react/outline'
 import Avatar from "./components/Avatar";
 import Button from "./components/Button";
 import WalletBar from './components/WalletBar'
 import {WalletProvider} from "./service/wallet/wallet";
 import {ChannelProvider} from "./service/channels/channel";
 import ChannelView from "./components/ChannelView";
-import logo from './logo-only.png'
 import logoText from './logo-text.png'
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ')
-}
+import {classNames} from "./components/util";
+import OnboardingController from "./components/onboarding/OnboardingController";
+import Logo from "./components/Logo";
 
 export default function App() {
   return (
     <WalletProvider>
       <ChannelProvider>
+        <OnboardingController/>
         <div className="min-h-screen bg-black font-white">
           <Popover as="header" className="pb-24 bg-black">
             {({ open }) => (
@@ -28,11 +27,7 @@ export default function App() {
                     <div className="absolute left-0 flex-shrink-0 lg:static">
                       <a href="#solarium">
                         <span className="sr-only">Solarium</span>
-                        <img
-                          className="h-20 w-auto float-left flex-grow-0 inline-block"
-                          src={logo}
-                          alt="Solarium Logo"
-                        />
+                        <Logo/>
                         <img
                           className="h-20 w-auto py-4 flex-grow inline-block"
                           src={logoText}

@@ -11,6 +11,7 @@ import logoText from './logo-text.png'
 import {classNames} from "./components/util";
 import OnboardingController from "./components/onboarding/OnboardingController";
 import Logo from "./components/Logo";
+import MyAvatar from "./components/MyAvatar";
 
 export default function App() {
   return (
@@ -40,13 +41,6 @@ export default function App() {
                     <div className="hidden lg:ml-4 lg:flex lg:items-center lg:pr-0.5 text-turquoise">
                       <WalletBar/>
                       <Button icon={BellIcon} text="View notifications"/>
-                      {/*<button*/}
-                      {/*  type="button"*/}
-                      {/*  className="flex-shrink-0 p-1 text-aeroBlue-200 rounded-full hover:text-white hover:bg-white hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-white"*/}
-                      {/*>*/}
-                      {/*  <span className="sr-only">View notifications</span>*/}
-                      {/*  <BellIcon className="h-6 w-6" aria-hidden="true" />*/}
-                      {/*</button>*/}
 
                       {/* Profile dropdown */}
                       <Menu as="div" className="ml-4 relative flex-shrink-0">
@@ -55,7 +49,7 @@ export default function App() {
                             <div>
                               <Menu.Button className="bg-white rounded-full flex text-sm ring-2 ring-white text-white ring-opacity-20 focus:outline-none focus:ring-opacity-100">
                                 <span className="sr-only">Open user menu</span>
-                                <Avatar className="h-8 w-8" address={"myAddressGoesHere"}/>
+                                <MyAvatar className="h-8 w-8" />
                               </Menu.Button>
                             </div>
                             <Transition

@@ -19,9 +19,9 @@ module.exports = {
           dark: '#124F46ff',
         },
         aeroBlue: {
-          dark: '#E8F9FFff',
+          dark: '#98D9CCff',
           DEFAULT: '#B8F9ECff',
-          light: '#98D9CCff',
+          light: '#E8F9FFff',
         },
         black: {
           DEFAULT: '#000000ff',

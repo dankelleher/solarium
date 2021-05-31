@@ -1,6 +1,5 @@
 import React, { Fragment, useRef, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { CheckIcon } from '@heroicons/react/outline'
 import Wizard from './Wizard'
 import {OnboardingStep} from "./OnboardingController";
 import Logo from "../Logo";

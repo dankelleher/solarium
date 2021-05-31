@@ -18,9 +18,9 @@ const MessageView = ({message}: Props) => (
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium">{message.sender}</h3>
-            <p className="text-sm text-gray-500">{toDate(message.timestamp)}</p>
+            <p className="text-sm text-aeroBlue-light">{toDate(message.timestamp)}</p>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-aeroBlue-light">
             {message.content}
           </p>
         </div>

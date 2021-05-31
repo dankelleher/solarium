@@ -3,33 +3,34 @@ module.exports = {
   // https://tailwindcss.com/docs/just-in-time-mode
   // mode: "jit",
   theme: {
-    extend: {},
-    colors: {
-      transparent: 'transparent',
-      current: 'currentColor',
-      turquoise: {
-        light: '#85F8E1ff',
-        DEFAULT: '#65D8C1ff',
-        dark: '#45B8A1ff',
-      },
-      myrtleGreen: {
-        lightest: '#72AFA6ff',
-        light: '#528F86ff',
-        DEFAULT: '#326F66ff',
-        dark: '#124F46ff',
-      },
-      aeroBlue: {
-        dark: '#E8F9FFff',
-        DEFAULT: '#B8F9ECff',
-        light: '#98D9CCff',
-      },
-      black: {
-        DEFAULT: '#000000ff',
-      },
-      white: {
-        DEFAULT: '#FFFFFFff',
+    extend: {
+      colors: {
+        transparent: 'transparent',
+        current: 'currentColor',
+        turquoise: {
+          light: '#85F8E1ff',
+          DEFAULT: '#65D8C1ff',
+          dark: '#45B8A1ff',
+        },
+        myrtleGreen: {
+          lightest: '#72AFA6ff',
+          light: '#528F86ff',
+          DEFAULT: '#326F66ff',
+          dark: '#124F46ff',
+        },
+        aeroBlue: {
+          dark: '#E8F9FFff',
+          DEFAULT: '#B8F9ECff',
+          light: '#98D9CCff',
+        },
+        black: {
+          DEFAULT: '#000000ff',
+        },
+        white: {
+          DEFAULT: '#FFFFFFff',
+        }
       }
-    }
+    },
   },
   variants: {},
   plugins: [

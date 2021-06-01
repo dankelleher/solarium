@@ -3,7 +3,7 @@ import {useWallet} from "../wallet/wallet";
 import {Message, Channel} from "solarium-js";
 import {useConnection} from "../web3/connection";
 import {useIdentity} from "../identity";
-import {postToChannel, readChannel, readChannelOnce} from "./solarium";
+import {postToChannel, readChannel} from "./solarium";
 import {useLocalStorageState} from "../storage";
 import {
   AddressBookConfig,
@@ -101,9 +101,6 @@ export function ChannelProvider({ children = null as any }) {
   useEffect(() => {
     if (!wallet || !connected || !channel) return;
     console.log("READING!");
-    // read current Messages:
-    readChannelOnce(did, channel, decryptionKey).then(messages => setMessages(messages))
-
     // subscribe to channel messages
     const subscription = readChannel(did, channel, decryptionKey).subscribe(message => {
       if (message) {

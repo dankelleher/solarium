@@ -49,6 +49,7 @@ export function ChannelProvider({ children = null as any }) {
     if (!addressBook) throw new Error("Load address book first");
     
     const defaultChannel = addressBook.getChannelByName(DEFAULT_CHANNEL);
+
     if (!defaultChannel) {
       // not in lobby- try to join it.
       const lobbyConfig = publicChannelConfigByName(DEFAULT_CHANNEL);
@@ -61,7 +62,7 @@ export function ChannelProvider({ children = null as any }) {
     } // else already in the lobby
     return Promise.resolve(defaultChannel)
   },  [addressBook])
-  
+
   const joinPublicChannelAndSetDefault = useCallback(() => 
     joinPublicChannel().then(async () => {
       if (!currentChannelInState && addressBook) {
@@ -82,7 +83,7 @@ export function ChannelProvider({ children = null as any }) {
       .load(addressBookStore, connection, wallet, did, decryptionKey)
       .then(setAddressBook)
   }, [
-    wallet, connected, connection, 
+    wallet, connected, connection,
     addressBookStore,
     identityReady, did, decryptionKey,
     document, addressBook
@@ -93,7 +94,7 @@ export function ChannelProvider({ children = null as any }) {
 
     if (currentChannelInState) {
       const groupOrDirectChannel = addressBook.getGroupOrDirectChannelByAddress(currentChannelInState);
-      
+
       if (groupOrDirectChannel) {
         if (isGroupChannel(groupOrDirectChannel)) {
           setChannel(groupOrDirectChannel);

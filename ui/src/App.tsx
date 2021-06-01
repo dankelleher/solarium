@@ -7,6 +7,7 @@ import {WalletProvider} from "./service/wallet/wallet";
 import {ChannelProvider} from "./service/channels/channel";
 import ChannelView from "./components/ChannelView";
 import logoText from './logo-text.png'
+import ChannelList from "./components/ChannelList";
 import {classNames} from "./components/util";
 import OnboardingController from "./components/onboarding/OnboardingController";
 import Logo from "./components/Logo";
@@ -234,31 +235,24 @@ export default function App() {
                               </div>
                             </div>
                           </div>
-                        </Popover.Panel>
-                      </Transition.Child>
-                    </div>
-                  </Transition.Root>
-                </>
-              )}
-            </Popover>
-            <main className="-mt-24 pb-8">
-              <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-                <h1 className="sr-only">Solarium</h1>
-                {/* Main 3 column grid */}
-                <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-3 lg:gap-8">
-                  {/* Left column */}
-                  <ChannelView/>
-                  {/* Right column */}
-                  <div className="grid grid-cols-1 gap-4">
-                    <section aria-labelledby="section-2-title">
-                      <h2 className="sr-only" id="section-2-title">
-                        Channels
-                      </h2>
-                      <div className="rounded-lg bg-white overflow-hidden shadow">
-                        <div className="p-6">{/* Your content */}</div>
-                      </div>
-                    </section>
+                        </div>
+                      </Popover.Panel>
+                    </Transition.Child>
                   </div>
+                </Transition.Root>
+              </>
+            )}
+          </Popover>
+          <main className="pb-8">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+              <h1 className="sr-only">Solarium</h1>
+              {/* Main 3 column grid */}
+              <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-3 lg:gap-8">
+                {/* Left column */}
+                <ChannelView/>
+                {/* Right column */}
+                <div className="grid grid-cols-1 gap-4">
+                  <ChannelList/>
                 </div>
               </div>
             </main>

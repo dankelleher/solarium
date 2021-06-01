@@ -26,7 +26,7 @@ export const get = async (
   const channelData = await SolariumTransaction.getChannelData(connection, channel);
 
   if (!channelData) throw new Error(`Channel not found`)
-  
+
   const cekAccountData = await SolariumTransaction.getCEKAccountData(connection, didKey, channel);
 
   if (!cekAccountData) throw new Error(`No CEK account found for DID ${memberDID}. Are they a member of the channel?`)

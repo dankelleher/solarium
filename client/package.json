@@ -77,5 +77,10 @@
   },
   "resolutions": {
     "@types/bn.js": "5.1.0"
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/test/setup.ts"
+    ]
   }
 }

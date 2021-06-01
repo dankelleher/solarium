@@ -16,7 +16,7 @@ const ChannelView = () => {
             <Post post={post} disabled={!channel}/>
           </div>
         </div>
-        <div className="rounded-lg bg-myrtleGreen overflow-hidden shadow">
+        <div className="rounded-lg bg-myrtleGreen-darkest overflow-hidden shadow">
           <div className="p-2">
             <Feed messages={messages}/>
           </div>

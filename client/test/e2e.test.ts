@@ -1,11 +1,26 @@
-import {create, createDirect, post, postDirect, read, addKey, Channel, getDirect, get, addToChannel} from '../src';
+import {
+  create,
+  createDirect,
+  post,
+  postDirect,
+  read,
+  addKey,
+  Channel,
+  getDirect,
+  get,
+  addToChannel,
+  readStream,
+  Message
+} from '../src';
 import { create as createDID } from '../src/api/id/create';
 import { get as getDID } from '../src/api/id/get';
 import { SolanaUtil } from '../src/lib/solana/solanaUtil';
-import { Keypair } from '@solana/web3.js';
+import {Keypair} from '@solana/web3.js';
 import { repeat } from 'ramda';
 import { DEFAULT_MAX_MESSAGE_COUNT } from '../src/lib/constants';
 import {ClusterType, keyToIdentifier} from "@identity.com/sol-did-client";
+import {getStream} from "../src/service/get";
+import {PrivateKey, PublicKeyBase58} from "../src/lib/util";
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
@@ -165,7 +180,84 @@ describe('E2E', () => {
   });
 
 
+  it('emits events of old message(s) when subscribing to stream', async () => {
+    expect.assertions(2)
+
+    channel = await create({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: 'emit-channel'
+    });
+
+    const message = 'Hello 1!'
+    await post({
+      payer: payer.secretKey,
+      channel: channel.address.toBase58(),
+      senderDID: aliceDID,
+      signer: alice.secretKey,
+      message,
+    });
+
+    const subscription = readStream({
+          channel: channel.address.toBase58(),
+          memberDID: aliceDID,
+          decryptionKey: alice.secretKey
+    }).subscribe( (msg: Message) => {
+      expect(msg.content).toEqual(message)
+      expect(msg.sender).toEqual(aliceDID);
+    })
+
+    // sleep 1000
+    await new Promise(r => setTimeout(r, 1000));
+    subscription.unsubscribe()
+  });
+
+  it('emits events of new message(s) after subscribing to stream', async () => {
+    expect.assertions(4)
+
+    channel = await create({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: 'emit-channel'
+    });
+
+    const messages = ['Hello 1!', 'Hello 2!' ]
+
+    await post({
+      payer: payer.secretKey,
+      channel: channel.address.toBase58(),
+      senderDID: aliceDID,
+      signer: alice.secretKey,
+      message: messages[0],
+    });
+
+
+    let msgIndex = 0;
+    const subscription = readStream({
+      channel: channel.address.toBase58(),
+      memberDID: aliceDID,
+      decryptionKey: alice.secretKey
+    }).subscribe( (msg: Message) => {
+      expect(msg.content).toEqual(messages[msgIndex])
+      expect(msg.sender).toEqual(aliceDID);
+      msgIndex++
+    })
+
+    await post({
+      payer: payer.secretKey,
+      channel: channel.address.toBase58(),
+      senderDID: aliceDID,
+      signer: alice.secretKey,
+      message: messages[1],
+    });
+
+    // sleep to finish the observable callbacks
+    await new Promise(r => setTimeout(r, 50));
+    subscription.unsubscribe()
+  });
+
   it('sends a message to a direct channel', async () => {
+
     // create bob's did
     await createDID({
       payer: payer.secretKey,
@@ -261,9 +353,6 @@ describe('E2E', () => {
   // This test checks that if a user adds a key to their DID,
   // they can read messages in channels they belong to with this new key
   it('adds a key to the DID', async () => {
-
-    // increase timeout from 5000 to
-    jest.setTimeout(30000);
 
     channel = await create({
       payer: payer.secretKey,

@@ -11,13 +11,14 @@ import {
   keyToIdentifier,
 } from '@identity.com/sol-did-client';
 import { distinct, switchMap } from 'rxjs/operators';
-import { from, Observable } from 'rxjs';
+import { from, Observable, merge } from 'rxjs';
 import { PublicKey } from '@solana/web3.js';
 import { Channel } from '../lib/Channel';
 
 type Message = {
   sender: PublicKeyBase58;
   content: string;
+  timestamp: number;
 };
 
 const didFromKey = (request: ReadRequest): Promise<string> => {
@@ -66,16 +67,24 @@ export const readStream = (request: ReadRequest): Observable<Message> => {
 
   return memberDID$.pipe(
     switchMap((memberDID: string) => {
-      const channel$ = service.getStream(
+      const channelInit$ = from(service.get(
+          new PublicKey(request.channel),
+          connection,
+          memberDID,
+          request.decryptionKey,
+          request.cluster
+      ));
+
+      const channelStream$ = service.getStream(
         new PublicKey(request.channel),
         connection,
         memberDID,
         request.decryptionKey,
         request.cluster
       );
-      const uniqueKey = (m: Message) => m.content + m.sender; // TODO add timestamp
+      const uniqueKey = (m: Message) => m.content + m.sender + m.timestamp;
 
-      return channel$
+      return merge(channelInit$, channelStream$)
         .pipe(switchMap((channel: Channel) => channel.messages))
         .pipe(distinct(uniqueKey)); // only emit a message once
     }));

@@ -1,15 +1,23 @@
-import { Fragment, useRef, useState } from 'react'
+import React, { Fragment, useRef, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { CheckIcon } from '@heroicons/react/outline'
+import Wizard from './Wizard'
+import {OnboardingStep} from "./OnboardingController";
+import Logo from "../Logo";
 
 type Props = {
   title: string,
-  content: string,   // TODO JSX element?
+  steps: OnboardingStep[],
+  currentStepIndex: number
+  next: () => void
 }
-export default ({ title, content }:Props) => {
+export default ({ title, steps, currentStepIndex, next }:Props) => {
   const [open, setOpen] = useState(true)
+  
+  console.log("CURRENT STEP " + currentStepIndex);
 
-  const cancelButtonRef = useRef(null)
+  const nextRef = useRef(null)
+
+  const nextButtonText = currentStepIndex === steps.length - 1 ? 'Let\'s go!' : 'Next'
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -17,9 +25,9 @@ export default ({ title, content }:Props) => {
         as="div"
         static
         className="fixed z-10 inset-0 overflow-y-auto"
-        initialFocus={cancelButtonRef}
+        initialFocus={nextRef}
         open={open}
-        onClose={setOpen}
+        onClose={() => {}}
       >
         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <Transition.Child
@@ -31,12 +39,14 @@ export default ({ title, content }:Props) => {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Overlay className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            <Dialog.Overlay
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+            />
           </Transition.Child>
 
           {/* This element is to trick the browser into centering the modal contents. */}
           <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
-            &#8203;
+          &#8203;
           </span>
           <Transition.Child
             as={Fragment}
@@ -49,35 +59,29 @@ export default ({ title, content }:Props) => {
           >
             <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
               <div>
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                  <CheckIcon className="h-6 w-6 text-green-600" aria-hidden="true" />
+                <div className="mx-auto flex items-center justify-center h-12 rounded-full bg-myrtleGreen">
+                  <Logo/>
                 </div>
-                <div className="mt-3 text-center sm:mt-5">
-                  <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
+                <div className="mt-3 text-center sm:mt-5 text-myrtleGreen">
+                  <Dialog.Title as="h3" className="text-lg leading-6 font-medium">
                     {title}
                   </Dialog.Title>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      {content}
-                    </p>
+                  <Dialog.Description>
+                    Let's get you set up...
+                  </Dialog.Description>
+                  <div className="mt-2 py-6">
+                    <Wizard steps={steps} currentStepIndex={currentStepIndex}/>
                   </div>
                 </div>
               </div>
-              <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+              <div className="mt-5 sm:mt-6 text-center">
                 <button
                   type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-aeroBlue-600 text-base font-medium text-white hover:bg-aeroBlue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aeroBlue-500 sm:col-start-2 sm:text-sm"
-                  onClick={() => setOpen(false)}
+                  className="w-1/2 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-myrtleGreen text-base font-medium text-aeroBluen hover:bg-myrtleGreen-lightest focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myrtleGreen sm:col-start-2 sm:text-sm"
+                  onClick={next}
+                  ref={nextRef}
                 >
-                  Deactivate
-                </button>
-                <button
-                  type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-aeroBlue-500 sm:mt-0 sm:col-start-1 sm:text-sm"
-                  onClick={() => setOpen(false)}
-                  ref={cancelButtonRef}
-                >
-                  Cancel
+                  {nextButtonText}
                 </button>
               </div>
             </div>

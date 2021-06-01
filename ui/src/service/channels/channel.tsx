@@ -3,7 +3,7 @@ import {useWallet} from "../wallet/wallet";
 import {Message, Channel} from "solarium-js";
 import {useConnection} from "../web3/connection";
 import {useIdentity} from "../identity";
-import {postToChannel, readChannel} from "./solarium";
+import {postToChannel, readChannel, readChannelOnce} from "./solarium";
 import {useLocalStorageState} from "../storage";
 import {
   AddressBookConfig,
@@ -45,7 +45,7 @@ export function ChannelProvider({ children = null as any }) {
 
   const joinLobby = useCallback(() => {
     if (!addressBook) return Promise.resolve();
-    
+
     const defaultChannel = addressBook?.getChannelByName(DEFAULT_CHANNEL);
     if (!defaultChannel) {
       // not in lobby- try to join it.
@@ -59,7 +59,7 @@ export function ChannelProvider({ children = null as any }) {
     } // else already in the lobby
     return Promise.resolve(defaultChannel)
   },  [addressBook])
-  
+
   // when the addressbook is loaded
   useEffect(() => {
     if (!addressBook || !joinLobby || !setCurrentChannel) return;
@@ -77,7 +77,7 @@ export function ChannelProvider({ children = null as any }) {
     AddressBookManager.load(addressBookStore, connection, wallet, did, decryptionKey)
       .then(setAddressBook)
   }, [
-    wallet, connected, connection, 
+    wallet, connected, connection,
     addressBookStore,
     identityReady, did, decryptionKey,
   ]);
@@ -87,7 +87,7 @@ export function ChannelProvider({ children = null as any }) {
 
     if (currentChannelInState) {
       const groupOrDirectChannel = addressBook.getGroupOrDirectChannelByAddress(currentChannelInState);
-      
+
       if (groupOrDirectChannel) {
         if (isGroupChannel(groupOrDirectChannel)) {
           setChannel(groupOrDirectChannel);
@@ -101,6 +101,9 @@ export function ChannelProvider({ children = null as any }) {
   useEffect(() => {
     if (!wallet || !connected || !channel) return;
     console.log("READING!");
+    // read current Messages:
+    readChannelOnce(did, channel, decryptionKey).then(messages => setMessages(messages))
+
     // subscribe to channel messages
     const subscription = readChannel(did, channel, decryptionKey).subscribe(message => {
       if (message) {

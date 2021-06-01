@@ -6,6 +6,7 @@ import {
   post,
   get,
   getDirect,
+  read,
   readStream,
   addKey as addKeyToDID,
   addToChannel as addDIDToChannel,
@@ -178,6 +179,18 @@ export const postToChannel = withAirdrop((
     signCallback: sign(connection, wallet, signer),
     cluster
   }))
+
+export const readChannelOnce = (
+    did: string,
+    channel: Channel,
+    decryptionKey: Keypair,
+): Promise<Message[]> =>
+    read({
+        channel: channel.address.toBase58(),
+        memberDID: did,
+        decryptionKey: decryptionKey.secretKey,
+        cluster
+    })
 
 export const readChannel = (
   did: string,

@@ -18,6 +18,7 @@ import { Channel } from '../lib/Channel';
 type Message = {
   sender: PublicKeyBase58;
   content: string;
+  timestamp: number;
 };
 
 const didFromKey = (request: ReadRequest): Promise<string> => {

@@ -1,8 +1,8 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import {AccountChangeCallback, Connection, PublicKey} from '@solana/web3.js';
 import {didToPublicKey, ExtendedCluster, PrivateKey} from '../lib/util';
 import { SolariumTransaction } from '../lib/solana/transaction';
 import { Channel } from '../lib/Channel';
-import {from, Observable} from 'rxjs';
+import {from, Observable, bindCallback} from 'rxjs';
 import {ChannelData} from "../lib/solana/models/ChannelData";
 import {switchMap} from "rxjs/operators";
 import {CEKAccountData} from "../lib/solana/models/CEKAccountData";
@@ -26,7 +26,7 @@ export const get = async (
   const channelData = await SolariumTransaction.getChannelData(connection, channel);
 
   if (!channelData) throw new Error(`Channel not found`)
-  
+
   const cekAccountData = await SolariumTransaction.getCEKAccountData(connection, didKey, channel);
 
   if (!cekAccountData) throw new Error(`No CEK account found for DID ${memberDID}. Are they a member of the channel?`)
@@ -54,6 +54,11 @@ export const getStream = (
 
   return cekAccountData$.pipe(switchMap((cekAccountData: CEKAccountData | null) => {
     if (!cekAccountData) throw new Error(`No CEK account found for DID ${memberDID}. Are they a member of the channel?`);
+
+    // Work in Progress
+    const initialChannelData$ = from(SolariumTransaction.getChannelData(connection, channel))
+    const onAccountChange$ = bindCallback(
+        (channel: PublicKey, callback: AccountChangeCallback) => connection.onAccountChange(channel, callback))
 
     return new Observable<Channel>(subscriber => {
       connection.onAccountChange(channel, async accountInfo => {

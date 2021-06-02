@@ -74,10 +74,7 @@ export function ChannelProvider({ children = null as any }) {
   console.log("identityReady " + identityReady);
   // load addressbook when identity ready
   useEffect(() => {
-    console.log("Address book loader");
     if (!wallet || !connected || !identityReady || !did || !decryptionKey || addressBook) return;
-
-    console.log("Loading address book...");
 
     AddressBookManager
       .load(addressBookStore, connection, wallet, did, decryptionKey)
@@ -121,7 +118,7 @@ export function ChannelProvider({ children = null as any }) {
     });
 
     // return unsubscribe method to execute when component unmounts
-    return subscription.unsubscribe;
+    // return () => subscription.unsubscribe();
   }, [wallet, connected, channel, did, decryptionKey]);
 
   const post = useCallback((message: string) => {

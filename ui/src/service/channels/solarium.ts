@@ -90,6 +90,7 @@ export const getDirectChannel = async (
   // TODO handle null case in client
   try {
     return await getDirect({
+      owner: wallet.publicKey.toBase58(),
       partnerDID,
       cluster,
       decryptionKey: decryptionKey?.secretKey
@@ -107,7 +108,7 @@ export const getOrCreateDirectChannel = withAirdrop(async (
   decryptionKey?: Keypair,
 ): Promise<Channel> => {
   const channel = await getDirectChannel(connection, wallet, partnerDID, decryptionKey)
-
+  
   if (channel) return channel;
 
   return createDirect({

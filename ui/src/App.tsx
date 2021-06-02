@@ -235,7 +235,6 @@ export default function App() {
                               </div>
                             </div>
                           </div>
-                        </div>
                       </Popover.Panel>
                     </Transition.Child>
                   </div>
@@ -255,6 +254,7 @@ export default function App() {
                   <ChannelList/>
                 </div>
               </div>
+            </div>
             </main>
             <footer>
               <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 lg:max-w-7xl">

@@ -13,7 +13,7 @@ const ChannelList = () => {
   let directChannels: DirectChannel[] = [];
 
   if (addressBook) {
-      groupChannels = addressBook.groupChannels
+      groupChannels = addressBook.groupChannels.map(gc => gc.channel)
       directChannels = addressBook.directChannels
   }
   

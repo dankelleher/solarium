@@ -34,7 +34,12 @@ export const emptyAddressBookConfig: AddressBookConfig = {
 }
 
 export type DirectChannel = {
-  contact :ContactConfig,
+  contact: ContactConfig,
+  channel: Channel
+}
+
+export type GroupChannel = {
+  inviteAuthority?: string,
   channel: Channel
 }
 
@@ -50,12 +55,14 @@ export class AddressBookManager {
     private wallet: Wallet,
     private did: string,
     private decryptionKey: Keypair,
-    readonly groupChannels: Channel[],
-    readonly directChannels: DirectChannel[]) {
+    readonly groupChannels: GroupChannel[],
+    readonly directChannels: DirectChannel[],
+    readonly updateCallback: (store: AddressBookConfig) => void
+  ) {
   }
 
   getChannelByName(name: string): Channel | undefined {
-    return this.groupChannels.find(c => c.name === name);
+    return this.groupChannels.find(gc => gc.channel.name === name)?.channel;
   }
 
   getDirectChannelByContactDID(did: string): DirectChannel | undefined {
@@ -66,16 +73,15 @@ export class AddressBookManager {
     return this.directChannels.find(c => c.contact.alias === alias);
   }
 
-  getGroupOrDirectChannelByAddress(address: string) : Channel | DirectChannel | undefined {
-    const groupChannel = this.groupChannels.find(c => c.address.toBase58() === address);
-    if (groupChannel) return groupChannel;
+  getGroupOrDirectChannelByAddress(address: string) : Channel | undefined {
+    const groupChannel = this.groupChannels.find(gc => gc.channel.address.toBase58() === address);
+    if (groupChannel) return groupChannel.channel;
 
     const directChannel = this.directChannels.find(dc => dc.channel.address.toBase58() === address);
-    if (directChannel) return directChannel;
+    if (directChannel) return directChannel.channel;
   }
 
   async joinChannel(channelConfig: GroupChannelConfig): Promise<Channel> {
-    console.log(`Joining channel ${channelConfig.name}`);
     if (!channelConfig.inviteAuthority) {
       throw new Error("Cannot join " + channelConfig.name + " - no invite authority");
     }
@@ -88,31 +94,54 @@ export class AddressBookManager {
 
     if (!channel) throw new Error("Unable to retrieve channel " + channelConfig.name);
 
-    this.groupChannels.push(channel);
+    this.groupChannels.push({ channel, inviteAuthority: channelConfig.inviteAuthority });
+
+    this.store();
 
     return channel;
   }
 
   async addContact(did: string, alias: string):Promise<DirectChannel> {
     const foundDirectChannel = this.getDirectChannelByContactDID(did);
-    if (foundDirectChannel) return foundDirectChannel; 
-    
+    if (foundDirectChannel) return foundDirectChannel;
+
     const channel = await getOrCreateDirectChannel(this.connection, this.wallet, did, this.decryptionKey);
     const directChannel = { contact: { did, alias }, channel }
-    
+
     this.directChannels.push(directChannel);
     
+    this.store();
+
     return directChannel;
   }
 
-  static async load(store: AddressBookConfig, connection: Connection, wallet: Wallet, did: string, decryptionKey: Keypair): Promise<AddressBookManager> {
+  private store() {
+    const config: AddressBookConfig = {
+      channels: this.groupChannels.map(gc => ({
+        name: gc.channel.name,
+        address: gc.channel.address.toBase58(),
+        inviteAuthority: gc.inviteAuthority
+      })),
+      contacts: this.directChannels.map(dc => dc.contact)
+    }
 
+    this.updateCallback(config);
+  }
+
+  static async load(store: AddressBookConfig, connection: Connection, wallet: Wallet, did: string, decryptionKey: Keypair, updateCallback: (store: AddressBookConfig) => void): Promise<AddressBookManager> {
     const mergedConfig: AddressBookConfig = {
       channels: [...store.channels, ...publicChannelConfig[cluster as string]],
       contacts: store.contacts,
     }
 
-    const groupChannelPromises = mergedConfig.channels.map(c => getChannel(connection, wallet, did, c.address, decryptionKey));
+    const groupChannelPromises = mergedConfig.channels.map(async (gc):Promise<GroupChannel> => {
+      const channel = await getChannel(connection, wallet, did, gc.address, decryptionKey)
+      if (!channel) throw new Error("Cannot find channel " + gc.address)
+      return {
+        channel,
+        inviteAuthority: gc.inviteAuthority
+      }
+    });
 
     const groupChannelResults = await Promise.allSettled(groupChannelPromises)
 
@@ -145,7 +174,8 @@ export class AddressBookManager {
       did,
       decryptionKey,
       groupChannels,
-      directChannels
+      directChannels,
+      updateCallback
     )
   }
 }

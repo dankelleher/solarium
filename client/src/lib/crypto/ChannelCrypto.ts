@@ -121,7 +121,7 @@ export const decryptCEK = async (encryptedCEK: CEKData, key: PrivateKey):Promise
 // Find the CEK encrypted with a particular key, and decrypt it
 export const decryptCEKs = async (encryptedCEKs: CEKData[], kid: string, key: PrivateKey):Promise<CEK> => {
   // find the encrypted CEK for the key
-  const encryptedCEK = encryptedCEKs.find(k => k.kid === shortenKID(kid));
+  const encryptedCEK = encryptedCEKs.find(k => (k.kid === shortenKID(kid) || k.kid === kid));
 
   if (!encryptedCEK) throw new Error(`No encrypted CEK found for key ${kid}`);
 

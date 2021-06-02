@@ -15,7 +15,7 @@
     "debug": "^4.3.1",
     "rxjs": "^7.0.0",
     "rxjs-stream": "^3.2.1",
-    "solarium-js": "^0.1.13",
+    "solarium-js": "^0.1.18",
     "tslib": "^1"
   },
   "devDependencies": {

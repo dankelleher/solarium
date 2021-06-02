@@ -57,10 +57,6 @@ const OnboardingController = () => {
     const joinPublicChannelAction = joinPublicChannel;
     const doneAction = async () => { };
     
-    console.log("address book");
-    console.log(addressBook);
-    console.log("has channel", addressBook?.getChannelByName(DEFAULT_CHANNEL));
-    
     const connectWalletSkipCondition = connected;
     const createIdentitySkipCondition = !!did;
     const addKeySkipCondition = identityReady;
@@ -83,30 +79,25 @@ const OnboardingController = () => {
     
     const populatedSteps = populateSteps(stepTemplates)
 
-    console.log(populatedSteps);
-
     setTitle(isNewUser ? titleNewUser : titleReturnUser)
     setSteps(populatedSteps)
-    skipSteps()
   }, [
     did, identityReady, decryptionKey, addKey, createIdentity,
     wallet, connected,
     addressBook, joinPublicChannel])
   
-  const skipSteps = useCallback((startAt = currentStepIndex) => {
-    console.log("STEP " + currentStepIndex + " DONE");
-    let nextStep = startAt;
+  useEffect(() => {
+    let nextStep = currentStepIndex;
     while (steps.length > nextStep && steps[nextStep].skipCondition) {
       nextStep++;
     }
-    console.log({ nextStep, currentStepIndex, startAt});
     if (nextStep > currentStepIndex) setCurrentStepIndex(nextStep);
   }, [currentStepIndex, steps, setCurrentStepIndex])
 
   const nextStep = useCallback(
     () => {
       steps[currentStepIndex].action().then(() => {
-        skipSteps(currentStepIndex + 1)
+        setCurrentStepIndex(currentStepIndex + 1)
       })
     }, 
     [currentStepIndex, setCurrentStepIndex, steps]

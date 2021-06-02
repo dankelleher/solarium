@@ -353,7 +353,6 @@ describe('E2E', () => {
   // This test checks that if a user adds a key to their DID,
   // they can read messages in channels they belong to with this new key
   it('adds a key to the DID', async () => {
-
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
@@ -403,5 +402,46 @@ describe('E2E', () => {
       decryptionKey: alice.secretKey
     });
     expect(messagesWithOldKey).toEqual(messagesWithNewKey);
+  });
+
+  it('creates a direct channel between users with two keys', async () => {
+    // creates alice's did
+    await createDID({
+      payer: payer.secretKey,
+      owner: alice.publicKey.toBase58(),
+    });
+    // adds a key to alice's did
+    await addKey({
+      ownerDID: aliceDID,
+      payer: payer.secretKey,
+      signer: alice.secretKey,
+      newKey: Keypair.generate().publicKey.toBase58(),
+      keyIdentifier: 'mobile',
+      channelsToUpdate: []
+    });
+    
+    // creates bob's did
+    await createDID({
+      payer: payer.secretKey,
+      owner: bob.publicKey.toBase58(),
+    });
+    // adds a key to bob's did
+    await addKey({
+      ownerDID: bobDID,
+      payer: payer.secretKey,
+      signer: bob.secretKey,
+      newKey: Keypair.generate().publicKey.toBase58(),
+      keyIdentifier: 'mobile',
+      channelsToUpdate: []
+    });
+
+    // create the direct channel
+    channel = await createDirect({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      inviteeDID: bobDID
+    });
+
+    expect(channel.name).toContain(bobDID.replace('did:sol:localnet:', ''))
   });
 });

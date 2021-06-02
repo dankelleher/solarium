@@ -1,9 +1,13 @@
 import {useChannel} from "../service/channels/channel";
 import {Channel} from "solarium-js";
 import {DirectChannel} from "../service/channels/addressBook";
+import Modal from "./Modal";
+import {useCallback, useState} from "react";
 
 const ChannelList = () => {
   const { channel, setCurrentChannel, addressBook} = useChannel();
+  const [ inviteToGroupModal, showInviteToGroupModal ] = useState<boolean>(false);
+  const [ addContactModal, showAddContactModal ] = useState<boolean>(false);
 
   let groupChannels: Channel[] = [];
   let directChannels: DirectChannel[] = [];
@@ -12,6 +16,12 @@ const ChannelList = () => {
       groupChannels = addressBook.groupChannels
       directChannels = addressBook.directChannels
   }
+  
+  const addContact = useCallback(async (did:string) => {
+    addressBook?.addContact(did, 'TODO ALIAS').then(
+      directChannel => setCurrentChannel(directChannel.channel)
+    )
+  }, [addressBook])
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:col-span-2">
@@ -79,10 +89,11 @@ const ChannelList = () => {
             </div>
         </section>
         <button
-            onClick={() => alert('Add Contact')}
+            onClick={() => showAddContactModal(true)}
             className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
             Add Contact
         </button>
+        <Modal show={addContactModal} onClose={() => showAddContactModal(false)} title="Add Contact" description="" tip="DID" execute={addContact}/>
     </div>
 
   );

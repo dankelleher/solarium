@@ -12,8 +12,6 @@ type Props = {
 }
 export default ({ title, steps, currentStepIndex, next }:Props) => {
   const [open, setOpen] = useState(true)
-  
-  console.log("CURRENT STEP " + currentStepIndex);
 
   const nextRef = useRef(null)
 

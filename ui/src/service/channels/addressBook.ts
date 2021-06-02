@@ -1,6 +1,6 @@
 import {ENDPOINTS} from "../constants";
 import {DEFAULT_ENDPOINT_INDEX} from "../web3/connection";
-import {addToChannel, getChannel, getDirectChannel} from "./solarium";
+import {addToChannel, getChannel, getDirectChannel, getOrCreateDirectChannel} from "./solarium";
 import {Connection, Keypair} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {Channel} from "solarium-js";
@@ -93,6 +93,18 @@ export class AddressBookManager {
     return channel;
   }
 
+  async addContact(did: string, alias: string):Promise<DirectChannel> {
+    const foundDirectChannel = this.getDirectChannelByContactDID(did);
+    if (foundDirectChannel) return foundDirectChannel; 
+    
+    const channel = await getOrCreateDirectChannel(this.connection, this.wallet, did, this.decryptionKey);
+    const directChannel = { contact: { did, alias }, channel }
+    
+    this.directChannels.push(directChannel);
+    
+    return directChannel;
+  }
+
   static async load(store: AddressBookConfig, connection: Connection, wallet: Wallet, did: string, decryptionKey: Keypair): Promise<AddressBookManager> {
 
     const mergedConfig: AddressBookConfig = {
@@ -115,7 +127,7 @@ export class AddressBookManager {
         wallet,
         contact.did,
         decryptionKey
-        )
+      )
 
       if (!channel) throw new Error("No direct channel created for contact " + contact.did);
 

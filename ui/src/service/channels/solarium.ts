@@ -81,17 +81,24 @@ export const getChannel = (
     decryptionKey: decryptionKey?.secretKey
   })
 
-export const getDirectChannel = (
+export const getDirectChannel = async (
   connection: Connection,
   wallet: Wallet,
   partnerDID: string,
   decryptionKey?: Keypair,
-):Promise<Channel | null> =>
-  getDirect({
-    partnerDID,
-    cluster,
-    decryptionKey: decryptionKey?.secretKey
-  })
+):Promise<Channel | null> => {
+  // TODO handle null case in client
+  try {
+    return await getDirect({
+      partnerDID,
+      cluster,
+      decryptionKey: decryptionKey?.secretKey
+    })
+  } catch (error) {
+    if (error.message === 'Channel not found') return null;
+    throw error;
+  }
+}
 
 export const getOrCreateDirectChannel = withAirdrop(async (
   connection: Connection,

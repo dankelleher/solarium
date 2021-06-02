@@ -11,12 +11,12 @@ const ChannelView = () => {
         {channel?.name || ''}
       </h2>
       <section aria-labelledby="section-1-title">
-        <div className="rounded-lg bg-myrtleGreen overflow-hidden shadow mb-3">
+        <div className="rounded-lg bg-myrtleGreen-dark overflow-hidden shadow mb-3">
           <div className="p-2">
             <Post post={post} disabled={!channel}/>
           </div>
         </div>
-        <div className="rounded-lg bg-myrtleGreen-darkest overflow-hidden shadow">
+        <div className="rounded-lg bg-myrtleGreen-dark overflow-hidden shadow">
           <div className="p-2">
             <Feed messages={messages}/>
           </div>

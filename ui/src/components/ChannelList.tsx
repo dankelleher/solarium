@@ -18,7 +18,7 @@ const ChannelList = () => {
   }
   
   const addContact = useCallback(async (did:string) => {
-    addressBook?.addContact(did, 'TODO ALIAS').then(
+    addressBook?.addContact(did, 'TODO ALIAS').then(  // TODO
       directChannel => setCurrentChannel(directChannel.channel)
     )
   }, [addressBook])

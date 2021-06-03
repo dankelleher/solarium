@@ -41,6 +41,7 @@ export function ChannelProvider({ children = null as any }) {
 
   const setCurrentChannel = useCallback(async (newChannel: Channel | undefined) => {
     if (!newChannel || newChannel.address.toBase58() === currentChannelInState) return;
+    setMessages([]);
     setCurrentChannelInState(newChannel.address.toBase58());
     setChannel(newChannel)
   }, [currentChannelInState, setChannel, setCurrentChannelInState]);
@@ -71,16 +72,12 @@ export function ChannelProvider({ children = null as any }) {
     })
   , [joinPublicChannel, currentChannelInState, addressBook, setCurrentChannel])
   
-  console.log("identityReady " + identityReady);
   // load addressbook when identity ready
   useEffect(() => {
-    console.log("Address book loader");
     if (!wallet || !connected || !identityReady || !did || !decryptionKey || addressBook) return;
 
-    console.log("Loading address book...");
-
     AddressBookManager
-      .load(addressBookStore, connection, wallet, did, decryptionKey)
+      .load(addressBookStore, connection, wallet, did, decryptionKey, setAddressBookStore)
       .then(setAddressBook)
   }, [
     wallet, connected, connection,
@@ -96,11 +93,7 @@ export function ChannelProvider({ children = null as any }) {
       const groupOrDirectChannel = addressBook.getGroupOrDirectChannelByAddress(currentChannelInState);
 
       if (groupOrDirectChannel) {
-        if (isGroupChannel(groupOrDirectChannel)) {
           setChannel(groupOrDirectChannel);
-        } else {
-          setChannel(groupOrDirectChannel.channel);
-        }
       }
     }
   }, [wallet, connected, addressBook, channel, setChannel, currentChannelInState, identityReady]);
@@ -121,7 +114,7 @@ export function ChannelProvider({ children = null as any }) {
     });
 
     // return unsubscribe method to execute when component unmounts
-    return subscription.unsubscribe;
+    return () => subscription.unsubscribe();
   }, [wallet, connected, channel, did, decryptionKey]);
 
   const post = useCallback((message: string) => {

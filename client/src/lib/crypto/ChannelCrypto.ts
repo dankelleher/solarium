@@ -21,6 +21,8 @@ import {base64ToBytes, bytesToBase64, bytesToString, stringToBytes, base58ToByte
 
 export type CEK = Uint8Array;
 
+const shortenKID = (kid:string) => kid.substring(kid.indexOf('#') + 1)
+
 // Create a CEK for a new channel
 export const generateCEK = async ():Promise<CEK> => {
   const cek = randomBytes(32)
@@ -60,7 +62,7 @@ export const encryptCEKForVerificationMethod = async (cek: CEK, key: Verificatio
   const header = bytesToBase64(concatByteArray)
 
   return new CEKData({
-    kid: key.id,
+    kid: shortenKID(key.id),
     header,
     encryptedKey: bytesToBase64(res.encryptedKey)
   });
@@ -119,7 +121,7 @@ export const decryptCEK = async (encryptedCEK: CEKData, key: PrivateKey):Promise
 // Find the CEK encrypted with a particular key, and decrypt it
 export const decryptCEKs = async (encryptedCEKs: CEKData[], kid: string, key: PrivateKey):Promise<CEK> => {
   // find the encrypted CEK for the key
-  const encryptedCEK = encryptedCEKs.find(k => k.kid === kid);
+  const encryptedCEK = encryptedCEKs.find(k => (k.kid === shortenKID(kid) || k.kid === kid));
 
   if (!encryptedCEK) throw new Error(`No encrypted CEK found for key ${kid}`);
 

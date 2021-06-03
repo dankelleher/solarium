@@ -5,5 +5,5 @@ export type Notification = {
 }
 export const notify = (notification:Notification) => {
   // TODO
-  alert(JSON.stringify(notification))
+  console.log(notification);
 }

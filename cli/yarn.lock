@@ -735,7 +735,7 @@ bn.js@^4.11.9, bn.js@^4.12.0:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.12.0.tgz#775b3f278efbb9718eec7361f483fb36fbbfea88"
   integrity sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==
 
-bn.js@^5.0.0:
+bn.js@^5.0.0, bn.js@^5.2.0:
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-5.2.0.tgz#358860674396c6997771a9d051fcc1b57d4ae002"
   integrity sha512-D7iWRBvnZE8ecXiLj/9wbxH7Tk79fAh8IHaTNq1RWRixsS02W+5qS+iE9yq6RYl0asXx5tw0bLhmT5pIfbSquw==
@@ -3031,16 +3031,17 @@ slice-ansi@^2.1.0:
     astral-regex "^1.0.0"
     is-fullwidth-code-point "^2.0.0"
 
-solarium-js@^0.1.13:
-  version "0.1.13"
-  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.13.tgz#6c1abac8c47908a27661601096f01de988ed3224"
-  integrity sha512-ygjwApdDmuBegOFTZ4UOAvo1TX0D4qWwS/2KryXPM0Tjs4u5ZAjLMyfkc6Fba0l6mon9jP6ebLRceAramcmaBg==
+solarium-js@^0.1.19:
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.19.tgz#039e6e92faf04342fffadd207cc74d6012e4df44"
+  integrity sha512-4HO+l2Y1GzCxvgr0Pp47Kt1qIKHTdiiRXzZ2VP8p1mnYkPwtORucUKwUb25Yl29ey2+U/dTBSUryU2hRBZj6ZQ==
   dependencies:
     "@identity.com/sol-did-client" "^0.1.9"
     "@solana/web3.js" "^1.12.0"
     "@stablelib/sha256" "^1.0.1"
     "@stablelib/x25519" "^1.0.1"
     "@stablelib/xchacha20poly1305" "^1.0.1"
+    bn.js "^5.2.0"
     borsh "^0.3.1"
     browserify-zlib "^0.2.0"
     cbor "^7.0.5"

@@ -12321,10 +12321,10 @@ sockjs@^0.3.21:
     uuid "^3.4.0"
     websocket-driver "^0.7.4"
 
-solarium-js@^0.1.17:
-  version "0.1.17"
-  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.17.tgz#811dbb0ec8bf05d1f13c04fdfd6a35271067c97c"
-  integrity sha512-eidk640KsWTJ/3xVmMerHdk4TcBT7KwPH7vX0XL13hoXLtf5VqNjUdW5EwU1LiNodvBd6AtNCFRs/Fczs26lag==
+solarium-js@^0.1.19:
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.19.tgz#039e6e92faf04342fffadd207cc74d6012e4df44"
+  integrity sha512-4HO+l2Y1GzCxvgr0Pp47Kt1qIKHTdiiRXzZ2VP8p1mnYkPwtORucUKwUb25Yl29ey2+U/dTBSUryU2hRBZj6ZQ==
   dependencies:
     "@identity.com/sol-did-client" "^0.1.9"
     "@solana/web3.js" "^1.12.0"

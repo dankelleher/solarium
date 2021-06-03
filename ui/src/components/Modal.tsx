@@ -7,22 +7,12 @@ type Props = {
   show: boolean,
   title: string,
   description: string,
-  execute: (value:string) => Promise<void>,
+  onOK: () => Promise<void>,
   onClose: () => void
-  tip: string
 }
-const Modal = ({ title, description, execute, tip, show, onClose }: Props ) => {
-  const [value, setValue] = useState<string>()
-
+const Modal: React.FC<Props> = ({ title, description, onOK, show, onClose, children }) => {
   const cancelButtonRef = useRef(null)
-  
-  const executeAndClose = useCallback(() => {
-    if (!value) {
-      return onClose();
-    }
-    
-    return execute(value).then(onClose)
-  }, [value, execute, onClose])
+  const executeAndClose = useCallback(() => onOK().then(onClose), [onOK, onClose])
 
   return (
     <Transition.Root show={show} as={Fragment}>
@@ -70,17 +60,7 @@ const Modal = ({ title, description, execute, tip, show, onClose }: Props ) => {
                       event.preventDefault()
                       executeAndClose()
                     }}>
-                      <label htmlFor="value" className="sr-only">
-                        Message
-                      </label>
-                      <input
-                        type="text"
-                        name="value"
-                        id="value"
-                        className="text-myrtleGreen disabled:opacity-50 shadow-sm focus:ring-aeroBlue-500 focus:border-aeroBlue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                        placeholder={tip}
-                        onChange={event => setValue(event.target.value)}
-                      />
+                      {children}
                     </form>
                   </div>
                 </div>

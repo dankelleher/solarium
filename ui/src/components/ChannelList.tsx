@@ -3,6 +3,8 @@ import {Channel} from "solarium-js";
 import {DirectChannel} from "../service/channels/addressBook";
 import Modal from "./Modal";
 import {useCallback, useState} from "react";
+import AddContactModal from "./AddContactModal";
+import Avatar from "./Avatar";
 
 const ChannelList = () => {
   const { channel, setCurrentChannel, addressBook} = useChannel();
@@ -70,6 +72,7 @@ const ChannelList = () => {
                         <li className="py-4" key={ch.channel.address.toBase58()}>
                             <div className="flex items-center space-x-4">
                                 <div className="flex-1 min-w-0">
+                                    <Avatar address={ch.contact.did}/>
                                     <p className="text-sm font-medium text-gray-900 truncate">
                                         {ch.contact.alias}
                                     </p>
@@ -93,7 +96,7 @@ const ChannelList = () => {
             className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
             Add Contact
         </button>
-        <Modal show={addContactModal} onClose={() => showAddContactModal(false)} title="Add Contact" description="" tip="DID" execute={addContact}/>
+        <AddContactModal show={addContactModal} setShow={showAddContactModal}/>
     </div>
 
   );

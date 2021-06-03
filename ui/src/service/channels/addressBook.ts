@@ -49,6 +49,13 @@ export const isGroupChannel =
 
 const base58ToBytes = (s: string) => u8a.fromString(s, 'base58btc')
 
+const distinct = (groupChannelConfigs: GroupChannelConfig[]) => 
+  Object.values(
+    groupChannelConfigs.reduce<Record<string, GroupChannelConfig>>(
+      (map, gcc) => ({ ...map, [gcc.address]: gcc }), 
+      {} as Record<string, GroupChannelConfig>)
+  )
+
 export class AddressBookManager {
   constructor(
     private connection: Connection,
@@ -79,6 +86,16 @@ export class AddressBookManager {
 
     const directChannel = this.directChannels.find(dc => dc.channel.address.toBase58() === address);
     if (directChannel) return directChannel.channel;
+  }
+  
+  // if the DID is in this addressbook, return its alias, else return the did
+  getDIDViewName(did: string) : string {
+    return this.directChannels.find(dc => dc.contact.did === did)?.contact.alias || did;
+  }
+  
+  // if the channel is a direct channel in this addressbook, return the contact alias, else return the channel name
+  getChannelViewName(channel: Channel) : string {
+    return this.directChannels.find(dc => dc.channel.address === channel.address)?.contact.alias || channel.name;
   }
 
   async joinChannel(channelConfig: GroupChannelConfig): Promise<Channel> {
@@ -130,7 +147,7 @@ export class AddressBookManager {
 
   static async load(store: AddressBookConfig, connection: Connection, wallet: Wallet, did: string, decryptionKey: Keypair, updateCallback: (store: AddressBookConfig) => void): Promise<AddressBookManager> {
     const mergedConfig: AddressBookConfig = {
-      channels: [...store.channels, ...publicChannelConfig[cluster as string]],
+      channels: distinct([...store.channels, ...publicChannelConfig[cluster as string]]),
       contacts: store.contacts,
     }
 

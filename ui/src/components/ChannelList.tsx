@@ -18,12 +18,6 @@ const ChannelList = () => {
       groupChannels = addressBook.groupChannels.map(gc => gc.channel)
       directChannels = addressBook.directChannels
   }
-  
-  const addContact = useCallback(async (did:string) => {
-    addressBook?.addContact(did, 'TODO ALIAS').then(  // TODO
-      directChannel => setCurrentChannel(directChannel.channel)
-    )
-  }, [addressBook])
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:col-span-2">

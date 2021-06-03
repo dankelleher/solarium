@@ -3,12 +3,12 @@ import Post from "./Post";
 import {useChannel} from "../service/channels/channel";
 
 const ChannelView = () => {
-  const { messages, post, channel} = useChannel();
+  const { messages, post, channel, addressBook} = useChannel();
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:col-span-2">
       <h2 className="text-2xl font-bold leading-7 sm:text-3xl sm:truncate" id="section-1-title">
-        {channel?.name || ''}
+        {channel ? addressBook?.getChannelViewName(channel) : ''}
       </h2>
       <section aria-labelledby="section-1-title">
         <div className="rounded-lg bg-myrtleGreen-dark overflow-hidden shadow mb-3">

@@ -17,10 +17,20 @@ type Props = { message: Message }
 const toDate = (timestamp: number) => timeAgo.format(new Date(timestamp * 1000));
 
 const MessageView = ({message}: Props) => {
-  const { addressBook} = useChannel();
-  const isContact = useCallback((did) => !!addressBook?.getDirectChannelByContactDID(did), [ addressBook ])
-  const [ addContactModal, showAddContactModal ] = useState<boolean>(false);
+  const { addressBook, setCurrentChannel } = useChannel();
+  const getContactChannel = useCallback((did) => addressBook?.getDirectChannelByContactDID(did), [ addressBook ])
   
+  const [ addContactModal, showAddContactModal ] = useState<boolean>(false);
+  const [ addContactDID, setAddContactDID ] = useState<string>();
+  const addContact = useCallback((did:string) => {
+    setAddContactDID(did)
+    showAddContactModal(true)
+  }, [setAddContactDID, showAddContactModal]);
+  
+  const chat = useCallback((did: string) => {
+    const directChannel = getContactChannel(did);
+    if (directChannel) setCurrentChannel(directChannel.channel);
+  }, [setCurrentChannel])
   
   return (
     <li key={message.content} className="py-4">
@@ -31,9 +41,9 @@ const MessageView = ({message}: Props) => {
             <div className="group flex">
               <h3 className="text-sm font-medium">{addressBook?.getDIDViewName(message.sender) || message.sender}</h3>
               <div className="flex opacity-0 group-hover:opacity-100 text-white">
-                { isContact(message.sender) 
-                  ? <ChatIcon className="block ml-2 h-5 w-5" aria-hidden="true"/>
-                  : <UserAddIcon className="block ml-2 h-5 w-5" aria-hidden="true" onClick={() => showAddContactModal(true)}/> }
+                { !!getContactChannel(message.sender) 
+                  ? <ChatIcon className="cursor-pointer block ml-2 h-5 w-5" aria-hidden="true" onClick={() => chat(message.sender)}/>
+                  : <UserAddIcon className="cursor-pointer block ml-2 h-5 w-5" aria-hidden="true" onClick={() => addContact(message.sender)}/> }
               </div>
               
             </div>
@@ -44,7 +54,7 @@ const MessageView = ({message}: Props) => {
           </p>
         </div>
       </div>
-      <AddContactModal show={addContactModal} setShow={showAddContactModal}/>
+      <AddContactModal show={addContactModal} setShow={showAddContactModal} prefilledDID={addContactDID}/>
     </li>);
 };
 

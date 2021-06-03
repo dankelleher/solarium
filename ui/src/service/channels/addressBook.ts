@@ -90,6 +90,7 @@ export class AddressBookManager {
   
   // if the DID is in this addressbook, return its alias, else return the did
   getDIDViewName(did: string) : string {
+    if (did === this.did) return "Me";
     return this.directChannels.find(dc => dc.contact.did === did)?.contact.alias || did;
   }
   

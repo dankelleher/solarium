@@ -7,6 +7,7 @@ export default class Chat extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
+    mute: flags.boolean({char: 'm', description: 'non-verbose input'}),
   }
 
   static args = [{name: 'with', description: 'The DID to chat with', required: true}]
@@ -21,7 +22,13 @@ export default class Chat extends Command {
 
     messages
       .subscribe(message => {
-        console.log(`From: ${message.sender}: ${message.content}`)
+        if (flags.mute) {
+          if (message.sender === args.with) { // do not echo own messages
+            console.log(message.content);
+          }
+        } else {
+          console.log(`From: ${message.sender}: ${message.content}`)
+        }
       });
   }
 }

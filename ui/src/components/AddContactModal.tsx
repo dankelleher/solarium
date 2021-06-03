@@ -1,12 +1,16 @@
 import Modal from "./Modal"
-import {useCallback, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useChannel} from "../service/channels/channel";
 
 type Props = { show: boolean, setShow: (show: boolean) => void, prefilledDID?: string }
 const AddContactModal: React.FC<Props> = ({show, setShow, prefilledDID}) => {
   const { setCurrentChannel, addressBook} = useChannel();
-  const [didToInvite, setDidToInvite] = useState<string>(prefilledDID || '');
+  const [didToInvite, setDidToInvite] = useState<string>();
   const [aliasToInvite, setAliasToInvite] = useState<string>()
+  
+  useEffect(() => {
+    if (prefilledDID) setDidToInvite(prefilledDID)
+  }, [setDidToInvite, prefilledDID, didToInvite])
 
   const addContact = useCallback(async () => {
     if (!didToInvite || !aliasToInvite) return;
@@ -26,7 +30,7 @@ const AddContactModal: React.FC<Props> = ({show, setShow, prefilledDID}) => {
         id="did"
         className="text-myrtleGreen disabled:opacity-50 shadow-sm focus:ring-aeroBlue-500 focus:border-aeroBlue-500 block w-full sm:text-sm border-gray-300 rounded-md"
         placeholder="did"
-        value={prefilledDID}
+        value={didToInvite}
         onChange={event => setDidToInvite(event.target.value)}
       />
       <label htmlFor="alias" className="sr-only">

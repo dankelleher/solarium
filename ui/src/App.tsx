@@ -21,7 +21,7 @@ export default function App() {
         <ChannelProvider>
           <OnboardingController/>
           <div className="min-h-screen bg-black font-white">
-            <Popover as="header" className="pb-24 bg-black">
+            <Popover as="header" className="pb-10 bg-black">
               {({ open }) => (
                 <>
                   <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">

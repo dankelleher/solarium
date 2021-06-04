@@ -124,6 +124,7 @@ export class AddressBookManager {
   }
 
   async createChannel(name: string) {
+    console.log(`Creating new channel: ${name}`)
     const channel = await createChannel(this.connection, this.wallet, name)
     this.groupChannels.push({ channel });
 

@@ -7,7 +7,7 @@ const AddContactModal: React.FC<Props> = ({show, setShow, prefilledDID}) => {
   const { setCurrentChannel, addressBook} = useChannel();
   const [didToInvite, setDidToInvite] = useState<string>();
   const [aliasToInvite, setAliasToInvite] = useState<string>()
-  
+
   useEffect(() => {
     if (prefilledDID) setDidToInvite(prefilledDID)
   }, [setDidToInvite, prefilledDID, didToInvite])
@@ -17,8 +17,8 @@ const AddContactModal: React.FC<Props> = ({show, setShow, prefilledDID}) => {
     addressBook?.addContact(didToInvite, aliasToInvite).then(  // TODO
       directChannel => setCurrentChannel(directChannel.channel)
     )
-  }, [addressBook, didToInvite, aliasToInvite])
-  
+  }, [addressBook, didToInvite, aliasToInvite, setCurrentChannel])
+
   return (
     <Modal title="Add Contact" description="" show={show} onOK={addContact} onClose={() => setShow(false)}>
       <label htmlFor="did" className="sr-only">

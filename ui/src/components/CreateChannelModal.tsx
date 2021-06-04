@@ -8,6 +8,7 @@ const CreateChannelModal: React.FC<Props> = ({show, setShow}) => {
   const [newChannelName, setNewChannelName] = useState<string>();
 
   const createNewChannel = useCallback(async () => {
+    // TODO: Check for existing channel with conflicitng name?
     if (!newChannelName) return;
     addressBook?.createChannel(newChannelName).then(
       channel => setCurrentChannel(channel)

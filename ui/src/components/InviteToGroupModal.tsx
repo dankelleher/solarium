@@ -13,7 +13,7 @@ type Props = {
   prefilledContactDid?: string
 }
 
-const AddContactModal: React.FC<Props> = ({
+const InviteToGroupModal: React.FC<Props> = ({
                                             show,
                                             setShow,
                                             channels,
@@ -39,8 +39,7 @@ const AddContactModal: React.FC<Props> = ({
     if (!channelToInvite || !contactToInvite) return;
 
     console.log(`Inviting Channel: ${channelToInvite} and Contact: ${contactToInvite}`)
-    // TODO JOIN Channel here.
-    // await addressBook?.joinChannel(didToInvite, aliasToInvite)
+    await addressBook?.inviteToChannel(channelToInvite, contactToInvite)
   }, [addressBook, channelToInvite, contactToInvite])
 
   return (
@@ -86,4 +85,4 @@ const AddContactModal: React.FC<Props> = ({
   )
 }
 
-export default AddContactModal;
+export default InviteToGroupModal;

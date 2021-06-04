@@ -5,10 +5,13 @@ import {useCallback, useState} from "react";
 import AddContactModal from "./AddContactModal";
 import Avatar from "./Avatar";
 import InviteToGroupChannel from "./InviteToGroupModal";
+import CreateChannelModal from "./CreateChannelModal";
 
 const ChannelList = () => {
   const { channel, setCurrentChannel, addressBook} = useChannel();
   const [ addContactModal, showAddContactModal ] = useState<boolean>(false);
+  const [ createChannelModal, showCreateChannelModal ] = useState<boolean>(false);
+
 
   const [ inviteToGroupModal, showInviteToGroupModal ] = useState<boolean>(false);
   const [ selectedChannelBase58, setSelectedChannelBase58 ] = useState<string>();
@@ -69,7 +72,7 @@ const ChannelList = () => {
 
       </section>
         <button
-            onClick={() => alert('Add a new Group Channel')}
+            onClick={() => showCreateChannelModal(true)}
             className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
             Add Channel
         </button>
@@ -121,8 +124,10 @@ const ChannelList = () => {
         className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
         Invite
       </button>
-        <AddContactModal show={addContactModal} setShow={showAddContactModal}/>
-        <InviteToGroupChannel show={inviteToGroupModal}
+      <AddContactModal show={addContactModal} setShow={showAddContactModal}/>
+      <CreateChannelModal show={createChannelModal} setShow={showCreateChannelModal}/>
+
+      <InviteToGroupChannel show={inviteToGroupModal}
                               setShow={showInviteToGroupModal}
                               channels={groupChannels}
                               contacts={directChannels.map(x => x.contact)} prefilledChannelBase58={selectedChannelBase58} prefilledContactDid={selectedContactDid}/>

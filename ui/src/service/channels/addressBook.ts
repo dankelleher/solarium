@@ -1,6 +1,6 @@
 import {ENDPOINTS} from "../constants";
 import {DEFAULT_ENDPOINT_INDEX} from "../web3/connection";
-import {addToChannel, getChannel, getDirectChannel, getOrCreateDirectChannel} from "./solarium";
+import {addToChannel, getChannel, getDirectChannel, getOrCreateDirectChannel, createChannel} from "./solarium";
 import {Connection, Keypair} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {Channel} from "solarium-js";
@@ -117,6 +117,19 @@ export class AddressBookManager {
     this.store();
 
     return channel;
+  }
+
+  async inviteToChannel(channelBase58: string, inviteeDid: string) {
+    await addToChannel(this.connection, this.wallet, channelBase58, this.decryptionKey, inviteeDid)
+  }
+
+  async createChannel(name: string) {
+    const channel = await createChannel(this.connection, this.wallet, name)
+    this.groupChannels.push({ channel });
+
+    this.store()
+
+    return channel
   }
 
   async addContact(did: string, alias: string):Promise<DirectChannel> {

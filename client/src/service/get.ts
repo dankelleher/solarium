@@ -56,11 +56,17 @@ export const getStream = (
     if (!cekAccountData) throw new Error(`No CEK account found for DID ${memberDID}. Are they a member of the channel?`);
 
     return new Observable<Channel>(subscriber => {
-      connection.onAccountChange(channel, async accountInfo => {
+
+      const id = connection.onAccountChange(channel, async accountInfo => {
         const channelData = await ChannelData.fromAccount(accountInfo.data);
         const channelObject = await Channel.fromChainData(channel, channelData, cekAccountData, memberDID, memberKey, cluster);
         subscriber.next(channelObject);
       });
+
+      // unsubscribe callback
+      return () => {
+        connection.removeAccountChangeListener(id)
+      }
     });
   }));
 };

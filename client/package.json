@@ -80,7 +80,7 @@
   },
   "jest": {
     "setupFilesAfterEnv": [
-      "<rootDir>/src/test/setup.ts"
+      "<rootDir>/test/setup.ts"
     ]
   }
 }

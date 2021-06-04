@@ -21,7 +21,7 @@ const firstTimeSteps: OnboardingStepTemplate[] = [
     description: 'This is how you tell others who you are. Don\'t worry, it\'s anonymous!',
   },
   { type: StepType.ADD_KEY, description: 'Messages you send will be encrypted with this.' },
-  { type: StepType.JOIN_PUBLIC_CHANNEL, description: 'Say hello!'},
+  { type: StepType.JOIN_PUBLIC_CHANNEL, description: 'Be polite!'},
   { type: StepType.DONE, description: '' },
 ]
 

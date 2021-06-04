@@ -92,22 +92,16 @@ export const sign = (
   wallet: Wallet,
   ...signers: Keypair[]
 ):SignCallback =>
-  async (instructions: TransactionInstruction[], transactionOpts?: TransactionCtorFields) => {
+  async (instructions: TransactionInstruction[], transactionOpts?: TransactionCtorFields, additionalSigners?: Keypair[]) => {
     const transaction = new Transaction({
       feePayer: wallet.publicKey,
       ...transactionOpts
     })
       .add(...instructions);
 
-    // TODO remove
-    // transaction.setSigners(
-    //   // fee paid by the wallet owner
-    //   wallet.publicKey,
-    //   ...signers.map((s) => s.publicKey)
-    // );
-
-    if (signers.length > 0) {
-      transaction.partialSign(...signers);
+    const allSigners = [...signers, ...(additionalSigners || [])]
+    if (allSigners.length > 0) {
+      transaction.partialSign(...allSigners);
     }
     return wallet.signTransaction(transaction);
   };

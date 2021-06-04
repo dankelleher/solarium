@@ -1,15 +1,25 @@
 import {useChannel} from "../service/channels/channel";
 import {Channel} from "solarium-js";
-import {DirectChannel} from "../service/channels/addressBook";
-import Modal from "./Modal";
+import {ContactConfig, DirectChannel} from "../service/channels/addressBook";
 import {useCallback, useState} from "react";
 import AddContactModal from "./AddContactModal";
 import Avatar from "./Avatar";
+import InviteToGroupChannel from "./InviteToGroupModal";
 
 const ChannelList = () => {
   const { channel, setCurrentChannel, addressBook} = useChannel();
-  const [ inviteToGroupModal, showInviteToGroupModal ] = useState<boolean>(false);
   const [ addContactModal, showAddContactModal ] = useState<boolean>(false);
+
+  const [ inviteToGroupModal, showInviteToGroupModal ] = useState<boolean>(false);
+  const [ selectedChannelBase58, setSelectedChannelBase58 ] = useState<string>();
+  const [ selectedContactDid, setSelectedContactDid ] = useState<string>();
+
+
+  const showInviteToGroupModalPrefilled = useCallback((channelBase58?: string, contactDid?: string ) => {
+    setSelectedChannelBase58(channelBase58)
+    setSelectedContactDid(contactDid)
+    showInviteToGroupModal(true)
+  }, [setSelectedChannelBase58, setSelectedContactDid, showInviteToGroupModal]);
 
   let groupChannels: Channel[] = [];
   let directChannels: DirectChannel[] = [];
@@ -35,13 +45,21 @@ const ChannelList = () => {
                                       {ch.name}
                                   </p>
                               </div>
-                              <div>
-                                  {channel?.address.toBase58() !== ch.address.toBase58() && <button
-                                    onClick={() => setCurrentChannel(ch)}
-                                    className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Join
-                                  </button>}
-
+                              <div className="flex items-start space-x-4">
+                                  <div>
+                                      {channel?.address.toBase58() !== ch.address.toBase58() && <button
+                                        onClick={() => setCurrentChannel(ch)}
+                                        className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        Join
+                                      </button>}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                      <button
+                                          onClick={() => showInviteToGroupModalPrefilled(ch.address.toBase58())}
+                                          className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                          Invite
+                                      </button>
+                                  </div>
                               </div>
                           </div>
                       </li>
@@ -51,9 +69,9 @@ const ChannelList = () => {
 
       </section>
         <button
-            onClick={() => alert('Invite')}
+            onClick={() => alert('Add a new Group Channel')}
             className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            Invite
+            Add Channel
         </button>
 
         <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate" id="section-1-title">
@@ -71,14 +89,22 @@ const ChannelList = () => {
                                         {ch.contact.alias}
                                     </p>
                                 </div>
+                              <div className="flex items-start space-x-4">
                                 <div>
                                     {channel?.address.toBase58() !== ch.channel.address.toBase58() && <button
                                       onClick={() => setCurrentChannel(ch.channel)}
                                       className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                       Chat
                                     </button>}
-
                                 </div>
+                                <div className="flex-1 min-w-0">
+                                  <button
+                                    onClick={() => showInviteToGroupModalPrefilled(undefined, ch.contact.did)}
+                                    className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Invite
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                         </li>
                     )}
@@ -90,7 +116,16 @@ const ChannelList = () => {
             className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
             Add Contact
         </button>
+      <button
+        onClick={() => showInviteToGroupModalPrefilled()}
+        className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        Invite
+      </button>
         <AddContactModal show={addContactModal} setShow={showAddContactModal}/>
+        <InviteToGroupChannel show={inviteToGroupModal}
+                              setShow={showInviteToGroupModal}
+                              channels={groupChannels}
+                              contacts={directChannels.map(x => x.contact)} prefilledChannelBase58={selectedChannelBase58} prefilledContactDid={selectedContactDid}/>
     </div>
 
   );

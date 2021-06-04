@@ -20,7 +20,7 @@ type GroupChannelConfig ={
   address: string,
   inviteAuthority?: string
 }
-type ContactConfig = {
+export type ContactConfig = {
   alias: string,
   did: string
 }
@@ -49,10 +49,10 @@ export const isGroupChannel =
 
 const base58ToBytes = (s: string) => u8a.fromString(s, 'base58btc')
 
-const distinct = (groupChannelConfigs: GroupChannelConfig[]) => 
+const distinct = (groupChannelConfigs: GroupChannelConfig[]) =>
   Object.values(
     groupChannelConfigs.reduce<Record<string, GroupChannelConfig>>(
-      (map, gcc) => ({ ...map, [gcc.address]: gcc }), 
+      (map, gcc) => ({ ...map, [gcc.address]: gcc }),
       {} as Record<string, GroupChannelConfig>)
   )
 
@@ -87,13 +87,13 @@ export class AddressBookManager {
     const directChannel = this.directChannels.find(dc => dc.channel.address.toBase58() === address);
     if (directChannel) return directChannel.channel;
   }
-  
+
   // if the DID is in this addressbook, return its alias, else return the did
   getDIDViewName(did: string) : string {
     if (did === this.did) return "Me";
     return this.directChannels.find(dc => dc.contact.did === did)?.contact.alias || did;
   }
-  
+
   // if the channel is a direct channel in this addressbook, return the contact alias, else return the channel name
   getChannelViewName(channel: Channel) : string {
     return this.directChannels.find(dc => dc.channel.address === channel.address)?.contact.alias || channel.name;
@@ -127,7 +127,7 @@ export class AddressBookManager {
     const directChannel = { contact: { did, alias }, channel }
 
     this.directChannels.push(directChannel);
-    
+
     this.store();
 
     return directChannel;

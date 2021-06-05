@@ -1,5 +1,4 @@
-/* This example requires Tailwind CSS v2.0+ */
-import {Fragment, useCallback, useRef, useState} from 'react'
+import {Fragment, useCallback, useRef} from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { CheckIcon } from '@heroicons/react/outline'
 

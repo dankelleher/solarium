@@ -1,6 +1,6 @@
 import Modal from "./Modal"
 import {useCallback, useEffect, useState} from "react";
-import {useChannel} from "../service/channels/channel";
+import {useChannel} from "../../service/channels/channel";
 import {UserAddIcon} from "@heroicons/react/outline";
 
 type Props = { show: boolean, setShow: (show: boolean) => void, prefilledDID?: string }

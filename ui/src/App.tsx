@@ -10,7 +10,7 @@ import logoText from './logo-text.png'
 import ChannelList from "./components/ChannelList";
 import {classNames} from "./components/util";
 import OnboardingController from "./components/onboarding/OnboardingController";
-import Logo from "./components/Logo";
+import Logo from "./components/logo/Logo";
 import MyAvatar from "./components/MyAvatar";
 import {IdentityProvider} from "./service/identity";
 

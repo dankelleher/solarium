@@ -1,7 +1,7 @@
 import Modal from "./Modal"
-import {useCallback, useEffect, useState} from "react";
-import {useChannel} from "../service/channels/channel";
-import {ChatIcon, PlusCircleIcon, UserAddIcon} from "@heroicons/react/outline";
+import {useCallback, useState} from "react";
+import {useChannel} from "../../service/channels/channel";
+import {PlusCircleIcon} from "@heroicons/react/outline";
 
 type Props = { show: boolean, setShow: (show: boolean) => void }
 const CreateChannelModal: React.FC<Props> = ({show, setShow}) => {

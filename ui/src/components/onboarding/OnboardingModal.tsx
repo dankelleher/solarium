@@ -2,7 +2,7 @@ import React, { Fragment, useRef, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import Wizard from './Wizard'
 import {OnboardingStep} from "./OnboardingController";
-import Logo from "../Logo";
+import Logo from "../logo/Logo";
 
 type Props = {
   title: string,

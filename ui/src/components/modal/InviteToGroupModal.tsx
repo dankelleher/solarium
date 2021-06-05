@@ -1,9 +1,9 @@
 import Modal from "./Modal"
 import {useCallback, useEffect, useState} from "react";
-import {useChannel} from "../service/channels/channel";
+import {useChannel} from "../../service/channels/channel";
 import {Channel} from "solarium-js";
-import {ContactConfig} from "../service/channels/addressBook";
-import {MailIcon, UserAddIcon} from "@heroicons/react/outline";
+import {ContactConfig} from "../../service/channels/addressBook";
+import {MailIcon} from "@heroicons/react/outline";
 
 type Props = {
   show: boolean,

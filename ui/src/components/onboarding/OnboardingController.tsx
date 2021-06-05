@@ -27,6 +27,7 @@ const firstTimeSteps: OnboardingStepTemplate[] = [
 
 const returnUserSteps: OnboardingStepTemplate[] = [
   { type: StepType.CONNECT_WALLET, description: 'Reconnect your wallet to see your latest messages' },
+  { type: StepType.JOIN_PUBLIC_CHANNEL, description: 'Be polite!'},
   { type: StepType.DONE, description: '' },
 ]
 
@@ -74,7 +75,7 @@ const OnboardingController = () => {
     
     const populateSteps = (templateSteps:OnboardingStepTemplate[]):OnboardingStep[] => templateSteps.map(populateStep);
     
-    const isNewUser = true; //!did;
+    const isNewUser = !did;
     const stepTemplates = isNewUser ? firstTimeSteps : returnUserSteps;
     
     const populatedSteps = populateSteps(stepTemplates)

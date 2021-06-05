@@ -5,7 +5,7 @@ import en from 'javascript-time-ago/locale/en'
 import {useChannel} from "../service/channels/channel";
 import { UserAddIcon, ChatIcon } from '@heroicons/react/outline'
 import {useCallback, useState} from "react";
-import AddContactModal from "./AddContactModal";
+import AddContactModal from "./modal/AddContactModal";
 
 // try-catch improves hot-loading
 try { TimeAgo.addDefaultLocale(en) } catch {}

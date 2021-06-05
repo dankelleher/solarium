@@ -2,10 +2,10 @@ import {useChannel} from "../service/channels/channel";
 import {Channel} from "solarium-js";
 import {ChannelType, DirectChannel, GroupChannel} from "../service/channels/addressBook";
 import {useCallback, useState} from "react";
-import AddContactModal from "./AddContactModal";
+import AddContactModal from "./modal/AddContactModal";
 import Avatar from "./Avatar";
-import InviteToGroupChannel from "./InviteToGroupModal";
-import CreateChannelModal from "./CreateChannelModal";
+import InviteToGroupChannel from "./modal/InviteToGroupModal";
+import CreateChannelModal from "./modal/CreateChannelModal";
 import {ChatIcon, MailIcon, PlusCircleIcon, UserAddIcon} from "@heroicons/react/outline";
 
 const ChannelList = () => {

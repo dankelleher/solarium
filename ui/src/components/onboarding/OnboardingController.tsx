@@ -15,7 +15,7 @@ enum StepType {
 }
 
 const firstTimeSteps: OnboardingStepTemplate[] = [
-  { type: StepType.CONNECT_WALLET, description: 'You\'ll use this to send messages' },
+  { type: StepType.CONNECT_WALLET, description: 'You\'ll use this to send messages.' },
   {
     type: StepType.CREATE_IDENTITY,
     description: 'This is how you tell others who you are. Don\'t worry, it\'s anonymous!',
@@ -27,6 +27,8 @@ const firstTimeSteps: OnboardingStepTemplate[] = [
 
 const returnUserSteps: OnboardingStepTemplate[] = [
   { type: StepType.CONNECT_WALLET, description: 'Reconnect your wallet to see your latest messages' },
+  { type: StepType.CREATE_IDENTITY, description: 'Loading your identity.' },
+  { type: StepType.ADD_KEY, description: 'Validating your key.' },
   { type: StepType.JOIN_PUBLIC_CHANNEL, description: 'Be polite!'},
   { type: StepType.DONE, description: '' },
 ]
@@ -46,7 +48,7 @@ type OnboardingStepTemplate = Omit<OnboardingStep, 'action' | 'skipCondition'>
 const OnboardingController = () => {
   const {wallet, connected} = useWallet();
   const { ready: identityReady, decryptionKey, did, createIdentity, addKey} = useIdentity();
-  const { addressBook, joinPublicChannel } = useChannel()
+  const { addressBook, joinPublicChannel, initialised } = useChannel()
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const [title, setTitle] = useState<string>(titleNewUser)
@@ -75,7 +77,7 @@ const OnboardingController = () => {
     
     const populateSteps = (templateSteps:OnboardingStepTemplate[]):OnboardingStep[] => templateSteps.map(populateStep);
     
-    const isNewUser = !did;
+    const isNewUser = !initialised;
     const stepTemplates = isNewUser ? firstTimeSteps : returnUserSteps;
     
     const populatedSteps = populateSteps(stepTemplates)

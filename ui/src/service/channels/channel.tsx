@@ -19,7 +19,8 @@ type ChannelProps = {
   channel?: Channel
   setCurrentChannel: (channel: Channel) => void
   addressBook: AddressBookManager | undefined
-  joinPublicChannel: () => Promise<void>
+  joinPublicChannel: () => Promise<void>,
+  initialised: boolean
 }
 
 const ChannelContext = React.createContext<ChannelProps>({
@@ -27,7 +28,8 @@ const ChannelContext = React.createContext<ChannelProps>({
   messages: [],
   setCurrentChannel: () => {},
   addressBook: undefined,
-  joinPublicChannel: async () => {}
+  joinPublicChannel: async () => {},
+  initialised: false
 });
 export function ChannelProvider({ children = null as any }) {
   const {wallet, connected} = useWallet();
@@ -38,6 +40,7 @@ export function ChannelProvider({ children = null as any }) {
   const [addressBook, setAddressBook] = useState<AddressBookManager>();
   const [currentChannelInState, setCurrentChannelInState] = useLocalStorageState<string>('channel');
   const [addressBookStore, setAddressBookStore] = useLocalStorageState<AddressBookConfig>('addressBook', emptyAddressBookConfig);
+  const [solariumInitialised, setSolariumInitialised] = useLocalStorageState<boolean>('solariumInitialised');
 
   const setCurrentChannel = useCallback(async (newChannel: Channel | undefined) => {
     if (!newChannel || newChannel.address.toBase58() === currentChannelInState) return;
@@ -68,6 +71,7 @@ export function ChannelProvider({ children = null as any }) {
     joinPublicChannel().then(async () => {
       if (!currentChannelInState && addressBook) {
         await setCurrentChannel(addressBook.getChannelByName(DEFAULT_CHANNEL));
+        setSolariumInitialised(true)
       }
     })
   , [joinPublicChannel, currentChannelInState, addressBook, setCurrentChannel])
@@ -100,11 +104,9 @@ export function ChannelProvider({ children = null as any }) {
 
   useEffect(() => {
     if (!wallet || !connected || !channel || !did || !decryptionKey) return;
-    console.log("READING!");
     // subscribe to channel messages
     const subscription = readChannel(did, channel, decryptionKey).subscribe(message => {
       if (message) {
-        console.log("Message received", message);
         // add message to local state if not empty
         setMessages(messages => [...messages, message]);
       } else {
@@ -130,7 +132,8 @@ export function ChannelProvider({ children = null as any }) {
       channel,
       setCurrentChannel,
       addressBook,
-      joinPublicChannel: joinPublicChannelAndSetDefault
+      joinPublicChannel: joinPublicChannelAndSetDefault,
+      initialised: solariumInitialised
     }}>
       {children}
     </ChannelContext.Provider>
@@ -145,6 +148,7 @@ export function useChannel():ChannelProps {
     channel: context.channel,
     setCurrentChannel: context.setCurrentChannel,
     addressBook: context.addressBook,
-    joinPublicChannel: context.joinPublicChannel
+    joinPublicChannel: context.joinPublicChannel,
+    initialised: context.initialised
   };
 }

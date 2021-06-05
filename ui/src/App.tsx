@@ -12,7 +12,17 @@ import {classNames} from "./components/util";
 import OnboardingController from "./components/onboarding/OnboardingController";
 import Logo from "./components/logo/Logo";
 import MyAvatar from "./components/MyAvatar";
-import {IdentityProvider} from "./service/identity";
+import {IdentityProvider, useIdentity} from "./service/identity";
+
+const CopyIdentityMenuItem = (props:{ className: string}) => {
+  const { did }= useIdentity()
+  return (<a href="#" {...props} onClick={
+      () => navigator.clipboard.writeText(did || '')
+    }
+  >
+    Copy Identity
+  </a>);
+}
 
 export default function App() {
   return (
@@ -66,25 +76,19 @@ export default function App() {
                                   className="origin-top-right z-40 absolute -right-2 mt-2 w-48 rounded-md shadow-lg py-1 bg-myrtleGreen ring-1 ring-black ring-opacity-5 focus:outline-none"
                                 >
                                   <Menu.Item>
-                                    {({ active }) => (
-                                      <a
-                                        href="#profile"
-                                        className={classNames(
-                                          active ? 'bg-gray-100' : '',
-                                          'block px-4 py-2 text-sm text-gray-700'
-                                        )}
-                                      >
-                                        Your Profile
-                                      </a>
-                                    )}
+                                    {({ active }) =>
+                                      <CopyIdentityMenuItem className={classNames(
+                                        'block px-4 py-2 text-sm',
+                                        active ? 'bg-gray-100 text-myrtleGreen' : 'text-aeroBlue-light'
+                                      )}/>}
                                   </Menu.Item>
                                   <Menu.Item>
                                     {({ active }) => (
                                       <a
                                         href="#settings"
                                         className={classNames(
-                                          active ? 'bg-gray-100' : '',
-                                          'block px-4 py-2 text-sm text-gray-700'
+                                          'block px-4 py-2 text-sm',
+                                          active ? 'bg-gray-100 text-myrtleGreen' : 'text-aeroBlue-light'
                                         )}
                                       >
                                         Settings
@@ -96,8 +100,8 @@ export default function App() {
                                       <a
                                         href="#signout"
                                         className={classNames(
-                                          active ? 'bg-gray-100' : '',
-                                          'block px-4 py-2 text-sm text-gray-700'
+                                          'block px-4 py-2 text-sm',
+                                          active ? 'bg-gray-100 text-myrtleGreen' : 'text-aeroBlue-light'
                                         )}
                                       >
                                         Sign out
@@ -235,26 +239,26 @@ export default function App() {
                               </div>
                             </div>
                           </div>
-                      </Popover.Panel>
-                    </Transition.Child>
+                        </Popover.Panel>
+                      </Transition.Child>
+                    </div>
+                  </Transition.Root>
+                </>
+              )}
+            </Popover>
+            <main className="pb-8">
+              <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+                <h1 className="sr-only">Solarium</h1>
+                {/* Main 3 column grid */}
+                <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-3 lg:gap-8">
+                  {/* Left column */}
+                  <ChannelView/>
+                  {/* Right column */}
+                  <div className="grid grid-cols-1 gap-4">
+                    <ChannelList/>
                   </div>
-                </Transition.Root>
-              </>
-            )}
-          </Popover>
-          <main className="pb-8">
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-              <h1 className="sr-only">Solarium</h1>
-              {/* Main 3 column grid */}
-              <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-3 lg:gap-8">
-                {/* Left column */}
-                <ChannelView/>
-                {/* Right column */}
-                <div className="grid grid-cols-1 gap-4">
-                  <ChannelList/>
                 </div>
               </div>
-            </div>
             </main>
             <footer>
               <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 lg:max-w-7xl">

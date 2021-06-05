@@ -15,7 +15,7 @@ const AddContactModal: React.FC<Props> = ({show, setShow, prefilledDID}) => {
 
   const addContact = useCallback(async () => {
     if (!didToInvite || !aliasToInvite) return;
-    addressBook?.addContact(didToInvite, aliasToInvite).then(  // TODO
+    addressBook?.addContact(didToInvite, aliasToInvite).then(
       directChannel => setCurrentChannel(directChannel.channel)
     )
   }, [addressBook, didToInvite, aliasToInvite, setCurrentChannel])

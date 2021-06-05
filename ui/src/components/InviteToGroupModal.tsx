@@ -3,6 +3,7 @@ import {useCallback, useEffect, useState} from "react";
 import {useChannel} from "../service/channels/channel";
 import {Channel} from "solarium-js";
 import {ContactConfig} from "../service/channels/addressBook";
+import {UserAddIcon} from "@heroicons/react/outline";
 
 type Props = {
   show: boolean,
@@ -44,7 +45,8 @@ const InviteToGroupModal: React.FC<Props> = ({
 
   return (
     <Modal title="Invite to Channel" description="" show={show} onOK={inviteToChannel}
-           onClose={() => setShow(false)}>
+           onClose={() => setShow(false)}
+           renderIcon={() => (<UserAddIcon className="h-6 w-6 text-green-600" aria-hidden="true" />)}>
       <div className="flex items-start space-x-4">
         <div className="min-w-0">
           <h3 className="font-bold leading-7 text-gray-900 sm:text-xl sm:truncate">

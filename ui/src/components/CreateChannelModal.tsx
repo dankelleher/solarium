@@ -1,6 +1,7 @@
 import Modal from "./Modal"
 import {useCallback, useEffect, useState} from "react";
 import {useChannel} from "../service/channels/channel";
+import {ChatIcon, UserAddIcon} from "@heroicons/react/outline";
 
 type Props = { show: boolean, setShow: (show: boolean) => void }
 const CreateChannelModal: React.FC<Props> = ({show, setShow}) => {
@@ -16,7 +17,7 @@ const CreateChannelModal: React.FC<Props> = ({show, setShow}) => {
   }, [addressBook, newChannelName])
 
   return (
-    <Modal title="Create Channel" description="" show={show} onOK={createNewChannel} onClose={() => setShow(false)}>
+    <Modal title="Create Channel" description="" show={show} onOK={createNewChannel} onClose={() => setShow(false)} renderIcon={() => (<ChatIcon className="h-6 w-6 text-green-600" aria-hidden="true" />)}>
       <label htmlFor="channel-name" className="sr-only">
         Channel
       </label>

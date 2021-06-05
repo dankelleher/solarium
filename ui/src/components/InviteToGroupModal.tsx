@@ -47,40 +47,44 @@ const InviteToGroupModal: React.FC<Props> = ({
     <Modal title="Invite to Channel" description="" show={show} onOK={inviteToChannel}
            onClose={() => setShow(false)}
            renderIcon={() => (<MailIcon className="h-6 w-6 text-green-600" aria-hidden="true" />)}>
-      <div className="flex items-start space-x-4">
-        <div className="min-w-0">
-          <h3 className="font-bold leading-7 text-gray-900 sm:text-xl sm:truncate">
-            Channel:
-          </h3>
-        </div>
-        <div className="flex-1">
-          <select disabled={!!prefilledChannelBase58}
-                  value={channelToInvite}
-                  onChange={e => setChannelToInvite(e.target.value)}
-                  className="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none">
-            {channels.map((ch) =>
-              <option
-                value={ch.address.toBase58()}>{ch.name}</option>
-            )}
-          </select>
-        </div>
-      </div>
-      <div className="flex items-start space-x-4">
-        <div className="min-w-0">
-          <h3 className="font-bold leading-7 text-gray-900 sm:text-xl sm:truncate">
-            Contact:
-          </h3>
-        </div>
-        <div className="flex-1">
-          <select disabled={!!prefilledContactDid}
-                  value={contactToInvite}
-                  onChange={e => setContactToInvite(e.target.value)}
-            className="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none">
-            {contacts.map((c) =>
-              <option
-                value={c.did}>{c.alias}</option>
-            )}
-          </select>
+      <div className="flex space-x-3">
+        <div className="flex-1 space-y-1">
+          <div className="flex items-center justify-between">
+            <div className="">
+              <h3 className="font-bold leading-7 text-gray-900 sm:text-xl sm:truncate">
+                Channel:
+              </h3>
+            </div>
+            <div className="w-2/3">
+              <select disabled={!!prefilledChannelBase58}
+                      value={channelToInvite}
+                      onChange={e => setChannelToInvite(e.target.value)}
+                      className="w-full border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none">
+                {channels.map((ch) =>
+                  <option
+                    value={ch.address.toBase58()}>{ch.name}</option>
+                )}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="">
+              <h3 className="font-bold leading-7 text-gray-900 sm:text-xl sm:truncate">
+                Contact:
+              </h3>
+            </div>
+            <div className="w-2/3">
+              <select disabled={!!prefilledContactDid}
+                      value={contactToInvite}
+                      onChange={e => setContactToInvite(e.target.value)}
+                className="w-full border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none">
+                {contacts.map((c) =>
+                  <option
+                    value={c.did}>{c.alias}</option>
+                )}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     </Modal>

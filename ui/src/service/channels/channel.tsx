@@ -8,7 +8,7 @@ import {useLocalStorageState} from "../storage";
 import {
   AddressBookConfig,
   AddressBookManager,
-  emptyAddressBookConfig, isGroupChannel,
+  emptyAddressBookConfig,
   publicChannelConfigByName
 } from "./addressBook";
 import {DEFAULT_CHANNEL} from "../constants";
@@ -48,7 +48,7 @@ export function ChannelProvider({ children = null as any }) {
 
   const joinPublicChannel = useCallback(() => {
     if (!addressBook) throw new Error("Load address book first");
-    
+
     const defaultChannel = addressBook.getChannelByName(DEFAULT_CHANNEL);
 
     if (!defaultChannel) {
@@ -64,14 +64,14 @@ export function ChannelProvider({ children = null as any }) {
     return Promise.resolve(defaultChannel)
   },  [addressBook])
 
-  const joinPublicChannelAndSetDefault = useCallback(() => 
+  const joinPublicChannelAndSetDefault = useCallback(() =>
     joinPublicChannel().then(async () => {
       if (!currentChannelInState && addressBook) {
         await setCurrentChannel(addressBook.getChannelByName(DEFAULT_CHANNEL));
       }
     })
   , [joinPublicChannel, currentChannelInState, addressBook, setCurrentChannel])
-  
+
   // load addressbook when identity ready
   useEffect(() => {
     if (!wallet || !connected || !identityReady || !did || !decryptionKey || addressBook) return;

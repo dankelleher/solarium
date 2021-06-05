@@ -5,6 +5,7 @@ import {Connection, Keypair} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {Channel} from "solarium-js";
 import * as u8a from 'uint8arrays'
+import {Dir} from "fs";
 
 const cluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
 
@@ -33,12 +34,19 @@ export const emptyAddressBookConfig: AddressBookConfig = {
   channels: [], contacts: []
 }
 
+export enum ChannelType {
+  Group,
+  Direct
+}
+
 export type DirectChannel = {
+  type: ChannelType
   contact: ContactConfig,
   channel: Channel
 }
 
 export type GroupChannel = {
+  type: ChannelType
   inviteAuthority?: string,
   channel: Channel
 }
@@ -95,8 +103,22 @@ export class AddressBookManager {
   }
 
   // if the channel is a direct channel in this addressbook, return the contact alias, else return the channel name
-  getChannelViewName(channel: Channel) : string {
-    return this.directChannels.find(dc => dc.channel.address === channel.address)?.contact.alias || channel.name;
+  getChannelViewName(channel: DirectChannel | GroupChannel) : string {
+    if (channel.type === ChannelType.Direct)
+      return (channel as DirectChannel).contact.alias
+
+    return (channel as GroupChannel).channel.name
+  }
+
+  findChannel(channel: Channel): DirectChannel | GroupChannel {
+    const found = this.directChannels.find(dc => dc.channel.address === channel.address) ||
+      this.groupChannels.find(gc => gc.channel.address === channel.address)
+
+    if (!found) {
+      throw new Error("No Direct of Group channel found with " + channel.address.toBase58());
+    }
+
+    return found
   }
 
   async joinChannel(channelConfig: GroupChannelConfig): Promise<Channel> {
@@ -112,7 +134,7 @@ export class AddressBookManager {
 
     if (!channel) throw new Error("Unable to retrieve channel " + channelConfig.name);
 
-    this.groupChannels.push({ channel, inviteAuthority: channelConfig.inviteAuthority });
+    this.groupChannels.push({ type: ChannelType.Group, channel, inviteAuthority: channelConfig.inviteAuthority });
 
     this.store();
 
@@ -126,7 +148,7 @@ export class AddressBookManager {
   async createChannel(name: string) {
     console.log(`Creating new channel: ${name}`)
     const channel = await createChannel(this.connection, this.wallet, name)
-    this.groupChannels.push({ channel });
+    this.groupChannels.push({ type: ChannelType.Group, channel });
 
     this.store()
 
@@ -138,7 +160,7 @@ export class AddressBookManager {
     if (foundDirectChannel) return foundDirectChannel;
 
     const channel = await getOrCreateDirectChannel(this.connection, this.wallet, did, this.decryptionKey);
-    const directChannel = { contact: { did, alias }, channel }
+    const directChannel = { type: ChannelType.Direct, contact: { did, alias }, channel }
 
     this.directChannels.push(directChannel);
 
@@ -170,6 +192,7 @@ export class AddressBookManager {
       const channel = await getChannel(connection, wallet, did, gc.address, decryptionKey)
       if (!channel) throw new Error("Cannot find channel " + gc.address)
       return {
+        type: ChannelType.Group,
         channel,
         inviteAuthority: gc.inviteAuthority
       }
@@ -193,6 +216,7 @@ export class AddressBookManager {
       if (!channel) throw new Error("No direct channel created for contact " + contact.did);
 
       return {
+        type: ChannelType.Direct,
         channel,
         contact
       }

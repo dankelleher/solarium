@@ -1,6 +1,6 @@
 import {useChannel} from "../service/channels/channel";
 import {Channel} from "solarium-js";
-import {ContactConfig, DirectChannel} from "../service/channels/addressBook";
+import {ChannelType, DirectChannel, GroupChannel} from "../service/channels/addressBook";
 import {useCallback, useState} from "react";
 import AddContactModal from "./AddContactModal";
 import Avatar from "./Avatar";
@@ -25,7 +25,13 @@ const ChannelList = () => {
     showInviteToGroupModal(true)
   }, [setSelectedChannelBase58, setSelectedContactDid, showInviteToGroupModal]);
 
-  let groupChannels: Channel[] = [];
+  const showInviteIcon = useCallback((ch: Channel ) => {
+    const groupChannel = addressBook?.findChannel(ch)
+    return groupChannel && groupChannel.type == ChannelType.Group && !(groupChannel as GroupChannel).inviteAuthority
+  }, [addressBook]);
+
+
+    let groupChannels: Channel[] = [];
   let directChannels: DirectChannel[] = [];
 
   if (addressBook) {
@@ -53,20 +59,20 @@ const ChannelList = () => {
               <ul className="divide-y divide-gray-200 overflow-scroll h-1/2 max-h-96">
                   {groupChannels.map((ch) =>
                       <li className="py-1" key={ch.address.toBase58()}>
-                          <div className="flex items-center space-x-4">
-                              <div className="flex-1 min-w-0">
+                          <div className="flex items-center">
+                              <div className="min-w-0">
                                   <p className="text-sm text-aeroBlue-light">
                                       {ch.name}
                                   </p>
                               </div>
+                            <div className="flex-1 min-w-0">
+                              {showInviteIcon(ch) && <MailIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => showInviteToGroupModalPrefilled(ch.address.toBase58())} />}
+                            </div>
                               <div className="flex items-center">
-                                  <div>
-                                      {channel?.address.toBase58() !== ch.address.toBase58() &&
-                                      <ChatIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => setCurrentChannel(ch)} />}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <MailIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => showInviteToGroupModalPrefilled(ch.address.toBase58())} />
-                                  </div>
+                                <div>
+                                  {channel?.address.toBase58() !== ch.address.toBase58() &&
+                                  <ChatIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => setCurrentChannel(ch)} />}
+                                </div>
                               </div>
                           </div>
                       </li>
@@ -108,9 +114,9 @@ const ChannelList = () => {
                                     {channel?.address.toBase58() !== ch.channel.address.toBase58() &&
                                     <ChatIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => setCurrentChannel(ch.channel)} />}
                                 </div>
-                                <div>
-                                  <MailIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => showInviteToGroupModalPrefilled(undefined, ch.contact.did)} />
-                                </div>
+                                {/*<div>*/}
+                                {/*  <MailIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => showInviteToGroupModalPrefilled(undefined, ch.contact.did)} />*/}
+                                {/*</div>*/}
                               </div>
                             </div>
                         </li>

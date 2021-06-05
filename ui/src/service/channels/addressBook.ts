@@ -5,7 +5,6 @@ import {Connection, Keypair} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {Channel} from "solarium-js";
 import * as u8a from 'uint8arrays'
-import {Dir} from "fs";
 
 const cluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
 

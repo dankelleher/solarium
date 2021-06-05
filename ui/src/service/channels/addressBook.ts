@@ -96,6 +96,10 @@ export class AddressBookManager {
     if (directChannel) return directChannel.channel;
   }
 
+  isOwnDid(did: string): boolean {
+    return did === this.did
+  }
+
   // if the DID is in this addressbook, return its alias, else return the did
   getDIDViewName(did: string) : string {
     if (did === this.did) return "Me";

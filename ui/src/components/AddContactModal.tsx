@@ -1,6 +1,7 @@
 import Modal from "./Modal"
 import {useCallback, useEffect, useState} from "react";
 import {useChannel} from "../service/channels/channel";
+import {UserAddIcon} from "@heroicons/react/outline";
 
 type Props = { show: boolean, setShow: (show: boolean) => void, prefilledDID?: string }
 const AddContactModal: React.FC<Props> = ({show, setShow, prefilledDID}) => {
@@ -20,7 +21,7 @@ const AddContactModal: React.FC<Props> = ({show, setShow, prefilledDID}) => {
   }, [addressBook, didToInvite, aliasToInvite, setCurrentChannel])
 
   return (
-    <Modal title="Add Contact" description="" show={show} onOK={addContact} onClose={() => setShow(false)}>
+    <Modal title="Add Contact" description="" show={show} onOK={addContact} onClose={() => setShow(false)} renderIcon={() => (<UserAddIcon className="h-6 w-6 text-green-600" aria-hidden="true" />)}>
       <label htmlFor="did" className="sr-only">
         DID
       </label>

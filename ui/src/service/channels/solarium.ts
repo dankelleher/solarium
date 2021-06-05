@@ -202,12 +202,14 @@ export const readChannel = (
 export const addToChannel = withAirdrop((
   connection: Connection,
   wallet: Wallet,
+  did: string | undefined,
   channelAddress: string,
   inviteAuthority: Keypair,
   inviteeDID: string
 ) => addDIDToChannel({
   channel: channelAddress,
   decryptionKey: inviteAuthority.secretKey,
+  ownerDID: did,
   inviteeDID,
   payer: wallet.publicKey,
   signCallback: sign(connection, wallet, inviteAuthority),

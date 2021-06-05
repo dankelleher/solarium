@@ -131,7 +131,7 @@ export class AddressBookManager {
 
     const inviteAuthorityKeypair = Keypair.fromSecretKey(base58ToBytes(channelConfig.inviteAuthority));
 
-    await addToChannel(this.connection, this.wallet, channelConfig.address, inviteAuthorityKeypair, this.did)
+    await addToChannel(this.connection, this.wallet, undefined, channelConfig.address, inviteAuthorityKeypair, this.did)
 
     const channel = await getChannel(this.connection, this.wallet, this.did, channelConfig.address, this.decryptionKey);
 
@@ -145,7 +145,7 @@ export class AddressBookManager {
   }
 
   async inviteToChannel(channelBase58: string, inviteeDid: string) {
-    await addToChannel(this.connection, this.wallet, channelBase58, this.decryptionKey, inviteeDid)
+    await addToChannel(this.connection, this.wallet, this.did, channelBase58, this.decryptionKey, inviteeDid)
   }
 
   async createChannel(name: string) {

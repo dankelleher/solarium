@@ -1,18 +1,25 @@
 import {useChannel} from "../service/channels/channel";
 import {Channel} from "solarium-js";
 import {ChannelType, DirectChannel, GroupChannel} from "../service/channels/addressBook";
-import {useCallback, useState} from "react";
+import {useCallback, useMemo, useState} from "react";
 import AddContactModal from "./modal/AddContactModal";
 import Avatar from "./Avatar";
 import InviteToGroupChannel from "./modal/InviteToGroupModal";
 import CreateChannelModal from "./modal/CreateChannelModal";
-import {ChatIcon, MailIcon, PlusCircleIcon, UserAddIcon} from "@heroicons/react/outline";
+import {
+  ChatIcon,
+  ClipboardCheckIcon,
+  ClipboardIcon,
+  MailIcon,
+  PlusCircleIcon,
+  UserAddIcon
+} from "@heroicons/react/outline";
 
 const ChannelList = () => {
   const { channel, setCurrentChannel, addressBook} = useChannel();
   const [ addContactModal, showAddContactModal ] = useState<boolean>(false);
   const [ createChannelModal, showCreateChannelModal ] = useState<boolean>(false);
-
+  const [ copiedChannelAddress, setCopiedChannelAddress ] = useState<string>();
 
   const [ inviteToGroupModal, showInviteToGroupModal ] = useState<boolean>(false);
   const [ selectedChannelBase58, setSelectedChannelBase58 ] = useState<string>();
@@ -31,20 +38,49 @@ const ChannelList = () => {
   }, [addressBook]);
 
 
-    let groupChannels: Channel[] = [];
+  let groupChannels: Channel[] = [];
   let directChannels: DirectChannel[] = [];
 
   if (addressBook) {
-      groupChannels = addressBook.groupChannels.map(gc => gc.channel)
-      directChannels = addressBook.directChannels
+    groupChannels = addressBook.groupChannels.map(gc => gc.channel)
+    directChannels = addressBook.directChannels
   }
+
+  const copyChannelIcon = useCallback((channel: Channel) => {
+    if (!channel) return;
+
+    const channelAddress = channel.address.toBase58();
+    
+    const copyChannelAddress = () => {
+      navigator.clipboard.writeText(channelAddress)
+      
+      setCopiedChannelAddress(channelAddress);
+      
+      // stop showing the check symbol after 3 seconds
+      setTimeout(() => setCopiedChannelAddress(undefined), 3000)
+    };
+    
+    if (copiedChannelAddress !== channelAddress) {
+      return (
+        <ClipboardIcon
+          className="cursor-pointer block ml-2 h-5 w-5"
+          onClick={copyChannelAddress}/>
+      );
+    }
+
+    return (
+      <ClipboardCheckIcon
+        className="cursor-pointer block ml-2 h-5 w-5"
+        onClick={copyChannelAddress}/>
+    )
+  }, [channel, copiedChannelAddress, setCopiedChannelAddress])
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:col-span-2">
       <div className="flex items-center space-x-4">
         <div className="flex-1 min-w-0">
           <h2 className="text-2xl font-bold leading-7 sm:text-3xl sm:truncate" id="section-1-title">
-              Group Channel List
+            Channels
           </h2>
         </div>
         <div>
@@ -56,28 +92,37 @@ const ChannelList = () => {
       <section aria-labelledby="section-1-title">
         <div className="rounded-lg bg-myrtleGreen-dark overflow-hidden shadow">
           <div className="p-2">
-              <ul className="divide-y divide-gray-200 overflow-scroll h-1/2 max-h-96">
-                  {groupChannels.map((ch) =>
-                      <li className="py-1" key={ch.address.toBase58()}>
-                          <div className="flex items-center">
-                              <div className="min-w-0">
-                                  <p className="text-sm text-aeroBlue-light">
-                                      {ch.name}
-                                  </p>
-                              </div>
-                            <div className="flex-1 min-w-0">
-                              {showInviteIcon(ch) && <MailIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => showInviteToGroupModalPrefilled(ch.address.toBase58())} />}
-                            </div>
-                              <div className="flex items-center">
-                                <div>
-                                  {channel?.address.toBase58() !== ch.address.toBase58() &&
-                                  <ChatIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => setCurrentChannel(ch)} />}
-                                </div>
-                              </div>
-                          </div>
-                      </li>
-                  )}
-              </ul>
+            <ul className="divide-y divide-gray-200 overflow-scroll h-1/2 max-h-96">
+              {groupChannels.map((ch) =>
+                <li className="py-1" key={ch.address.toBase58()}>
+                  <div className="flex items-center">
+                    <div className="min-w-0">
+                      <p className="text-sm text-aeroBlue-light">
+                        {ch.name}
+                      </p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                    </div>
+                    <div className="flex items-center">
+                      <div>
+                        {copyChannelIcon(ch)}
+                      </div>
+                      <div>
+                        {showInviteIcon(ch) &&
+                        <MailIcon className="cursor-pointer block ml-2 h-5 w-5"
+                                  onClick={() => showInviteToGroupModalPrefilled(ch.address.toBase58())} />}
+                      </div>
+                      <div>
+                        {channel?.address.toBase58() !== ch.address.toBase58() &&
+                        <ChatIcon className="cursor-pointer block ml-2 h-5 w-5"
+                                  onClick={() => setCurrentChannel(ch)} />
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              )}
+            </ul>
           </div>
         </div>
       </section>
@@ -94,37 +139,37 @@ const ChannelList = () => {
             onClick={() => showAddContactModal(true)} />
         </div>
       </div>
-        <section aria-labelledby="section-1-title">
-          <div className="rounded-lg bg-myrtleGreen-dark overflow-hidden shadow">
-            <div className="p-2">
-              <ul className="divide-y divide-gray-200 overflow-scroll h-1/2 max-h-96">
-                    {directChannels.map((ch) =>
-                        <li className="py-1" key={ch.channel.address.toBase58()}>
-                            <div className="flex items-center space-x-4">
-                              <div>
-                                <Avatar address={ch.contact.did}/>
-                              </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm text-aeroBlue-light">
-                                        {ch.contact.alias}
-                                  </p>
-                                </div>
-                              <div className="flex items-center">
-                                <div className="flex-1 min-w-0">
-                                    {channel?.address.toBase58() !== ch.channel.address.toBase58() &&
-                                    <ChatIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => setCurrentChannel(ch.channel)} />}
-                                </div>
-                                {/*<div>*/}
-                                {/*  <MailIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => showInviteToGroupModalPrefilled(undefined, ch.contact.did)} />*/}
-                                {/*</div>*/}
-                              </div>
-                            </div>
-                        </li>
-                    )}
-                </ul>
-            </div>
+      <section aria-labelledby="section-1-title">
+        <div className="rounded-lg bg-myrtleGreen-dark overflow-hidden shadow">
+          <div className="p-2">
+            <ul className="divide-y divide-gray-200 overflow-scroll h-1/2 max-h-96">
+              {directChannels.map((ch) =>
+                <li className="py-1" key={ch.channel.address.toBase58()}>
+                  <div className="flex items-center space-x-4">
+                    <div>
+                      <Avatar address={ch.contact.did}/>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-aeroBlue-light">
+                        {ch.contact.alias}
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="flex-1 min-w-0">
+                        {channel?.address.toBase58() !== ch.channel.address.toBase58() &&
+                        <ChatIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => setCurrentChannel(ch.channel)} />}
+                      </div>
+                      {/*<div>*/}
+                      {/*  <MailIcon className="cursor-pointer block ml-2 h-5 w-5" onClick={() => showInviteToGroupModalPrefilled(undefined, ch.contact.did)} />*/}
+                      {/*</div>*/}
+                    </div>
+                  </div>
+                </li>
+              )}
+            </ul>
           </div>
-        </section>
+        </div>
+      </section>
       {/*<button*/}
       {/*  onClick={() => showInviteToGroupModalPrefilled()}*/}
       {/*  className="inline-flex bg-myrtleGreen items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">*/}
@@ -134,9 +179,9 @@ const ChannelList = () => {
       <CreateChannelModal show={createChannelModal} setShow={showCreateChannelModal}/>
 
       <InviteToGroupChannel show={inviteToGroupModal}
-                              setShow={showInviteToGroupModal}
-                              channels={groupChannels}
-                              contacts={directChannels.map(x => x.contact)} prefilledChannelBase58={selectedChannelBase58} prefilledContactDid={selectedContactDid}/>
+                            setShow={showInviteToGroupModal}
+                            channels={groupChannels}
+                            contacts={directChannels.map(x => x.contact)} prefilledChannelBase58={selectedChannelBase58} prefilledContactDid={selectedContactDid}/>
     </div>
 
   );

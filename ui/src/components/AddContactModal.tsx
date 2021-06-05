@@ -15,10 +15,10 @@ const AddContactModal: React.FC<Props> = ({show, setShow, prefilledDID}) => {
 
   const addContact = useCallback(async () => {
     if (!didToInvite || !aliasToInvite) return;
-    addressBook?.addContact(didToInvite, aliasToInvite).then(  // TODO
+    addressBook?.addContact(didToInvite, aliasToInvite).then(
       directChannel => setCurrentChannel(directChannel.channel)
     )
-  }, [addressBook, didToInvite, aliasToInvite])
+  }, [addressBook, didToInvite, aliasToInvite, setCurrentChannel])
 
   return (
     <Modal title="Add Contact" description="" show={show} onOK={addContact} onClose={() => setShow(false)} renderIcon={() => (<UserAddIcon className="h-6 w-6 text-green-600" aria-hidden="true" />)}>

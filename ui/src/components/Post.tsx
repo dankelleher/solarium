@@ -27,7 +27,7 @@ const Post = ({post, disabled}: Props) => {
                 id="message"
                 className="bg-myrtleGreen border-0 rounded w-full py-2 px-4 text-aeroBlue-light placeholder-aeroBlue-dark leading-tight focus:outline-none focus:border-aeroBlue"
                 maxLength={MESSAGE_LIMIT}
-                placeholder="message"
+                placeholder="What's going on?"
                 onChange={event => setMessage(event.target.value)}
                 disabled={disabled}
               />

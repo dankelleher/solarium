@@ -74,7 +74,7 @@ export const ChannelProvider: React.FC = ({ children = null }) => {
         setSolariumInitialised(true)
       }
     })
-  , [joinPublicChannel, currentChannelInState, addressBook, setCurrentChannel])
+  , [joinPublicChannel, currentChannelInState, addressBook, setCurrentChannel, setSolariumInitialised])
 
   // load addressbook when identity ready
   useEffect(() => {
@@ -87,7 +87,7 @@ export const ChannelProvider: React.FC = ({ children = null }) => {
     wallet, connected, connection,
     addressBookStore,
     identityReady, did, decryptionKey,
-    document, addressBook
+    document, addressBook, setAddressBookStore
   ]);
 
   // check for channel join param after addressBook is loaded

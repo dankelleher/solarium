@@ -50,7 +50,7 @@ export function IdentityProvider({ children = null as any }) {
   useEffect(() => { if (did) resolve(did).then(doc => {
     setDocument(doc)
     console.log(doc);
-  }).catch(error => {
+  }).catch(() => {
     console.log("No DID registered yet");
   }) }, [did]);
 

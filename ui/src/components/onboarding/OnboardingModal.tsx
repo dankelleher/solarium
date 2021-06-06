@@ -10,8 +10,8 @@ type Props = {
   currentStepIndex: number
   next: () => void
 }
-export default ({ title, steps, currentStepIndex, next }:Props) => {
-  const [open, setOpen] = useState(true)
+const OnboardingModal = ({ title, steps, currentStepIndex, next }:Props) => {
+  const [open] = useState(true)
 
   const nextRef = useRef(null)
 
@@ -89,3 +89,5 @@ export default ({ title, steps, currentStepIndex, next }:Props) => {
     </Transition.Root>
   )
 }
+
+export default OnboardingModal

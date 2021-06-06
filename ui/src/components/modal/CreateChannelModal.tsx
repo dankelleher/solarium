@@ -1,5 +1,5 @@
 import Modal from "./Modal"
-import {useCallback, useState} from "react";
+import React, {useCallback, useState} from "react";
 import {useChannel} from "../../service/channels/channel";
 import {PlusCircleIcon} from "@heroicons/react/outline";
 
@@ -14,7 +14,7 @@ const CreateChannelModal: React.FC<Props> = ({show, setShow}) => {
     addressBook?.createChannel(newChannelName).then(
       channel => setCurrentChannel(channel)
     )
-  }, [addressBook, newChannelName])
+  }, [addressBook, newChannelName, setCurrentChannel])
 
   return (
     <Modal title="Create Channel" description="" show={show} onOK={createNewChannel} onClose={() => setShow(false)} renderIcon={() => (<PlusCircleIcon className="h-6 w-6 text-green-600" aria-hidden="true" />)}>

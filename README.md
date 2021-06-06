@@ -231,12 +231,9 @@ When in a direct or group channel, just type your message in the message box and
 a transaction within the wallet to send the encrypted message to the current channel.
 
 ### How do add an alias for a participant (represented by a DID)?
-Unknown users are represented by their DID within the lobby. You can add an alias by clicking the following symbol, 
-either within a channel (e.g. the lobby), or next to the **Contacts** heading.
-
-<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-</svg>
+Unknown users are represented by their DID within the lobby. You can add an alias by clicking the
+![UserAdd-Icon](https://raw.githubusercontent.com/tailwindlabs/heroicons/master/src/outline/user-add.svg)
+icon, either within a channel (e.g. the lobby), or next to the **Contacts** heading.
 
 ### How do I create a direct channel with a user?
 Direct channels are automatically generated when a Contact alias is added for a DID. Please note that it's necessary for 
@@ -246,29 +243,25 @@ Direct channels are automatically generated when a Contact alias is added for a 
 It's necessary for **both** parties to add each other as a contact alias in order to have a bidirectional conversation.
 
 ### How do I create a group channel?
-You can create a new group channel by clicking the following symbol next to the **Channels** heading. The resulting
+You can create a new group channel by clicking the
+![Plus-Icon](https://raw.githubusercontent.com/tailwindlabs/heroicons/master/src/outline/plus-circle.svg)
+icon next to the **Channels** heading. The resulting
 modal will ask for a channel-name. Please note, that the channel-name is persisted on chain and cannot be changed later.
 
-<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-</svg>
 
 ### I've created a group channel, how can I invite others to it?
 New channels have the creater as the sole member. The invitation is a two-step process:
-1. Invite an existing contact alias to your channel by clicking the "Mail-Icon" next to a group channel and selecting
-the alias to invite. Please note, inviting a member twice will result in an error message being shown.
+1. Invite an existing contact alias to your channel by clicking the 
+   ![Mail-Icon](https://raw.githubusercontent.com/tailwindlabs/heroicons/master/src/outline/mail.svg)
+   icon next to a group channel and selecting the alias to invite. 
+   Please note, inviting a member twice will result in an error message being shown.
 
-<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-</svg>
-
-
-2. Sending an invite link to the newly invited alias: 
-   
-Clicking the "Clipboard-Icon" next to a group-channel will copy
-a universal invite link for the given channel, which will need to be shared with the invited user. Clicking the invite 
-link will add the channel to the **Channels** list of the invitee. **Note**: The invite link will **ONLY** work for users
-that were previously invited by performing step 1. It will have no effect for everyone else.
+2. Sending an invite link to the newly invited alias: Clicking the
+   ![Clipboard-Icon](https://raw.githubusercontent.com/tailwindlabs/heroicons/master/src/outline/clipboard.svg)
+   icon next to a group-channel will copy a universal invite link for the given channel, which will need to be shared 
+   with the invited user. Clicking the invite link will add the channel to the **Channels** list of the invitee. 
+   **Note**: The invite link will **ONLY** work for users that were previously invited by performing step 1. 
+   It will have no effect for everyone else.
 
 
 ### I've invited a contact to my group channel, but he cannot find it. What's going on?

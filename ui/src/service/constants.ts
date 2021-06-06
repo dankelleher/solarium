@@ -21,3 +21,6 @@ export const ENDPOINTS = [
 export const MIN_BALANCE = 500000000
 
 export const DEFAULT_CHANNEL = 'lobby';
+export const URL_PARAM_JOIN_ADDRESS = 'joinAddress'
+export const URL_PARAM_JOIN_NAME = 'joinName'
+

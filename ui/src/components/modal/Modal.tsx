@@ -1,6 +1,7 @@
-import React, {Fragment, useCallback, useRef} from 'react'
+import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { CheckIcon } from '@heroicons/react/outline'
+import ErrorMessage from "../generic/ErrorMessage";
 
 type Props = {
   show: boolean,
@@ -11,8 +12,19 @@ type Props = {
   renderIcon?: () => JSX.Element
 }
 const Modal: React.FC<Props> = ({ title, description, onOK, show, onClose, children , renderIcon = () => <CheckIcon className="h-6 w-6 text-green-600" aria-hidden="true" />}) => {
+  const [onOkError, setOnOkError] = useState<Error>();
+
+  useEffect(() => {
+    // reset Error state when bringing to foreground
+    if (show) {
+      setOnOkError(undefined)
+    }
+  }, [show])
+
   const cancelButtonRef = useRef(null)
-  const executeAndClose = useCallback(() => onOK().then(onClose), [onOK, onClose])
+  const executeAndClose = useCallback(() => onOK().then(onClose).catch((e: Error) => setOnOkError(e)), [onOK, onClose, setOnOkError])
+
+
 
   return (
     <Transition.Root show={show} as={Fragment}>
@@ -64,6 +76,13 @@ const Modal: React.FC<Props> = ({ title, description, onOK, show, onClose, child
                     </form>
                   </div>
                 </div>
+              </div>
+              <div className="mt-5 sm:mt-6">
+                {onOkError && <ErrorMessage title={'Submission Error'}>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>{onOkError.message}</li>
+                  </ul>
+                </ErrorMessage>}
               </div>
               <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                 <button

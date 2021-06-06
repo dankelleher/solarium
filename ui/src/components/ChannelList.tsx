@@ -1,6 +1,5 @@
 import {useChannel} from "../service/channels/channel";
-import {Channel} from "solarium-js";
-import {ChannelType, DirectChannel, GroupChannel} from "../service/channels/addressBook";
+import {DirectChannel, GroupChannel} from "../service/channels/addressBook";
 import {useCallback, useState} from "react";
 import AddContactModal from "./modal/AddContactModal";
 import Avatar from "./Avatar";
@@ -14,6 +13,7 @@ import {
   PlusCircleIcon,
   UserAddIcon
 } from "@heroicons/react/outline";
+import {getInviteChannelJoinURL} from "./util";
 
 const ChannelList = () => {
   const { channel, setCurrentChannel, addressBook} = useChannel();
@@ -32,32 +32,47 @@ const ChannelList = () => {
     showInviteToGroupModal(true)
   }, [setSelectedChannelBase58, setSelectedContactDid, showInviteToGroupModal]);
 
-  const showInviteIcon = useCallback((ch: Channel ) => {
-    const groupChannel = addressBook?.findChannel(ch)
-    return groupChannel && groupChannel.type === ChannelType.Group && !(groupChannel as GroupChannel).inviteAuthority
-  }, [addressBook]);
+  const inviteIcon = useCallback((groupChannel: GroupChannel ) => {
+    if (!groupChannel || groupChannel.inviteAuthority) return
+
+    return (<MailIcon className="cursor-pointer block ml-2 h-5 w-5"
+                      onClick={() => showInviteToGroupModalPrefilled(groupChannel.channel.address.toBase58())} />)
+  }, [showInviteToGroupModalPrefilled]);
+
+  const chatIcon = useCallback((groupChannel: GroupChannel ) => {
+    if (!groupChannel || !channel) return
+
+    if (channel.address.toBase58() === groupChannel.channel.address.toBase58()) {
+      return (<div className="cursor-pointer block ml-2 h-5 w-5" />)
+    }
+
+    return (<ChatIcon className="cursor-pointer block ml-2 h-5 w-5"
+                      onClick={() => setCurrentChannel(groupChannel.channel)} />)
+  }, [channel, setCurrentChannel]);
 
 
-  let groupChannels: Channel[] = [];
+  let groupChannels: GroupChannel[] = [];
   let directChannels: DirectChannel[] = [];
 
   if (addressBook) {
-    groupChannels = addressBook.groupChannels.map(gc => gc.channel)
+    groupChannels = addressBook.groupChannels
     directChannels = addressBook.directChannels
   }
 
-  const copyChannelIcon = useCallback((channel: Channel) => {
-    if (!channel) return;
+  const copyChannelIcon = useCallback((groupChannel: GroupChannel) => {
+    // don't generate InviteIcons for groups with an inviteAuthority
+    if (!groupChannel || groupChannel.inviteAuthority) return;
 
-    const channelAddress = channel.address.toBase58();
+    const channelAddress = groupChannel.channel.address.toBase58();
+    const channelName = groupChannel.channel.name
+    const inviteURL = getInviteChannelJoinURL(channelName, channelAddress)
 
     const copyChannelAddress = () => {
-      navigator.clipboard.writeText(channelAddress)
-
-      setCopiedChannelAddress(channelAddress);
-
-      // stop showing the check symbol after 3 seconds
-      setTimeout(() => setCopiedChannelAddress(undefined), 3000)
+      navigator.clipboard.writeText(inviteURL).then(
+        () => setCopiedChannelAddress(channelAddress)).finally(
+        // stop showing the check symbol after 3 seconds
+        () => setTimeout(() => setCopiedChannelAddress(undefined), 1000)
+      )
     };
 
     if (copiedChannelAddress !== channelAddress) {
@@ -93,30 +108,25 @@ const ChannelList = () => {
         <div className="rounded-lg bg-myrtleGreen-dark overflow-hidden shadow">
           <div className="p-2">
             <ul className="divide-y divide-gray-200 overflow-scroll h-1/2 max-h-96">
-              {groupChannels.map((ch) =>
-                <li className="py-1" key={ch.address.toBase58()}>
+              {groupChannels.map((g) =>
+                <li className="py-1" key={g.channel.address.toBase58()}>
                   <div className="flex items-center">
                     <div className="min-w-0">
                       <p className="text-sm text-aeroBlue-light">
-                        {ch.name}
+                        {g.channel.name}
                       </p>
                     </div>
                     <div className="flex-1 min-w-0">
                     </div>
                     <div className="flex items-center">
                       <div>
-                        {copyChannelIcon(ch)}
+                        {copyChannelIcon(g)}
                       </div>
                       <div>
-                        {showInviteIcon(ch) &&
-                        <MailIcon className="cursor-pointer block ml-2 h-5 w-5"
-                                  onClick={() => showInviteToGroupModalPrefilled(ch.address.toBase58())} />}
+                        {inviteIcon(g)}
                       </div>
                       <div>
-                        {channel?.address.toBase58() !== ch.address.toBase58() &&
-                        <ChatIcon className="cursor-pointer block ml-2 h-5 w-5"
-                                  onClick={() => setCurrentChannel(ch)} />
-                        }
+                        {chatIcon(g)}
                       </div>
                     </div>
                   </div>

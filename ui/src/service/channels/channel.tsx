@@ -11,7 +11,7 @@ import {
   emptyAddressBookConfig,
   publicChannelConfigByName
 } from "./addressBook";
-import {DEFAULT_CHANNEL} from "../constants";
+import {DEFAULT_CHANNEL, URL_PARAM_JOIN_ADDRESS, URL_PARAM_JOIN_NAME} from "../constants";
 
 type ChannelProps = {
   messages: Message[],
@@ -31,7 +31,7 @@ const ChannelContext = React.createContext<ChannelProps>({
   joinPublicChannel: async () => {},
   initialised: false
 });
-export function ChannelProvider({ children = null as any }) {
+export const ChannelProvider: React.FC = ({ children = null }) => {
   const {wallet, connected} = useWallet();
   const connection = useConnection();
   const { ready: identityReady, decryptionKey, did, document} = useIdentity();
@@ -89,6 +89,35 @@ export function ChannelProvider({ children = null as any }) {
     identityReady, did, decryptionKey,
     document, addressBook, setAddressBookStore
   ]);
+
+  // check for channel join param after addressBook is loaded
+  useEffect(() => {
+    if (!addressBook) return
+
+    // Note: Method without react-router (vanilla-js)
+    const params = new URLSearchParams(window.location.search)
+    if (params.has(URL_PARAM_JOIN_NAME) && params.has(URL_PARAM_JOIN_ADDRESS)) {
+      const address = params.get(URL_PARAM_JOIN_ADDRESS) as string
+      const name = params.get(URL_PARAM_JOIN_NAME) as string
+
+      // Update URL right away. Independent of JoinChannel result.
+      params.delete(URL_PARAM_JOIN_NAME)
+      params.delete(URL_PARAM_JOIN_ADDRESS)
+      window.history.replaceState(null, 'Solarium', '?' + params.toString())
+
+      // already in Channel?
+      if (addressBook.getGroupOrDirectChannelByAddress(address)) {
+        console.log('Already joined Channel ' + name)
+        return
+      }
+
+      addressBook.joinChannel({name, address}).catch(
+        // Ignore Join errors
+        () => console.log('There was an error joining the invite channel ' + name)
+      )
+    }
+
+  }, [addressBook])
 
   useEffect(() => {
     if (channel || !wallet || !connected || !identityReady || !addressBook) return;

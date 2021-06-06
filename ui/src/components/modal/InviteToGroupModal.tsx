@@ -1,14 +1,13 @@
 import Modal from "./Modal"
 import React, {useCallback, useEffect, useState} from "react";
 import {useChannel} from "../../service/channels/channel";
-import {Channel} from "solarium-js";
-import {ContactConfig} from "../../service/channels/addressBook";
+import {ContactConfig, GroupChannel} from "../../service/channels/addressBook";
 import {MailIcon} from "@heroicons/react/outline";
 
 type Props = {
   show: boolean,
   setShow: (show: boolean) => void,
-  channels: Channel[],
+  channels: GroupChannel[],
   contacts: ContactConfig[],
   prefilledChannelBase58?: string,
   prefilledContactDid?: string
@@ -28,7 +27,7 @@ const InviteToGroupModal: React.FC<Props> = ({
 
   useEffect(() => {
     // default to first item in list
-    if (channels.length > 0) setChannelToInvite(channels[0].address.toBase58())
+    if (channels.length > 0) setChannelToInvite(channels[0].channel.address.toBase58())
     if (contacts.length > 0) setContactToInvite(contacts[0].did)
 
     // default to prefilled
@@ -40,7 +39,11 @@ const InviteToGroupModal: React.FC<Props> = ({
     if (!channelToInvite || !contactToInvite) return;
 
     console.log(`Inviting Channel: ${channelToInvite} and Contact: ${contactToInvite}`)
-    await addressBook?.inviteToChannel(channelToInvite, contactToInvite)
+    try {
+      await addressBook?.inviteToChannel(channelToInvite, contactToInvite)
+    } catch (e) {
+      throw new Error('There was an error inviting the user to the channel. Most likely, the user is already authorized to access the channel.')
+    }
   }, [addressBook, channelToInvite, contactToInvite])
 
   return (
@@ -60,10 +63,10 @@ const InviteToGroupModal: React.FC<Props> = ({
                       value={channelToInvite}
                       onChange={e => setChannelToInvite(e.target.value)}
                       className="w-full border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none">
-                {channels.map((ch) =>
+                {channels.map((g) =>
                   <option
-                    key={ch.address.toBase58()}
-                    value={ch.address.toBase58()}>{ch.name}</option>
+                    key={g.channel.address.toBase58()}
+                    value={g.channel.address.toBase58()}>{g.channel.name}</option>
                 )}
               </select>
             </div>

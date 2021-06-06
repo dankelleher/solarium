@@ -196,10 +196,10 @@ based on the [Solana](https://solana.com) blockchain.
 We believe that a completely decentralized censorship-resistant messaging solution on a blockchain
 is a missing link to establishing fully-decentralized trusted communities. For example, current implementations 
 of DEXs and DAOs generally rely on a third-party off-chain communication tools (e.g. Discord, Slack, ...) that break the
-chain of trust between an on-chain identity and communication platform.
+chain of trust between an on-chain identity and the 3rd party communication platform.
 
 We also believe in [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core/) as the basis of
-new internet identity layer that would allow to build these communities from the group up.
+a novel internet identity layer that would allow to build these communities from the group up.
 
 ### How secure is Solarium?
 All messages in Solarium are end-to-end encrypted using
@@ -218,7 +218,7 @@ Future implementations of Solarium (see [the roadmap](#roadmap)) above will move
 the [Signal Protocol](https://signal.org/docs/) to support PFS.
 
 ### How decentralized is Solarium?
-The solarium frontend only requires a [JSON RPC API](https://solana-labs.github.io/solana-web3.js/) to Solana and
+The solarium frontend only requires a [JSON RPC API](https://solana-labs.github.io/solana-web3.js/) endpoint to Solana and
 a Wallet (currently [SPL Token Wallet](https://github.com/project-serum/spl-token-wallet)). The [Solarium frontend](https://solarium.chat/) is 
 currently hosted on IPFS and served via [Infura](https://infura.io/docs/ipfs).
 
@@ -263,11 +263,9 @@ New channels have the creater as the sole member. The invitation is a two-step p
    **Note**: The invite link will **ONLY** work for users that were previously invited by performing step 1. 
    It will have no effect for everyone else.
 
-
 ### I've invited a contact to my group channel, but he cannot find it. What's going on?
 After inviting an alias to a group channel you'll need to share the group-link with the new member. See
 "I've created a group channel, how can I invite others to it?". step 2.
-
 
 ### Can I use Solarium on Mainnet?
 The current version of Solarium is in Alpha-Phase and works against the [Solana Devnet](https://docs.solana.com/clusters#devnet). 

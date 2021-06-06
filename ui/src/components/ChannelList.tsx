@@ -1,7 +1,7 @@
 import {useChannel} from "../service/channels/channel";
 import {Channel} from "solarium-js";
 import {ChannelType, DirectChannel, GroupChannel} from "../service/channels/addressBook";
-import {useCallback, useMemo, useState} from "react";
+import {useCallback, useState} from "react";
 import AddContactModal from "./modal/AddContactModal";
 import Avatar from "./Avatar";
 import InviteToGroupChannel from "./modal/InviteToGroupModal";
@@ -34,7 +34,7 @@ const ChannelList = () => {
 
   const showInviteIcon = useCallback((ch: Channel ) => {
     const groupChannel = addressBook?.findChannel(ch)
-    return groupChannel && groupChannel.type == ChannelType.Group && !(groupChannel as GroupChannel).inviteAuthority
+    return groupChannel && groupChannel.type === ChannelType.Group && !(groupChannel as GroupChannel).inviteAuthority
   }, [addressBook]);
 
 
@@ -50,16 +50,16 @@ const ChannelList = () => {
     if (!channel) return;
 
     const channelAddress = channel.address.toBase58();
-    
+
     const copyChannelAddress = () => {
       navigator.clipboard.writeText(channelAddress)
-      
+
       setCopiedChannelAddress(channelAddress);
-      
+
       // stop showing the check symbol after 3 seconds
       setTimeout(() => setCopiedChannelAddress(undefined), 3000)
     };
-    
+
     if (copiedChannelAddress !== channelAddress) {
       return (
         <ClipboardIcon
@@ -73,7 +73,7 @@ const ChannelList = () => {
         className="cursor-pointer block ml-2 h-5 w-5"
         onClick={copyChannelAddress}/>
     )
-  }, [channel, copiedChannelAddress, setCopiedChannelAddress])
+  }, [copiedChannelAddress, setCopiedChannelAddress])
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:col-span-2">

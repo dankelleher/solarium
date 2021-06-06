@@ -7,7 +7,7 @@ type Props = {
   steps: OnboardingStep[],
   currentStepIndex: number
 }
-export default ({ steps, currentStepIndex }: Props) => {
+const Wizard = ({ steps, currentStepIndex }: Props) => {
   return (
     <nav aria-label="Progress">
       <ol className="overflow-hidden">
@@ -18,7 +18,7 @@ export default ({ steps, currentStepIndex }: Props) => {
                 {stepIdx !== steps.length - 1 ? (
                   <div className="-ml-px absolute mt-0.5 top-4 left-4 w-0.5 h-full bg-myrtleGreen" aria-hidden="true"/>
                 ) : null}
-                <a href={'#'} className="relative flex items-start group items-center">
+                <a href={'#' + step.type.valueOf()} className="relative flex items-start group items-center">
                     <span className="h-9 flex items-center">
                       <span
                         className="relative z-10 w-8 h-8 flex items-center justify-center bg-myrtleGreen rounded-full group-hover:bg-myrtleGreen-800">
@@ -36,7 +36,7 @@ export default ({ steps, currentStepIndex }: Props) => {
                 {stepIdx !== steps.length - 1 ? (
                   <div className="-ml-px absolute mt-0.5 top-4 left-4 w-0.5 h-full bg-gray-300" aria-hidden="true"/>
                 ) : null}
-                <a href={'#'} className="relative flex items-start group items-center" aria-current="step">
+                <a href={'#' + step.type.valueOf()} className="relative flex items-start group items-center" aria-current="step">
                     <span className="h-9 flex items-center" aria-hidden="true">
                       <span
                         className="relative z-10 w-8 h-8 flex items-center justify-center bg-white border-2 border-myrtleGreen rounded-full">
@@ -55,7 +55,7 @@ export default ({ steps, currentStepIndex }: Props) => {
                 {stepIdx !== steps.length - 1 ? (
                   <div className="-ml-px absolute mt-0.5 top-4 left-4 w-0.5 h-full bg-gray-300" aria-hidden="true"/>
                 ) : null}
-                <a href={'#'} className="relative flex items-start group items-center">
+                <a href={'#' + step.type.valueOf()} className="relative flex items-start group items-center">
                     <span className="h-9 flex items-center" aria-hidden="true">
                       <span
                         className="relative z-10 w-8 h-8 flex items-center justify-center bg-white border-2 border-gray-300 rounded-full group-hover:border-gray-400">
@@ -75,3 +75,5 @@ export default ({ steps, currentStepIndex }: Props) => {
     </nav>
   );
 }
+
+export default Wizard

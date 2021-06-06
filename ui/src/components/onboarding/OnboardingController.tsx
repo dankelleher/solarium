@@ -52,19 +52,19 @@ const OnboardingController = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const [title, setTitle] = useState<string>(titleNewUser)
-  
+
   useEffect(() => {
     const connectWalletAction = wallet.connect;
     const createIdentityAction = createIdentity;
     const addKeyAction = addKey;
     const joinPublicChannelAction = joinPublicChannel;
     const doneAction = async () => { };
-    
+
     const connectWalletSkipCondition = connected;
     const createIdentitySkipCondition = !!did;
     const addKeySkipCondition = identityReady;
     const joinPublicChannelSkipCondition = !!addressBook?.getChannelByName(DEFAULT_CHANNEL)
-    
+
     const populateStep = (templateStep:OnboardingStepTemplate):OnboardingStep => {
       switch (templateStep.type) {
         case StepType.CONNECT_WALLET: return { ...templateStep, action: connectWalletAction, skipCondition: connectWalletSkipCondition}
@@ -74,12 +74,12 @@ const OnboardingController = () => {
         case StepType.DONE: return { ...templateStep, action: doneAction, skipCondition: false}
       }
     }
-    
+
     const populateSteps = (templateSteps:OnboardingStepTemplate[]):OnboardingStep[] => templateSteps.map(populateStep);
-    
+
     const isNewUser = !initialised;
     const stepTemplates = isNewUser ? firstTimeSteps : returnUserSteps;
-    
+
     const populatedSteps = populateSteps(stepTemplates)
 
     setTitle(isNewUser ? titleNewUser : titleReturnUser)
@@ -87,8 +87,8 @@ const OnboardingController = () => {
   }, [
     did, identityReady, decryptionKey, addKey, createIdentity,
     wallet, connected,
-    addressBook, joinPublicChannel])
-  
+    addressBook, joinPublicChannel, initialised])
+
   useEffect(() => {
     let nextStep = currentStepIndex;
     while (steps.length > nextStep && steps[nextStep].skipCondition) {
@@ -102,7 +102,7 @@ const OnboardingController = () => {
       steps[currentStepIndex].action().then(() => {
         setCurrentStepIndex(currentStepIndex + 1)
       })
-    }, 
+    },
     [currentStepIndex, setCurrentStepIndex, steps]
   );
   const done = useMemo(() => currentStepIndex >= steps.length, [currentStepIndex, steps])

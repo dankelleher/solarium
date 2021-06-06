@@ -74,7 +74,7 @@ export function ChannelProvider({ children = null as any }) {
         setSolariumInitialised(true)
       }
     })
-  , [joinPublicChannel, currentChannelInState, addressBook, setCurrentChannel])
+  , [joinPublicChannel, currentChannelInState, addressBook, setCurrentChannel, setSolariumInitialised])
 
   // load addressbook when identity ready
   useEffect(() => {
@@ -87,7 +87,7 @@ export function ChannelProvider({ children = null as any }) {
     wallet, connected, connection,
     addressBookStore,
     identityReady, did, decryptionKey,
-    document, addressBook
+    document, addressBook, setAddressBookStore
   ]);
 
   useEffect(() => {

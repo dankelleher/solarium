@@ -65,6 +65,7 @@ const InviteToGroupModal: React.FC<Props> = ({
                       className="w-full border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none">
                 {channels.map((g) =>
                   <option
+                    key={g.channel.address.toBase58()}
                     value={g.channel.address.toBase58()}>{g.channel.name}</option>
                 )}
               </select>
@@ -83,6 +84,7 @@ const InviteToGroupModal: React.FC<Props> = ({
                 className="w-full border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none">
                 {contacts.map((c) =>
                   <option
+                    key={c.did}
                     value={c.did}>{c.alias}</option>
                 )}
               </select>

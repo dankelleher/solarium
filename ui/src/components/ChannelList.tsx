@@ -7,6 +7,7 @@ import Avatar from "./Avatar";
 import InviteToGroupChannel from "./modal/InviteToGroupModal";
 import CreateChannelModal from "./modal/CreateChannelModal";
 import {
+  ChatAltIcon,
   ChatIcon,
   ClipboardCheckIcon,
   ClipboardIcon,
@@ -14,6 +15,9 @@ import {
   PlusCircleIcon,
   UserAddIcon
 } from "@heroicons/react/outline";
+import {
+  ChatIcon as ChatIconSolid
+} from "@heroicons/react/solid";
 import {getInviteChannelJoinURL} from "./util";
 
 const ChannelList = () => {
@@ -33,25 +37,39 @@ const ChannelList = () => {
     showInviteToGroupModal(true)
   }, [setSelectedChannelBase58, setSelectedContactDid, showInviteToGroupModal]);
 
-  const showInviteIcon = useCallback((ch: Channel ) => {
-    const groupChannel = addressBook?.findChannel(ch)
-    return groupChannel && groupChannel.type === ChannelType.Group && !(groupChannel as GroupChannel).inviteAuthority
+  const inviteIcon = useCallback((groupChannel: GroupChannel ) => {
+    if (!groupChannel || groupChannel.inviteAuthority) return
+
+    return (<MailIcon className="cursor-pointer block ml-2 h-5 w-5"
+                      onClick={() => showInviteToGroupModalPrefilled(groupChannel.channel.address.toBase58())} />)
   }, [addressBook]);
 
+  const chatIcon = useCallback((groupChannel: GroupChannel ) => {
+    if (!groupChannel || !channel) return
 
-  let groupChannels: Channel[] = [];
+    if (channel.address.toBase58() === groupChannel.channel.address.toBase58()) {
+      return (<div className="cursor-pointer block ml-2 h-5 w-5" />)
+    }
+
+    return (<ChatIcon className="cursor-pointer block ml-2 h-5 w-5"
+                      onClick={() => setCurrentChannel(groupChannel.channel)} />)
+  }, [addressBook, channel]);
+
+
+  let groupChannels: GroupChannel[] = [];
   let directChannels: DirectChannel[] = [];
 
   if (addressBook) {
-    groupChannels = addressBook.groupChannels.map(gc => gc.channel)
+    groupChannels = addressBook.groupChannels
     directChannels = addressBook.directChannels
   }
 
-  const copyChannelIcon = useCallback((channel: Channel) => {
-    if (!channel) return;
+  const copyChannelIcon = useCallback((groupChannel: GroupChannel) => {
+    // don't generate InviteIcons for groups with an inviteAuthority
+    if (!groupChannel || groupChannel.inviteAuthority) return;
 
-    const channelAddress = channel.address.toBase58();
-    const channelName = channel.name
+    const channelAddress = groupChannel.channel.address.toBase58();
+    const channelName = groupChannel.channel.name
     const inviteURL = getInviteChannelJoinURL(channelName, channelAddress)
 
     const copyChannelAddress = () => {
@@ -95,30 +113,25 @@ const ChannelList = () => {
         <div className="rounded-lg bg-myrtleGreen-dark overflow-hidden shadow">
           <div className="p-2">
             <ul className="divide-y divide-gray-200 overflow-scroll h-1/2 max-h-96">
-              {groupChannels.map((ch) =>
-                <li className="py-1" key={ch.address.toBase58()}>
+              {groupChannels.map((g) =>
+                <li className="py-1" key={g.channel.address.toBase58()}>
                   <div className="flex items-center">
                     <div className="min-w-0">
                       <p className="text-sm text-aeroBlue-light">
-                        {ch.name}
+                        {g.channel.name}
                       </p>
                     </div>
                     <div className="flex-1 min-w-0">
                     </div>
                     <div className="flex items-center">
                       <div>
-                        {copyChannelIcon(ch)}
+                        {copyChannelIcon(g)}
                       </div>
                       <div>
-                        {showInviteIcon(ch) &&
-                        <MailIcon className="cursor-pointer block ml-2 h-5 w-5"
-                                  onClick={() => showInviteToGroupModalPrefilled(ch.address.toBase58())} />}
+                        {inviteIcon(g)}
                       </div>
                       <div>
-                        {channel?.address.toBase58() !== ch.address.toBase58() &&
-                        <ChatIcon className="cursor-pointer block ml-2 h-5 w-5"
-                                  onClick={() => setCurrentChannel(ch)} />
-                        }
+                        {chatIcon(g)}
                       </div>
                     </div>
                   </div>

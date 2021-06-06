@@ -1,5 +1,5 @@
 import Modal from "./Modal"
-import {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {useChannel} from "../../service/channels/channel";
 import {Channel} from "solarium-js";
 import {ContactConfig} from "../../service/channels/addressBook";
@@ -22,7 +22,7 @@ const InviteToGroupModal: React.FC<Props> = ({
                                             prefilledChannelBase58,
                                             prefilledContactDid
                                           }) => {
-  const {setCurrentChannel, addressBook} = useChannel();
+  const {addressBook} = useChannel();
   const [channelToInvite, setChannelToInvite] = useState<string>();
   const [contactToInvite, setContactToInvite] = useState<string>();
 
@@ -62,6 +62,7 @@ const InviteToGroupModal: React.FC<Props> = ({
                       className="w-full border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none">
                 {channels.map((ch) =>
                   <option
+                    key={ch.address.toBase58()}
                     value={ch.address.toBase58()}>{ch.name}</option>
                 )}
               </select>
@@ -80,6 +81,7 @@ const InviteToGroupModal: React.FC<Props> = ({
                 className="w-full border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none">
                 {contacts.map((c) =>
                   <option
+                    key={c.did}
                     value={c.did}>{c.alias}</option>
                 )}
               </select>

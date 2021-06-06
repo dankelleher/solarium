@@ -18,7 +18,7 @@ const Feed = ({messages}: Props) => {
 
   return (
     <ul className="divide-y divide-gray-200 overflow-scroll h-1/2 max-h-96" ref={messageEl}>
-      {messages.map((message) => <MessageView message={message}/>)}
+      {messages.map((message) => <MessageView key={message.content} message={message}/>)}
     </ul>);
 }
 

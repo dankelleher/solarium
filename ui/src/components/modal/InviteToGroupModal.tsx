@@ -1,7 +1,6 @@
 import Modal from "./Modal"
-import {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {useChannel} from "../../service/channels/channel";
-import {Channel} from "solarium-js";
 import {ContactConfig, GroupChannel} from "../../service/channels/addressBook";
 import {MailIcon} from "@heroicons/react/outline";
 
@@ -22,7 +21,7 @@ const InviteToGroupModal: React.FC<Props> = ({
                                             prefilledChannelBase58,
                                             prefilledContactDid
                                           }) => {
-  const {setCurrentChannel, addressBook} = useChannel();
+  const {addressBook} = useChannel();
   const [channelToInvite, setChannelToInvite] = useState<string>();
   const [contactToInvite, setContactToInvite] = useState<string>();
 
@@ -43,7 +42,7 @@ const InviteToGroupModal: React.FC<Props> = ({
     try {
       await addressBook?.inviteToChannel(channelToInvite, contactToInvite)
     } catch (e) {
-      throw new Error('There was an error inviting the user to the channel. Most likely, the user is already authorized to acccess the channel.')
+      throw new Error('There was an error inviting the user to the channel. Most likely, the user is already authorized to access the channel.')
     }
   }, [addressBook, channelToInvite, contactToInvite])
 

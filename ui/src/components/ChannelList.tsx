@@ -1,13 +1,11 @@
 import {useChannel} from "../service/channels/channel";
-import {Channel} from "solarium-js";
-import {ChannelType, DirectChannel, GroupChannel} from "../service/channels/addressBook";
+import {DirectChannel, GroupChannel} from "../service/channels/addressBook";
 import {useCallback, useState} from "react";
 import AddContactModal from "./modal/AddContactModal";
 import Avatar from "./Avatar";
 import InviteToGroupChannel from "./modal/InviteToGroupModal";
 import CreateChannelModal from "./modal/CreateChannelModal";
 import {
-  ChatAltIcon,
   ChatIcon,
   ClipboardCheckIcon,
   ClipboardIcon,
@@ -15,9 +13,6 @@ import {
   PlusCircleIcon,
   UserAddIcon
 } from "@heroicons/react/outline";
-import {
-  ChatIcon as ChatIconSolid
-} from "@heroicons/react/solid";
 import {getInviteChannelJoinURL} from "./util";
 
 const ChannelList = () => {
@@ -42,7 +37,7 @@ const ChannelList = () => {
 
     return (<MailIcon className="cursor-pointer block ml-2 h-5 w-5"
                       onClick={() => showInviteToGroupModalPrefilled(groupChannel.channel.address.toBase58())} />)
-  }, [addressBook]);
+  }, [showInviteToGroupModalPrefilled]);
 
   const chatIcon = useCallback((groupChannel: GroupChannel ) => {
     if (!groupChannel || !channel) return
@@ -53,7 +48,7 @@ const ChannelList = () => {
 
     return (<ChatIcon className="cursor-pointer block ml-2 h-5 w-5"
                       onClick={() => setCurrentChannel(groupChannel.channel)} />)
-  }, [addressBook, channel]);
+  }, [channel, setCurrentChannel]);
 
 
   let groupChannels: GroupChannel[] = [];

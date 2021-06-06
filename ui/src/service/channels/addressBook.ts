@@ -125,13 +125,10 @@ export class AddressBookManager {
   }
 
   async joinChannel(channelConfig: GroupChannelConfig): Promise<Channel> {
-    if (!channelConfig.inviteAuthority) {
-      throw new Error("Cannot join " + channelConfig.name + " - no invite authority");
+    if (channelConfig.inviteAuthority) {
+      const inviteAuthorityKeypair = Keypair.fromSecretKey(base58ToBytes(channelConfig.inviteAuthority));
+      await addToChannel(this.connection, this.wallet, undefined, channelConfig.address, inviteAuthorityKeypair, this.did)
     }
-
-    const inviteAuthorityKeypair = Keypair.fromSecretKey(base58ToBytes(channelConfig.inviteAuthority));
-
-    await addToChannel(this.connection, this.wallet, undefined, channelConfig.address, inviteAuthorityKeypair, this.did)
 
     const channel = await getChannel(this.connection, this.wallet, this.did, channelConfig.address, this.decryptionKey);
 

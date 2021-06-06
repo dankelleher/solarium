@@ -185,3 +185,103 @@ blockchain transaction that adds the message to the channel is signed by the
 sender. The Solarium program ensures the following statements are true:
 1. The sender key of the transaction currently belongs to the DID of the stated sender of the message
 2. The sender DID is a member of the channel that the message is being posted to.
+
+## Frequently Asked Questions (FAQs)
+
+### What is Solarium?
+Solarium is a fully decentralised, end-to-end encrypted, censorship-resistant instant messenger
+based on the [Solana](https://solana.com) blockchain.
+
+### Why did you create Solarium?
+We believe that a completely decentralized censorship-resistant messaging solution on a blockchain
+is a missing link to establishing fully-decentralized trusted communities. For example, current implementations 
+of DEXs and DAOs generally rely on a third-party off-chain communication tools (e.g. Discord, Slack, ...) that break the
+chain of trust between an on-chain identity and communication platform.
+
+We also believe in [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core/) as the basis of
+new internet identity layer that would allow to build these communities from the group up.
+
+### How secure is Solarium?
+All messages in Solarium are end-to-end encrypted using
+the [XChaCha20-Poly1305](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-xchacha-01)
+symmetric encryption algorithm, using a 256-bit content encryption key (CEK)
+that is shared for all messages in a given channel.
+
+The CEK is then encrypted for each member of a channel using the
+ECDH-ES+XC20PKW algorithm (a CEK-wrapping variant of the
+[Elliptic Curve Diffie-Hellman](https://datatracker.ietf.org/doc/html/rfc6278)
+algorithm). The CEK is encrypted for each key in the user's [DID](#identity).
+
+The use of the same CEK for all messages in a channel means that Solarium
+does not at present exhibit [perfect forward secrecy (PFS)](https://en.wikipedia.org/wiki/Forward_secrecy).
+Future implementations of Solarium (see [the roadmap](#roadmap)) above will move to
+the [Signal Protocol](https://signal.org/docs/) to support PFS.
+
+### How decentralized is Solarium?
+The solarium frontend only requires a [JSON RPC API](https://solana-labs.github.io/solana-web3.js/) to Solana and
+a Wallet (currently [SPL Token Wallet](https://github.com/project-serum/spl-token-wallet)). The [Solarium frontend](https://solarium.chat/) is 
+currently hosted on IPFS and served via [Infura](https://infura.io/docs/ipfs).
+
+### How many messages can be persisted within a channel (direct or group)?
+Currently, there is a hard-coded on-chain limit of 8 messages that can be persisted per channel. Newer messages will
+automatically overwrite older ones.
+
+### How to I send a new message
+When in a direct or group channel, just type your message in the message box and hit **RETURN**. This will trigger
+a transaction within the wallet to send the encrypted message to the current channel.
+
+### How do add an alias for a participant (represented by a DID)?
+Unknown users are represented by their DID within the lobby. You can add an alias by clicking the following symbol, 
+either within a channel (e.g. the lobby), or next to the **Contacts** heading.
+
+<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+</svg>
+
+### How do I create a direct channel with a user?
+Direct channels are automatically generated when a Contact alias is added for a DID. Please note that it's necessary for 
+**both** parties to add each other as a contact alias in order to have a bidirectional conversation 
+
+### I've created a direct chat, but the other party is not able to see it.
+It's necessary for **both** parties to add each other as a contact alias in order to have a bidirectional conversation.
+
+### How do I create a group channel?
+You can create a new group channel by clicking the following symbol next to the **Channels** heading. The resulting
+modal will ask for a channel-name. Please note, that the channel-name is persisted on chain and cannot be changed later.
+
+<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+</svg>
+
+### I've created a group channel, how can I invite others to it?
+New channels have the creater as the sole member. The invitation is a two-step process:
+1. Invite an existing contact alias to your channel by clicking the "Mail-Icon" next to a group channel and selecting
+the alias to invite. Please note, inviting a member twice will result in an error message being shown.
+
+<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+</svg>
+
+
+2. Sending an invite link to the newly invited alias: 
+   
+Clicking the "Clipboard-Icon" next to a group-channel will copy
+a universal invite link for the given channel, which will need to be shared with the invited user. Clicking the invite 
+link will add the channel to the **Channels** list of the invitee. **Note**: The invite link will **ONLY** work for users
+that were previously invited by performing step 1. It will have no effect for everyone else.
+
+
+### I've invited a contact to my group channel, but he cannot find it. What's going on?
+After inviting an alias to a group channel you'll need to share the group-link with the new member. See
+"I've created a group channel, how can I invite others to it?". step 2.
+
+
+### Can I use Solarium on Mainnet?
+The current version of Solarium is in Alpha-Phase and works against the [Solana Devnet](https://docs.solana.com/clusters#devnet). 
+This allows for an easy onboarding experience, including an automatic airdrop of SOL. An Beta-Release on Mainnet is 
+planned shortly according to our roadmap.
+
+### Will there be a mobile App for Solarium?
+We plan to release an Solarium Mobile App at the end of the year.
+
+

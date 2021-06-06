@@ -40,7 +40,11 @@ const InviteToGroupModal: React.FC<Props> = ({
     if (!channelToInvite || !contactToInvite) return;
 
     console.log(`Inviting Channel: ${channelToInvite} and Contact: ${contactToInvite}`)
-    await addressBook?.inviteToChannel(channelToInvite, contactToInvite)
+    try {
+      await addressBook?.inviteToChannel(channelToInvite, contactToInvite)
+    } catch (e) {
+      throw new Error('There was an error inviting the user to the channel. Most likely, the user is already authorized to acccess the channel.')
+    }
   }, [addressBook, channelToInvite, contactToInvite])
 
   return (

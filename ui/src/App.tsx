@@ -16,6 +16,7 @@ import {IdentityProvider, useIdentity} from "./service/identity";
 
 const CopyIdentityMenuItem = (props:{ className: string}) => {
   const { did }= useIdentity()
+  // eslint-disable-next-line jsx-a11y/anchor-is-valid
   return (<a href="#" {...props} onClick={
       () => navigator.clipboard.writeText(did || '')
     }

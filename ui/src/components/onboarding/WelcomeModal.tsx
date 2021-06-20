@@ -1,33 +1,26 @@
-import React, {Fragment, useMemo, useRef, useState} from 'react'
-import { Dialog, Transition } from '@headlessui/react'
-import Wizard from './Wizard'
-import {OnboardingStep} from "./OnboardingController";
+import React, { Fragment, useRef, useState } from 'react'
+import {Dialog, Transition} from "@headlessui/react";
 import Logo from "../logo/Logo";
+
 
 type Props = {
   show: boolean,
-  title: string,
-  steps: OnboardingStep[],
-  currentStepIndex: number
-  next: () => void
+  setShow: (show: boolean) => void,
 }
-const OnboardingModal = ({ show, title, steps, currentStepIndex, next }:Props) => {
 
-  const isVisible = useMemo(() => show && currentStepIndex < steps.length, [currentStepIndex, steps, show])
+const WelcomeModal: React.FC<Props> = ({
+                                               show,
+                                               setShow,
+                                             }) => {
 
-
-  const nextRef = useRef(null)
-
-  const nextButtonText = currentStepIndex === steps.length - 1 ? 'Let\'s go!' : 'Next'
 
   return (
-    <Transition.Root show={isVisible} as={Fragment}>
+    <Transition.Root show={show} as={Fragment}>
       <Dialog
         as="div"
         static
         className="fixed z-10 inset-0 overflow-y-auto"
-        initialFocus={nextRef}
-        open={isVisible}
+        open={show}
         onClose={() => {}}
       >
         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -65,13 +58,13 @@ const OnboardingModal = ({ show, title, steps, currentStepIndex, next }:Props) =
                 </div>
                 <div className="mt-3 text-center sm:mt-5 text-myrtleGreen">
                   <Dialog.Title as="h3" className="text-lg leading-6 font-medium">
-                    {title}
+                    Welcome Screen
                   </Dialog.Title>
                   <Dialog.Description>
                     Let's get you set up...
                   </Dialog.Description>
                   <div className="mt-2 py-6">
-                    <Wizard steps={steps} currentStepIndex={currentStepIndex}/>
+                    <h1>Let's put some content in here!</h1>
                   </div>
                 </div>
               </div>
@@ -79,10 +72,9 @@ const OnboardingModal = ({ show, title, steps, currentStepIndex, next }:Props) =
                 <button
                   type="button"
                   className="w-1/2 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-myrtleGreen text-base font-medium text-aeroBluen hover:bg-myrtleGreen-lightest focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myrtleGreen sm:col-start-2 sm:text-sm"
-                  onClick={next}
-                  ref={nextRef}
+                  onClick={() => setShow(false)}
                 >
-                  {nextButtonText}
+                  Close
                 </button>
               </div>
             </div>
@@ -91,6 +83,7 @@ const OnboardingModal = ({ show, title, steps, currentStepIndex, next }:Props) =
       </Dialog>
     </Transition.Root>
   )
+
 }
 
-export default OnboardingModal
+export default WelcomeModal

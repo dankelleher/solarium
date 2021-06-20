@@ -5,6 +5,7 @@ import {useWallet} from "../../service/wallet/wallet";
 import Loader from "../Loader";
 import {DEFAULT_CHANNEL} from "../../service/constants";
 import {useIdentity} from "../../service/identity";
+import WelcomeModal from "./WelcomeModal";
 
 enum StepType {
   CONNECT_WALLET = 'Connect Wallet',
@@ -52,6 +53,7 @@ const OnboardingController = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const [title, setTitle] = useState<string>(titleNewUser)
+  const [showWelcome, setShowWelcome] = useState<boolean>(true)
 
   useEffect(() => {
     const connectWalletAction = wallet.connect;
@@ -97,6 +99,10 @@ const OnboardingController = () => {
     if (nextStep > currentStepIndex) setCurrentStepIndex(nextStep);
   }, [currentStepIndex, steps, setCurrentStepIndex])
 
+  useEffect(() => {
+    setShowWelcome(!did && showWelcome) // will always be false, once showWelcome turns false.
+    }, [did, showWelcome, setShowWelcome])
+
   const nextStep = useCallback(
     () => {
       steps[currentStepIndex].action().then(() => {
@@ -105,15 +111,15 @@ const OnboardingController = () => {
     },
     [currentStepIndex, setCurrentStepIndex, steps]
   );
-  const done = useMemo(() => currentStepIndex >= steps.length, [currentStepIndex, steps])
+
+  // const done = useMemo(() => currentStepIndex >= steps.length, [currentStepIndex, steps])
 
   return (
     <>
-      { !done &&
-      (steps.length ?
-          <OnboardingModal title={title} steps={steps} currentStepIndex={currentStepIndex} next={nextStep}/> :
-          <Loader/>
-      )}
+      <WelcomeModal show={showWelcome} setShow={setShowWelcome}/>
+      <OnboardingModal show={!showWelcome && steps.length > 0} title={title} steps={steps} currentStepIndex={currentStepIndex} next={nextStep}/>
+      {/* TODO: @Dan I feel this loader did nothing... */}
+      {/*<Loader/>*/}
     </>
   )
 }

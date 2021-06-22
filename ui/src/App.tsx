@@ -1,6 +1,6 @@
-import {Fragment} from 'react'
+import {Fragment, useRef, useState} from 'react'
 import {Menu, Popover, Transition} from '@headlessui/react'
-import {BellIcon, MenuIcon, XIcon} from '@heroicons/react/outline'
+import {BellIcon, MenuIcon, QuestionMarkCircleIcon, XIcon} from '@heroicons/react/outline'
 import Button from "./components/Button";
 import WalletBar from './components/WalletBar'
 import {WalletProvider} from "./service/wallet/wallet";
@@ -26,11 +26,14 @@ const CopyIdentityMenuItem = (props:{ className: string}) => {
 }
 
 export default function App() {
+  const [forceShowWelcome, setForceShowWelcome] = useState<boolean>(false)
+
+
   return (
     <WalletProvider>
       <IdentityProvider>
         <ChannelProvider>
-          <OnboardingController/>
+          <OnboardingController forceShowWelcome={forceShowWelcome} setForceShowWelcome={setForceShowWelcome}/>
           <div className="min-h-screen bg-black font-white">
             <Popover as="header" className="pb-10 bg-black">
               {({ open }) => (
@@ -53,6 +56,7 @@ export default function App() {
                       {/* Right section on desktop */}
                       <div className="hidden lg:ml-4 lg:flex lg:items-center lg:pr-0.5 text-turquoise">
                         <WalletBar/>
+                        <Button icon={QuestionMarkCircleIcon} text="View notifications" onClick={async () => setForceShowWelcome(true)}/>
                         <Button icon={BellIcon} text="View notifications"/>
 
                         {/* Profile dropdown */}

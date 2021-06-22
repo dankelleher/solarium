@@ -6,6 +6,7 @@ import Loader from "../Loader";
 import {DEFAULT_CHANNEL} from "../../service/constants";
 import {useIdentity} from "../../service/identity";
 import WelcomeModal from "./WelcomeModal";
+import * as React from "react";
 
 enum StepType {
   CONNECT_WALLET = 'Connect Wallet',
@@ -46,7 +47,12 @@ export type OnboardingStep = {
 
 type OnboardingStepTemplate = Omit<OnboardingStep, 'action' | 'skipCondition'>
 
-const OnboardingController = () => {
+type Props = {
+  forceShowWelcome: boolean
+  setForceShowWelcome: (show: boolean) => void,
+}
+
+const OnboardingController = ({forceShowWelcome, setForceShowWelcome} : Props) => {
   const {wallet, connected} = useWallet();
   const { ready: identityReady, decryptionKey, did, createIdentity, addKey} = useIdentity();
   const { addressBook, joinPublicChannel, initialised } = useChannel()
@@ -116,7 +122,7 @@ const OnboardingController = () => {
 
   return (
     <>
-      <WelcomeModal show={showWelcome} setShow={setShowWelcome}/>
+      <WelcomeModal show={forceShowWelcome || showWelcome} setShow={(show) => {setForceShowWelcome(show); setShowWelcome(show)}}/>
       <OnboardingModal show={!showWelcome && steps.length > 0} title={title} steps={steps} currentStepIndex={currentStepIndex} next={nextStep}/>
       {/* TODO: @Dan I feel this loader did nothing... */}
       {/*<Loader/>*/}

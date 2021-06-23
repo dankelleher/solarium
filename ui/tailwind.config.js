@@ -35,6 +35,7 @@ module.exports = {
   variants: {},
   plugins: [
     require('@tailwindcss/forms'),
+    require('@tailwindcss/aspect-ratio'),
   ],
   purge: {
     // Filenames to scan for classes

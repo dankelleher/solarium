@@ -1,6 +1,5 @@
 //! Program state
 use {
-    crate::id,
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
     solana_program::{
         pubkey::Pubkey,
@@ -141,8 +140,8 @@ pub const CHANNEL_ADDRESS_SEED: &'static [u8; 16] = br"solarium_channel";
 pub const CEK_ACCOUNT_ADDRESS_SEED: &'static [u8; 20] = br"solarium_cek_account";
 
 /// Get program-derived cek account address for the did and channel 
-pub fn get_cek_account_address_with_seed(did: &Pubkey, channel: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[&did.to_bytes(), &channel.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED], &id())
+pub fn get_cek_account_address_with_seed(program_id: &Pubkey, did: &Pubkey, channel: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[&did.to_bytes(), &channel.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED], program_id)
 }
 
 /// To ensure predictable account addresses, sort the DIDs.
@@ -154,10 +153,10 @@ pub fn direct_channel_address_order<'a>(did0: &'a Pubkey, did1: &'a Pubkey) -> [
 }
 
 /// Get the program-derived channel account address for a direct channel
-pub fn get_channel_address_with_seed(did0: &Pubkey, did1: &Pubkey) -> (Pubkey, u8) {
+pub fn get_channel_address_with_seed(program_id: &Pubkey, did0: &Pubkey, did1: &Pubkey) -> (Pubkey, u8) {
     // To ensure predictable account addresses, sort the DIDs.
     let [a, b] = direct_channel_address_order(did0, did1);
-    Pubkey::find_program_address(&[&a.to_bytes(), &b.to_bytes(), CHANNEL_ADDRESS_SEED], &id())
+    Pubkey::find_program_address(&[&a.to_bytes(), &b.to_bytes(), CHANNEL_ADDRESS_SEED], program_id)
 }
 
 /// Struct for the Message object

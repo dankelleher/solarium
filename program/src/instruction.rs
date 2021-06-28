@@ -130,7 +130,7 @@ pub fn initialize_channel(
     creator_authority: &Pubkey,
     ceks: Vec<CEKData>
 ) -> Instruction {
-    let (creator_cek_account, _) = get_cek_account_address_with_seed(creator_did, channel);
+    let (creator_cek_account, _) = get_cek_account_address_with_seed(&id(), creator_did, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::InitializeChannel { name, ceks },
@@ -156,8 +156,8 @@ pub fn initialize_direct_channel(
     creator_ceks: Vec<CEKData>,
     invitee_ceks: Vec<CEKData>
 ) -> Instruction {
-    let (creator_cek_account, _) = get_cek_account_address_with_seed(creator_did, channel);
-    let (invitee_cek_account, _) = get_cek_account_address_with_seed(invitee_did, channel);
+    let (creator_cek_account, _) = get_cek_account_address_with_seed(&id(), creator_did, channel);
+    let (invitee_cek_account, _) = get_cek_account_address_with_seed(&id(), invitee_did, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::InitializeDirectChannel {
@@ -180,7 +180,7 @@ pub fn initialize_direct_channel(
 
 /// Create a `SolariumInstruction::Post` instruction
 pub fn post(channel: &Pubkey, sender_authority: &Pubkey, message: &Message) -> Instruction {
-    let (sender_cek_account, _) = get_cek_account_address_with_seed(&message.sender, channel);
+    let (sender_cek_account, _) = get_cek_account_address_with_seed(&id(), &message.sender, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::Post { message: message.content.to_string() },
@@ -202,8 +202,8 @@ pub fn add_to_channel(
     inviter_authority: &Pubkey,
     ceks: Vec<CEKData>
 ) -> Instruction {
-    let (inviter_cek_account, _) = get_cek_account_address_with_seed(inviter_did, channel);
-    let (invitee_cek_account, _) = get_cek_account_address_with_seed(invitee_did, channel);
+    let (inviter_cek_account, _) = get_cek_account_address_with_seed(&id(), inviter_did, channel);
+    let (invitee_cek_account, _) = get_cek_account_address_with_seed(&id(), invitee_did, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::AddToChannel { ceks },
@@ -228,7 +228,7 @@ pub fn add_cek(
     channel: &Pubkey,
     cek: CEKData
 ) -> Instruction {
-    let (owner_cek_account, _) = get_cek_account_address_with_seed(owner_did, channel);
+    let (owner_cek_account, _) = get_cek_account_address_with_seed(&id(), owner_did, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::AddCEK { cek },
@@ -247,7 +247,7 @@ pub fn remove_cek(
     channel: &Pubkey,
     kid: String
 ) -> Instruction {
-    let (owner_cek_account, _) = get_cek_account_address_with_seed(owner_did, channel);
+    let (owner_cek_account, _) = get_cek_account_address_with_seed(&id(), owner_did, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::RemoveCEK { kid },

@@ -11911,10 +11911,8 @@ rpc-websockets@^7.4.2:
   dependencies:
     "@babel/runtime" "^7.11.2"
     assert-args "^1.2.1"
-    bufferutil "^4.0.1"
     circular-json "^0.5.9"
     eventemitter3 "^4.0.7"
-    utf-8-validate "^5.0.2"
     uuid "^8.3.0"
     ws "^7.3.1"
   optionalDependencies:
@@ -12328,10 +12326,10 @@ sockjs@^0.3.21:
     uuid "^3.4.0"
     websocket-driver "^0.7.4"
 
-solarium-js@^0.1.19:
-  version "0.1.19"
-  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.19.tgz#039e6e92faf04342fffadd207cc74d6012e4df44"
-  integrity sha512-4HO+l2Y1GzCxvgr0Pp47Kt1qIKHTdiiRXzZ2VP8p1mnYkPwtORucUKwUb25Yl29ey2+U/dTBSUryU2hRBZj6ZQ==
+solarium-js@^0.1.21:
+  version "0.1.21"
+  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.21.tgz#9b7774d1c3070a5999bdc3886be9266eba2c292a"
+  integrity sha512-2VvZByLqDrP5Ntjn3SHCn9Xsi5A5uiH519lcIws8MjYd5QehQ2I9mTJMuHoplPyB47dxQeOHaf5CfPxpIlXnNg==
   dependencies:
     "@identity.com/sol-did-client" "^0.1.9"
     "@solana/web3.js" "^1.12.0"

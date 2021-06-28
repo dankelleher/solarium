@@ -11,8 +11,10 @@ const cluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
 type PublicChannelConfig = { [key: string]: GroupChannelConfig[] }
 export const publicChannelConfig: PublicChannelConfig = require('./publicChannels.json');
 
+const publicChannelKey = cluster + (process.env.NODE_ENV === 'development'  ? '-dev' : '');
+
 export const publicChannelConfigByName = (name:string) =>
-  publicChannelConfig[cluster]
+  publicChannelConfig[publicChannelKey]
     .find(config => config.name === name)
 
 type GroupChannelConfig ={

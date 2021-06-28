@@ -117,7 +117,9 @@ impl SolariumContext {
         let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
         
         let (channel, bump_seed) = get_channel_address_with_seed(
-            &self.alice_did, &self.bob_did);
+            &id(),
+            &self.alice_did, 
+            &self.bob_did);
         let initialize_direct_channel = instruction::initialize_direct_channel(
             &self.context.payer.pubkey(),
             &channel,

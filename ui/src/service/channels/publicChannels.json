@@ -3,5 +3,10 @@
     "name": "lobby",
     "address": "53Zryh83YjC9qL56KAcUCg8dc1WNNRxHwPuTVH19Sp7",
     "inviteAuthority": "22AfM7EbdhkH5qetBaND1yMp9F53CWeFUcS9mMqDjQMhTTBAT37hP4AjR6KGn3KewzA3pGzANBbpRemua1YGNhX3"
+  }],
+  "devnet-dev": [{
+    "name": "lobby",
+    "address": "8tsShvvPuKduM36SueMic3hyGzuod4uexTxEnQgeSY9r",
+    "inviteAuthority": "22AfM7EbdhkH5qetBaND1yMp9F53CWeFUcS9mMqDjQMhTTBAT37hP4AjR6KGn3KewzA3pGzANBbpRemua1YGNhX3"
   }]
 }

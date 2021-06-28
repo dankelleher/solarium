@@ -1,12 +1,6 @@
 import {clusterApiUrl, Commitment, PublicKey} from "@solana/web3.js";
 import {ExtendedCluster} from "solarium-js";
 
-export const SOLARIUM_PROGRAM_ID = new PublicKey(
-  "boxndjnzQZEWbBku3YipL4pchYRc1zi4nNSrFUwawWo"
-);
-
-export const DEFAULT_COMMITMENT: Commitment = "processed";
-
 export const ENDPOINTS = [
   {
     name: "mainnet-beta" as ExtendedCluster,

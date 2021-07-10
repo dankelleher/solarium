@@ -3,7 +3,7 @@ import {DEFAULT_ENDPOINT_INDEX} from "../web3/connection";
 import {addToChannel, getChannel, getDirectChannel, getOrCreateDirectChannel, createChannel} from "./solarium";
 import {Connection, Keypair} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
-import {Channel} from "solarium-js";
+import {Channel, STAGE} from "solarium-js";
 import * as u8a from 'uint8arrays'
 
 const cluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
@@ -11,7 +11,8 @@ const cluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
 type PublicChannelConfig = { [key: string]: GroupChannelConfig[] }
 export const publicChannelConfig: PublicChannelConfig = require('./publicChannels.json');
 
-const publicChannelKey = cluster + (process.env.NODE_ENV === 'development'  ? '-dev' : '');
+console.log("STAGE " + STAGE);
+const publicChannelKey = cluster + (STAGE === 'development'  ? '-dev' : '');
 
 export const publicChannelConfigByName = (name:string) =>
   publicChannelConfig[publicChannelKey]
@@ -129,7 +130,16 @@ export class AddressBookManager {
   async joinChannel(channelConfig: GroupChannelConfig): Promise<Channel> {
     if (channelConfig.inviteAuthority) {
       const inviteAuthorityKeypair = Keypair.fromSecretKey(base58ToBytes(channelConfig.inviteAuthority));
-      await addToChannel(this.connection, this.wallet, undefined, channelConfig.address, inviteAuthorityKeypair, this.did)
+      
+      try {
+        await addToChannel(this.connection, this.wallet, undefined, channelConfig.address, inviteAuthorityKeypair, this.did)
+      } catch (error) {
+        if (error.message === 'Invitee DID is already a member') {
+          console.log("Skip add to channel - invitee is already a member");
+        } else {
+          throw error;
+        }
+      }
     }
 
     const channel = await getChannel(this.connection, this.wallet, this.did, channelConfig.address, this.decryptionKey);
@@ -186,7 +196,7 @@ export class AddressBookManager {
 
   static async load(store: AddressBookConfig, connection: Connection, wallet: Wallet, did: string, decryptionKey: Keypair, updateCallback: (store: AddressBookConfig) => void): Promise<AddressBookManager> {
     const mergedConfig: AddressBookConfig = {
-      channels: distinct([...store.channels, ...publicChannelConfig[cluster as string]]),
+      channels: distinct([...store.channels, ...publicChannelConfig[publicChannelKey]]),
       contacts: store.contacts,
     }
 

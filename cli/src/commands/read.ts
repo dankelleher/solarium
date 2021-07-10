@@ -8,7 +8,7 @@ export default class Read extends Command {
     help: flags.help({char: 'h'}),
   }
 
-  static args = [{name: 'channel'}]
+  static args = [{name: 'channel', required: true}]
   static aliases = ['get']
 
   async run() {

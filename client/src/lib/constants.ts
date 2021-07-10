@@ -5,7 +5,9 @@ import { ClusterType } from '@identity.com/sol-did-client';
 const PROD_PROGRAM_ID = 'boxndjnzQZEWbBku3YipL4pchYRc1zi4nNSrFUwawWo';
 const DEV_PROGRAM_ID = 'dbo6b6DDmWTWpLcZM5SoVEf9X8DSJYPjVfD3Ptz6hod';
 
-export const PROGRAM_ID: PublicKey = process.env.NODE_ENV === 'development' ? new PublicKey(DEV_PROGRAM_ID) : new PublicKey(PROD_PROGRAM_ID);
+export const STAGE = (process.env.REACT_APP_STAGE || process.env.NODE_ENV);
+
+export const PROGRAM_ID: PublicKey = STAGE === 'development' ? new PublicKey(DEV_PROGRAM_ID) : new PublicKey(PROD_PROGRAM_ID);
 export const SOLANA_COMMITMENT: Commitment = 'single'; // for message channels, the focus is speed rather than safety
 
 // must match get_cek_account_address_with_seed in state.rs

@@ -62,6 +62,9 @@ export const addToChannel = async (
 
   const ownerDIDKey = didToPublicKey(ownerDID);
   const inviteeDIDKey = didToPublicKey(inviteeDID);
+
+  const inviteeIsAlreadyMember = await channelForOwner.hasMember(inviteeDIDKey);
+  if (inviteeIsAlreadyMember) throw new Error('Invitee DID is already a member');
   
   const inviteeCEKs = await channelForOwner.encryptCEKForDID(inviteeDID);
   

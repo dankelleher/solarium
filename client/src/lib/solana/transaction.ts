@@ -126,7 +126,7 @@ export class SolariumTransaction {
     channel: PublicKey
   ): Promise<ChannelData | null> {
     const accountInfo = await connection.getAccountInfo(channel);
-
+    
     if (!accountInfo) return null;
 
     return ChannelData.fromAccount(accountInfo.data);

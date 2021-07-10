@@ -11,9 +11,7 @@ import { memoizeWith } from 'ramda';
 
 const memoizedGetConnection = memoizeWith(
   getClusterEndpoint,
-  (cluster?: ExtendedCluster) => {
-    return new Connection(getClusterEndpoint(cluster), SOLANA_COMMITMENT);
-  }
+  (cluster?: ExtendedCluster) => new Connection(getClusterEndpoint(cluster), SOLANA_COMMITMENT)
 );
 
 export class SolanaUtil {

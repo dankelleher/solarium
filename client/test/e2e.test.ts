@@ -104,6 +104,37 @@ describe('E2E', () => {
     })
     expect(channelForBob.address).toEqual(channel.address);
   });
+
+  it('adds a user twice to a group channel throws an error the second time', async () => {
+    const channelName = "dummy channel " + Date.now();
+    channel = await create({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: channelName
+    });
+
+    // create Bob's DID
+    await createDID({
+      payer: payer.secretKey,
+      owner: bob.publicKey.toBase58(),
+    });
+
+    await addToChannel({
+      payer: payer.secretKey,
+      decryptionKey: alice.secretKey,
+      channel: channel.address.toBase58(),
+      inviteeDID: bobDID
+    })
+
+    const shouldFail = addToChannel({
+      payer: payer.secretKey,
+      decryptionKey: alice.secretKey,
+      channel: channel.address.toBase58(),
+      inviteeDID: bobDID
+    });
+    
+    return expect(shouldFail).rejects.toThrow('DID is already a member');
+  });
   
   it('creates a DID and direct channel', async () => {
     await createDID({

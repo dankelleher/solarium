@@ -7,6 +7,7 @@ export { addKey } from './api/id/addKey';
 export { get as getDID } from './api/id/get';
 export { create as createDID } from './api/id/create';
 
+export { STAGE } from './lib/constants';
 export { Channel, Message } from './lib/Channel';
 export { create as createWallet, SignCallback } from './lib/wallet';
 export { ExtendedCluster } from './lib/util';

@@ -13,13 +13,15 @@ import {
 import {PublicKey} from "@solana/web3.js";
 import {VerificationMethod} from "did-resolver";
 import {CEKData} from "./solana/models/CEKData";
+import {getCekAccountKey} from "./solana/instruction";
+import {SolanaUtil} from "./solana/solanaUtil";
 
 export class Message {
   constructor(readonly sender: string, readonly content: string, readonly timestamp: number) {}
 }
 
 export class Channel {
-  constructor(readonly name: string, readonly messages: Message[], readonly address: PublicKey, private cek?: CEK) {}
+  constructor(readonly name: string, readonly messages: Message[], readonly address: PublicKey, private cek?: CEK, private cluster?: ExtendedCluster) {}
 
   async encrypt(message: string) {
     if (!this.cek) {
@@ -40,6 +42,16 @@ export class Channel {
       throw new Error("Cannot encrypt, this channel was loaded without a private key, so no CEK was available")
     }
     return encryptCEKForVerificationMethod(this.cek, verificationMethod);
+  }
+  
+  async hasMember(did: PublicKey):Promise<boolean> {
+    const cekAccount = await getCekAccountKey(did, this.address);
+
+    const connection = SolanaUtil.getConnection(this.cluster);
+    
+    const cekAccountInfo = await connection.getAccountInfo(cekAccount);
+    
+    return !!cekAccountInfo
   }
 
   static async fromChainData(
@@ -84,6 +96,6 @@ export class Channel {
 
     const messages = await Promise.all(messagePromises);
 
-    return new Channel(channelData.name, messages, address, cek);
+    return new Channel(channelData.name, messages, address, cek, cluster);
   }
 }

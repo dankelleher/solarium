@@ -16,6 +16,8 @@ export const CEK_ACCOUNT_NONCE_SEED_STRING = 'solarium_cek_account';
 // must match get_channel_address_with_seed in state.rs
 export const CHANNEL_NONCE_SEED_STRING = 'solarium_channel';
 
+export const USER_DETAILS_ACCOUNT_NONCE_SEED_STRING = 'solarium_userdetails_account';
+
 // The cluster reference for the sol-did client - used to generate
 // DIDs that can be unambiguously resolved to any solana cluster
 // e.g. did:sol:devnet:abcde
@@ -23,3 +25,5 @@ export const DEFAULT_CLUSTER = ClusterType.development(); // localhost - overrid
 
 export const MESSAGE_SIZE_BYTES = 512;
 export const DEFAULT_MAX_MESSAGE_COUNT = 8;
+
+export const DEFAULT_USER_DETAILS_SIZE = 512;

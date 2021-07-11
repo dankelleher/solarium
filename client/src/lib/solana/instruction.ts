@@ -1,5 +1,10 @@
 import { Enum, Assignable, SCHEMA } from './solanaBorsh';
-import {CEK_ACCOUNT_NONCE_SEED_STRING, CHANNEL_NONCE_SEED_STRING, PROGRAM_ID} from '../constants';
+import {
+  CEK_ACCOUNT_NONCE_SEED_STRING,
+  CHANNEL_NONCE_SEED_STRING,
+  DEFAULT_USER_DETAILS_SIZE,
+  PROGRAM_ID, USER_DETAILS_ACCOUNT_NONCE_SEED_STRING
+} from '../constants';
 import {
   AccountMeta,
   PublicKey,
@@ -36,6 +41,12 @@ export class RemoveCEK extends Assignable {
   kid: string;
 }
 
+export class CreateUserDetails extends Assignable {
+  alias: string;
+  addressBook: string;
+  size: number;
+}
+
 export class SolariumInstruction extends Enum {
   initializeChannel: InitializeChannel;
   initializeDirectChannel: InitializeDirectChannel;
@@ -43,6 +54,7 @@ export class SolariumInstruction extends Enum {
   addToChannel: AddToChannel;
   addCEK: AddCEK;
   removeCEK: RemoveCEK;
+  createUserDetails: CreateUserDetails;
 
   static initializeChannel(name: string, CEKs: CEKData[]): SolariumInstruction {
     return new SolariumInstruction({
@@ -77,11 +89,25 @@ export class SolariumInstruction extends Enum {
       removeCEK: new RemoveCEK({ kid }),
     });
   }
+  
+  static createUserDetails(alias: string, addressBook: string = "", size: number = DEFAULT_USER_DETAILS_SIZE): SolariumInstruction {
+    return new SolariumInstruction({
+      createUserDetails: new CreateUserDetails({ alias, addressBook, size }),
+    });
+  }
 }
 
 export async function getCekAccountKey(ownerDID: PublicKey, channel: PublicKey): Promise<PublicKey> {
   const publicKeyNonce = await PublicKey.findProgramAddress(
     [ownerDID.toBuffer(), channel.toBuffer(), Buffer.from(CEK_ACCOUNT_NONCE_SEED_STRING, 'utf8')],
+    PROGRAM_ID
+  );
+  return publicKeyNonce[0];
+}
+
+export async function getUserDetailsKey(did: PublicKey): Promise<PublicKey> {
+  const publicKeyNonce = await PublicKey.findProgramAddress(
+    [did.toBuffer(), Buffer.from(USER_DETAILS_ACCOUNT_NONCE_SEED_STRING, 'utf8')],
     PROGRAM_ID
   );
   return publicKeyNonce[0];
@@ -243,6 +269,30 @@ export async function removeCEK(
   });
 }
 
+export async function createUserDetails(
+  payer: PublicKey,
+  did: PublicKey,
+  authority: PublicKey,
+  alias: string,
+  size?: number
+): Promise<TransactionInstruction> {
+  const userDetailsAccount = await getUserDetailsKey(did);
+  const keys: AccountMeta[] = [
+    {pubkey: payer, isSigner: true, isWritable: true},
+    {pubkey: did, isSigner: false, isWritable: false},
+    {pubkey: authority, isSigner: true, isWritable: false},
+    {pubkey: userDetailsAccount, isSigner: false, isWritable: true},
+    {pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false},
+    {pubkey: SystemProgram.programId, isSigner: false, isWritable: false},
+  ];
+  const data = SolariumInstruction.createUserDetails(alias, undefined, size).encode();
+  return new TransactionInstruction({
+    keys,
+    programId: PROGRAM_ID,
+    data,
+  });
+}
+
 SCHEMA.set(SolariumInstruction, {
   kind: 'enum',
   field: 'enum',
@@ -253,6 +303,7 @@ SCHEMA.set(SolariumInstruction, {
     ['addToChannel', AddToChannel],
     ['addCEK', AddCEK],
     ['removeCEK', RemoveCEK],
+    ['createUserDetails', CreateUserDetails],
   ],
 });
 SCHEMA.set(InitializeChannel, {
@@ -289,5 +340,13 @@ SCHEMA.set(RemoveCEK, {
   kind: 'struct',
   fields: [
     ['kid', 'string']
+  ],
+});
+SCHEMA.set(CreateUserDetails, {
+  kind: 'struct',
+  fields: [
+    ['alias', 'string'],
+    ['addressBook', 'string'],
+    ['size', 'u32']
   ],
 });

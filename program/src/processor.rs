@@ -25,7 +25,7 @@ use {
         sysvar::Sysvar
     }
 };
-use crate::state::{CHANNEL_ADDRESS_SEED, direct_channel_address_order};
+use crate::state::{CHANNEL_ADDRESS_SEED, direct_channel_address_order, UserDetails, get_userdetails_account_address_with_seed, USERDETAILS_ACCOUNT_ADDRESS_SEED};
 
 /// Checks that the authority_info account is an authority for the DID,
 /// And that the CEK Account is owned by that DID
@@ -48,6 +48,7 @@ fn check_authority_of_cek(program_id: &Pubkey, authority_info: &AccountInfo, did
 }
 
 fn check_authority_of_did(authority_info: &AccountInfo, did: &AccountInfo) -> ProgramResult {
+    msg!("Checking authority of DID");
     if !authority_info.is_signer {
         msg!("CEKAccount authority signature missing");
         return Err(ProgramError::MissingRequiredSignature);
@@ -85,6 +86,11 @@ fn initialize_channel(program_id: &Pubkey, accounts: &[AccountInfo], name: Strin
     let system_program_info = next_account_info(account_info_iter)?;
 
     let rent = &Rent::from_account_info(rent_info)?;
+
+    if channel_info.owner != program_id {
+        msg!("Error: channel is not a Solarium program account");
+        return Err(ProgramError::IncorrectProgramId);
+    }
 
     let channel =
         program_borsh::try_from_slice_incomplete::<ChannelData>(*channel_info.data.borrow())?;
@@ -366,6 +372,69 @@ fn remove_cek(program_id: &Pubkey, accounts: &[AccountInfo], kid: String) -> Pro
         .map_err(|e| e.into())
 }
 
+fn create_user_details(program_id: &Pubkey, accounts: &[AccountInfo], alias: String, address_book: String, size: u32) -> ProgramResult {
+    msg!("SolariumInstruction::CreateUserDetails");
+    let account_info_iter = &mut accounts.iter();
+    let funder_info = next_account_info(account_info_iter)?;
+    let did_info = next_account_info(account_info_iter)?;
+    let authority_info = next_account_info(account_info_iter)?;
+    let user_details_account_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
+    msg!("Extracting accounts");
+
+    let rent = &Rent::from_account_info(rent_info)?;
+
+    msg!("Checking userdetails initialised");
+    let data_len = user_details_account_info.data.borrow().len();
+    if data_len > 0 {
+        msg!("Error: Attempt to create a userdetails account for an address that is already in use");
+        return Err(SolariumError::AlreadyInUse.into());
+    }
+
+    // Check that the authority is valid for the DID 
+    check_authority_of_did(authority_info, did_info).unwrap();
+
+    msg!("Checking userdetails address");
+    let (user_details_address, user_details_bump_seed) = get_userdetails_account_address_with_seed(program_id, did_info.key);
+    if user_details_address != *user_details_account_info.key {
+        msg!("Error: Attempt to create a userdetails account with an address not derived from the DID");
+        return Err(SolariumError::AddressDerivationMismatch.into());
+    }
+
+    // Create the new cek account for the invitee
+    let new_user_details = UserDetails {
+        alias,
+        address_book
+    };
+
+    let user_details_account_signer_seeds: &[&[_]] =
+        &[
+            &did_info.key.to_bytes(),
+            USERDETAILS_ACCOUNT_ADDRESS_SEED,
+            &[user_details_bump_seed]
+        ];
+
+    invoke_signed(
+        &system_instruction::create_account(
+            funder_info.key,
+            user_details_account_info.key,
+            1.max(rent.minimum_balance(size as usize)),
+            size as u64,
+            program_id,
+        ),
+        &[
+            funder_info.clone(),
+            user_details_account_info.clone(),
+            system_program_info.clone(),
+        ],
+        &[&user_details_account_signer_seeds],
+    )?;
+
+    new_user_details.serialize(&mut *user_details_account_info.data.borrow_mut())
+        .map_err(|e| e.into())
+}
+
 /// Instruction processor
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -381,5 +450,6 @@ pub fn process_instruction(
         SolariumInstruction::AddToChannel { ceks } => add_to_channel(program_id, accounts, ceks),
         SolariumInstruction::AddCEK { cek } => add_cek(program_id, accounts, cek),
         SolariumInstruction::RemoveCEK { kid} => remove_cek(program_id, accounts, kid),
+        SolariumInstruction::CreateUserDetails { alias, address_book, size } => create_user_details(program_id, accounts, alias, address_book, size),
     }
 }

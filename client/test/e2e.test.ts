@@ -14,6 +14,8 @@ import {
 } from '../src';
 import { create as createDID } from '../src/api/id/create';
 import { get as getDID } from '../src/api/id/get';
+import { create as createUserDetails } from '../src/api/userDetails/create';
+import { get as getUserDetails } from '../src/api/userDetails/get';
 import { SolanaUtil } from '../src/lib/solana/solanaUtil';
 import {Keypair} from '@solana/web3.js';
 import { repeat } from 'ramda';
@@ -73,6 +75,23 @@ describe('E2E', () => {
       owner: alice.secretKey,
       name: channelName
     });
+  });
+
+  it('creates user details for a DID', async () => {
+    await createDID({
+      payer: payer.secretKey,
+      owner: alice.publicKey.toBase58(),
+    });
+
+    await createUserDetails({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      alias: 'Alice'
+    });
+
+    const aliceUserDetails = await getUserDetails({ did: aliceDID });
+
+      expect(aliceUserDetails?.alias).toEqual('Alice')
   });
 
   it('adds a user to a group channel', async () => {

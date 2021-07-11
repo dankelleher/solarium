@@ -3,7 +3,7 @@
 use {
     crate::{
         id,
-        state::{get_cek_account_address_with_seed, CEKData, Message},
+        state::{get_cek_account_address_with_seed, get_userdetails_account_address_with_seed, CEKData, Message},
     },
     borsh::{BorshDeserialize, BorshSerialize},
     solana_program::{
@@ -93,16 +93,16 @@ pub enum SolariumInstruction {
     AddToChannel {
         /// The initial set of CEKs that are added to the invited user's CEK Account
         /// They should be signed by each key in the DID.
-        ceks: Vec<CEKData>
+        ceks: Vec<CEKData>,
     },
 
     /// Add a CEK to an existing CEKAccount 
     ///
     /// Accounts expected by this instruction:
     ///
-    /// 1. `[]` Owner DID account - must be owned by the sol-did program
-    /// 2. `[signer]` Owner authority - must be a key on the owner DID 
-    /// 3. `[writable]` CEK account, must be owned by the owner DID
+    /// 0. `[]` Owner DID account - must be owned by the sol-did program
+    /// 1. `[signer]` Owner authority - must be a key on the owner DID 
+    /// 2. `[writable]` CEK account, must be owned by the owner DID
     AddCEK {
         /// A new CEK to add to the account
         cek: CEKData
@@ -112,12 +112,31 @@ pub enum SolariumInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    /// 1. `[]` Owner DID account - must be owned by the sol-did program
-    /// 2. `[signer]` Owner authority - must be a key on the owner DID 
-    /// 3. `[writable]` CEK account, must be owned by the owner DID
+    /// 0. `[]` Owner DID account - must be owned by the sol-did program
+    /// 1. `[signer]` Owner authority - must be a key on the owner DID 
+    /// 2. `[writable]` CEK account, must be owned by the owner DID
     RemoveCEK {
         /// The key id of the CEK to remove
         kid: String
+    },
+
+    /// Creates a UserDetails account 
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    /// 0. `[writable, signer]` Funding account, must be a system account
+    /// 1. `[]` Owner DID account - must be owned by the sol-did program
+    /// 2. `[signer]` Owner authority - must be a key on the owner DID 
+    /// 3. `[writable]` UserDetails account, must be owned by the owner DID
+    /// 4. `[]` Rent sysvar
+    /// 5. `[]` System program
+    CreateUserDetails {
+        /// The user's public alias
+        alias: String,
+        /// The user's encrypted address book
+        address_book: String,
+        /// The size of the userDetails account
+        size: u32
     }
 }
 
@@ -255,6 +274,29 @@ pub fn remove_cek(
             AccountMeta::new_readonly(*owner_did, false),
             AccountMeta::new_readonly(*owner_authority, true),
             AccountMeta::new(owner_cek_account, false),
+        ],
+    )
+}
+
+/// Create a `SolariumInstruction::RemoveCEK` instruction
+pub fn create_user_details(
+    funder_account: &Pubkey,
+    owner_did: &Pubkey,
+    owner_authority: &Pubkey,
+    alias: String,
+    size: u32
+) -> Instruction {
+    let (owner_userdetails_account, _) = get_userdetails_account_address_with_seed(&id(), owner_did);
+    Instruction::new_with_borsh(
+        id(),
+        &SolariumInstruction::CreateUserDetails { alias, address_book: "".to_string(), size },
+        vec![
+            AccountMeta::new(*funder_account, true),
+            AccountMeta::new_readonly(*owner_did, false),
+            AccountMeta::new_readonly(*owner_authority, true),
+            AccountMeta::new(owner_userdetails_account, false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+            AccountMeta::new_readonly(system_program::id(), false),
         ],
     )
 }

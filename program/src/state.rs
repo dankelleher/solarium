@@ -133,15 +133,42 @@ impl IsInitialized for CEKAccountData {
     }
 }
 
+/// Defines a UserDetails account structure
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
+pub struct UserDetails {
+    /// The user's public alias
+    pub alias: String,
+    /// The user's encrypted address book
+    pub address_book: String,
+}
+impl UserDetails {
+    /// The recommended default size of a userDetails account 
+    pub const DEFAULT_SIZE_BYTES: u32 = 512;
+}
+impl IsInitialized for UserDetails {
+    /// Checks if a CEK account has been initialized
+    fn is_initialized(&self) -> bool {
+        !!self.alias.is_empty()
+    }
+}
+
 /// The seed string used to derive a program address for a Solarium channel (for direct channels)
 pub const CHANNEL_ADDRESS_SEED: &'static [u8; 16] = br"solarium_channel";
 
 /// The seed string used to derive a program address for a Solarium cek account
 pub const CEK_ACCOUNT_ADDRESS_SEED: &'static [u8; 20] = br"solarium_cek_account";
 
+/// The seed string used to derive a program address for a Solarium cek account
+pub const USERDETAILS_ACCOUNT_ADDRESS_SEED: &'static [u8; 28] = br"solarium_userdetails_account";
+
 /// Get program-derived cek account address for the did and channel 
 pub fn get_cek_account_address_with_seed(program_id: &Pubkey, did: &Pubkey, channel: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[&did.to_bytes(), &channel.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED], program_id)
+}
+
+/// Get program-derived user details account address for the did 
+pub fn get_userdetails_account_address_with_seed(program_id: &Pubkey, did: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[&did.to_bytes(), USERDETAILS_ACCOUNT_ADDRESS_SEED], program_id)
 }
 
 /// To ensure predictable account addresses, sort the DIDs.

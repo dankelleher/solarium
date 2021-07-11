@@ -9,7 +9,7 @@ use solana_sdk::{
     transaction::Transaction,
     pubkey::Pubkey,
     signature::Keypair,
-    system_instruction::{create_account, create_account_with_seed},
+    system_instruction::{create_account},
 };
 use solarium::{
     state::{
@@ -21,7 +21,7 @@ use solarium::{
     borsh as program_borsh,
     processor::process_instruction
 };
-use solarium::state::{Message, CEKAccountData, CHANNEL_ADDRESS_SEED, get_channel_address_with_seed};
+use solarium::state::{Message, CEKAccountData, get_channel_address_with_seed, get_userdetails_account_address_with_seed, UserDetails};
 
 pub struct SolariumContext {
     pub context: ProgramTestContext,
@@ -31,6 +31,7 @@ pub struct SolariumContext {
     pub alice_did: Pubkey,
     pub bob_did: Pubkey,
     pub alice_cek: Option<Pubkey>,
+    pub alice_user_details: Option<Pubkey>,
 }
 impl SolariumContext {
     async fn make_did(context: &mut ProgramTestContext, authority: &Keypair) -> Pubkey {
@@ -69,6 +70,7 @@ impl SolariumContext {
             alice_did,
             bob_did,
             alice_cek: None,
+            alice_user_details: None,
             channel: None
         }
     }
@@ -107,7 +109,7 @@ impl SolariumContext {
         );
         self.context.banks_client.process_transaction(transaction).await.unwrap();
         
-        let (alice_cek_account, _) = get_cek_account_address_with_seed(&self.alice_did, &channel.pubkey());
+        let (alice_cek_account, _) = get_cek_account_address_with_seed(&id(), &self.alice_did, &channel.pubkey());
         self.alice_cek = Some(alice_cek_account);
         self.channel = Some(channel.pubkey());
     }
@@ -116,7 +118,7 @@ impl SolariumContext {
         let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
         let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
         
-        let (channel, bump_seed) = get_channel_address_with_seed(
+        let (channel, _) = get_channel_address_with_seed(
             &id(),
             &self.alice_did, 
             &self.bob_did);
@@ -138,7 +140,7 @@ impl SolariumContext {
         );
         self.context.banks_client.process_transaction(transaction).await.unwrap();
 
-        let (alice_cek_account, _) = get_cek_account_address_with_seed(&self.alice_did, &channel);
+        let (alice_cek_account, _) = get_cek_account_address_with_seed(&id(), &self.alice_did, &channel);
         self.alice_cek = Some(alice_cek_account);
         self.channel = Some(channel);
     }
@@ -259,5 +261,39 @@ impl SolariumContext {
             self.context.last_blockhash,
         );
         self.context.banks_client.process_transaction(transaction).await.unwrap();
+    }
+
+    pub async fn create_user_details(&mut self) -> () {
+        let (alice_user_details, _) = get_userdetails_account_address_with_seed(&id(), &self.alice_did);
+
+        let create_user_details_account = instruction::create_user_details(
+            &self.context.payer.pubkey(),
+            &self.alice_did,
+            &self.alice.pubkey(),
+            "Alice".to_string(),
+            UserDetails::DEFAULT_SIZE_BYTES
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[create_user_details_account],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.alice],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
+
+        self.alice_user_details = Some(alice_user_details);
+    }
+
+    pub async fn get_user_details(&mut self) -> UserDetails {
+        let account_info = &self.context
+            .banks_client
+            .get_account(self.alice_user_details.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        let account_data =
+            program_borsh::try_from_slice_incomplete::<UserDetails>(&account_info.data).unwrap();
+
+        account_data
     }
 }

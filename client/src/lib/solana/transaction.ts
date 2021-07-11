@@ -4,9 +4,9 @@ import { SignCallback } from '../wallet';
 import {debug, ExtendedCluster} from '../util';
 import {
   addCEK,
-  addToChannel,
+  addToChannel, createUserDetails,
   getCekAccountKey,
-  getDirectChannelAccountKey,
+  getDirectChannelAccountKey, getUserDetailsKey,
   initializeChannel,
   initializeDirectChannel,
   post
@@ -16,6 +16,7 @@ import {ChannelData} from "./models/ChannelData";
 import {PROGRAM_ID} from "../constants";
 import {CEKAccountData} from "./models/CEKAccountData";
 import {MessageData} from "./models/MessageData";
+import {UserDetailsData} from "./models/UserDetailsData";
 
 export class SolariumTransaction {
   static async createGroupChannel(
@@ -184,6 +185,47 @@ export class SolariumTransaction {
       [],
       cluster
     );
+  }
+
+  static async createUserDetails(
+    payer: PublicKey,
+    did: PublicKey,
+    authority: PublicKey,
+    signCallback: SignCallback,
+    alias: string,
+    size?: number,
+    cluster?: ExtendedCluster
+  ): Promise<PublicKey> {
+    const userDetails = await getUserDetailsKey(did);
+    debug(`userDetails address: ${userDetails.toBase58()}`);
+
+    const createUserDetailsInstruction = await createUserDetails(
+      payer,
+      did,
+      authority,
+      alias,
+      size);
+
+    await SolariumTransaction.signAndSendTransaction(
+      [createUserDetailsInstruction],
+      signCallback,
+      [],
+      cluster
+    );
+
+    return userDetails;
+  }
+
+  static async getUserDetails(
+    connection: Connection,
+    did: PublicKey
+  ): Promise<UserDetailsData | null> {
+    const userDetails = await getUserDetailsKey(did);
+    const accountInfo = await connection.getAccountInfo(userDetails);
+
+    if (!accountInfo) return null;
+
+    return UserDetailsData.fromAccount(accountInfo.data);
   }
 
   static async signAndSendTransaction(

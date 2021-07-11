@@ -109,3 +109,15 @@ async fn create_direct_channel() {
     assert_eq!(channel.messages[0].content, alices_message);
     assert_eq!(channel.messages[1].content, bobs_message);
 }
+
+#[tokio::test]
+async fn create_user_details() {
+    let mut context = SolariumContext::new().await;
+
+    context.create_user_details().await;
+
+    let user_details = context.get_user_details().await;
+    
+    assert_eq!(user_details.alias, "Alice");
+    assert_eq!(user_details.address_book, "");
+}

@@ -172,6 +172,17 @@ export type GetDIDRequest = SolanaRequest & {
   owner: PublicKeyBase58;
 };
 
+export type CreateUserDetailsRequest = TransactionRequest & {
+  ownerDID?: string;
+  owner?: KeyMaterial;
+  alias: string;
+  size?: number;
+};
+
+export type GetUserDetailsRequest = SolanaRequest & {
+  did: string;
+};
+
 export const didToPublicKey = (did: string) =>
   DecentralizedIdentifier.parse(did).pubkey.toPublicKey();
 

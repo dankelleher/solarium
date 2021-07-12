@@ -7,17 +7,20 @@ import {
   pubkeyOf,
 } from '../lib/util';
 import { SolariumTransaction } from '../lib/solana/transaction';
-import { get as getDID } from '../lib/did/get';
+import { get as getDID, getDocument } from '../lib/did/get';
 import { create as createDID } from '../lib/did/create';
 import { DIDDocument } from 'did-resolver';
-import { defaultSignCallback, SignCallback } from '../lib/wallet';
+import {
+  defaultSignCallback,
+  defaultSignCallbackFor,
+  SignCallback,
+} from '../lib/wallet';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import {
   createEncryptedCEK,
   encryptCEKForDID,
   generateCEK,
 } from '../lib/crypto/ChannelCrypto';
-import { resolve } from '@identity.com/sol-did-client';
 import { Channel } from '../lib/Channel';
 import { get } from './get';
 
@@ -41,7 +44,13 @@ const getOrCreateDID = async (
     if (error.message.startsWith('No DID found')) {
       debug('No DID found - creating...');
 
-      return createDID(owner, pubkeyOf(payer), signCallback, cluster);
+      return createDID(
+        owner,
+        pubkeyOf(payer),
+        undefined,
+        signCallback,
+        cluster
+      );
     }
     throw error;
   }
@@ -87,7 +96,9 @@ export const createChannel = async (
 ): Promise<Channel> => {
   const createSignedTx =
     signCallback ||
-    (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
+    (isKeypair(payer) &&
+      isKeypair(owner) &&
+      defaultSignCallbackFor(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
   const ownerDIDDocument = await getOrCreateDID(
@@ -151,7 +162,7 @@ export const createDirectChannel = async (
     cluster
   );
 
-  const inviteeDIDDocument = await resolve(inviteeDID);
+  const inviteeDIDDocument = await getDocument(inviteeDID);
 
   // create and encrypt a CEK for the new channel
   const cek = await generateCEK();

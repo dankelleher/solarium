@@ -51,10 +51,6 @@ describe('ChannelCrypto', () => {
         convertPublicKey(aliceKeypair.publicKey.toBytes())
       ),
     });
-    // expect(cekData).toEqual('')
-
-    console.log(`Secret Key: ${aliceKeypair.secretKey}`);
-    console.log(`Secret Key Length: ${aliceKeypair.secretKey.length}`);
 
     expect(base64ToBytes(cekData.header).length).toEqual(24 + 12 + 36);
     expect(base64ToBytes(cekData.encryptedKey).length).toEqual(32);

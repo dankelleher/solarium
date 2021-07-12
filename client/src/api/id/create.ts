@@ -1,4 +1,3 @@
-import { PublicKey } from '@solana/web3.js';
 import {
   CreateDIDRequest,
   pubkeyOf,
@@ -16,12 +15,17 @@ export const create = async (
   request: CreateDIDRequest
 ): Promise<DIDDocument> => {
   const payer = toSolanaKeyMaterial(request.payer);
-  const owner = request.owner ? new PublicKey(request.owner) : undefined;
-  const authority = owner || pubkeyOf(payer);
+  const owner = request.owner ? toSolanaKeyMaterial(request.owner) : payer;
 
   try {
-    return await getDID(authority, request.cluster);
+    return await getDID(pubkeyOf(owner), request.cluster);
   } catch (e) {
-    return createDID(authority, payer, request.signCallback, request.cluster);
+    return createDID(
+      owner,
+      payer,
+      request.alias,
+      request.signCallback,
+      request.cluster
+    );
   }
 };

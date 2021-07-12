@@ -3177,10 +3177,10 @@ slice-ansi@^4.0.0:
     astral-regex "^2.0.0"
     is-fullwidth-code-point "^3.0.0"
 
-solarium-js@^0.1.21:
-  version "0.1.21"
-  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.21.tgz#9b7774d1c3070a5999bdc3886be9266eba2c292a"
-  integrity sha512-2VvZByLqDrP5Ntjn3SHCn9Xsi5A5uiH519lcIws8MjYd5QehQ2I9mTJMuHoplPyB47dxQeOHaf5CfPxpIlXnNg==
+solarium-js@^0.1.24:
+  version "0.1.24"
+  resolved "https://registry.yarnpkg.com/solarium-js/-/solarium-js-0.1.24.tgz#6308dd89c2153b2e1c6253dd56436a462351ba7b"
+  integrity sha512-ibmFMJU7zBm11E8WZMp8NDM2G7s9jeUp8nWhW9mKenb/eQiJKaCO9HBz3xV8DWiiijfisPmZHCP+pFlo160yeA==
   dependencies:
     "@identity.com/sol-did-client" "^0.1.9"
     "@solana/web3.js" "^1.12.0"

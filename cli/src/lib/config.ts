@@ -37,7 +37,7 @@ const parseConfig = (configString: string): Config => {
 
 // If the user has the solana cli installed, use their default solana wallet (TODO and chain)
 export const getDefaultSolanaWallet = (): Keypair => {
-  const solanaConfig = execSync("solanax config get --output json", {
+  const solanaConfig = execSync("solana config get --output json", {
     encoding: "utf-8",
   });
   const parsedConfig = parseConfig(solanaConfig.toString("utf-8"));

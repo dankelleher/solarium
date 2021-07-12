@@ -1,9 +1,10 @@
-import { resolve, createUpdateInstruction } from '@identity.com/sol-did-client';
+import { createUpdateInstruction } from '@identity.com/sol-did-client';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import { DIDDocument } from 'did-resolver';
 import { defaultSignCallback, SignCallback } from '../wallet';
 import { SolariumTransaction } from '../solana/transaction';
 import { ExtendedCluster, isKeypair, pubkeyOf } from '../util';
+import { getDocument } from './get';
 
 export const addKey = async (
   did: string,
@@ -22,7 +23,7 @@ export const addKey = async (
 
   const keyDID = did + '#' + keyIdentifier;
 
-  const existingDoc = await resolve(did);
+  const existingDoc = await getDocument(did);
 
   const appendedCapabilityInvocation = [
     ...(existingDoc.capabilityInvocation || []),
@@ -53,5 +54,5 @@ export const addKey = async (
     cluster
   );
 
-  return resolve(did);
+  return getDocument(did, true);
 };

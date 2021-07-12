@@ -16,7 +16,7 @@
     "did-resolver": "^3.1.0",
     "rxjs": "^7.0.0",
     "rxjs-stream": "^3.2.1",
-    "solarium-js": "^0.1.21",
+    "solarium-js": "^0.1.24",
     "tslib": "^1"
   },
   "devDependencies": {

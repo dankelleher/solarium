@@ -1,22 +1,11 @@
-import {
-  currentCluster,
-  makeKeypair,
-  PublicKeyBase58,
-  ReadRequest,
-} from '../lib/util';
+import { currentCluster, makeKeypair, ReadRequest } from '../lib/util';
 import * as service from '../service/get';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import { keyToIdentifier } from '@identity.com/sol-did-client';
 import { distinct, switchMap } from 'rxjs/operators';
 import { from, Observable, merge } from 'rxjs';
 import { PublicKey } from '@solana/web3.js';
-import { Channel } from '../lib/Channel';
-
-type Message = {
-  sender: PublicKeyBase58;
-  content: string;
-  timestamp: number;
-};
+import { Channel, Message } from '../lib/Channel';
 
 const didFromKey = (request: ReadRequest): Promise<string> => {
   if (request.memberDID) return Promise.resolve(request.memberDID);
@@ -82,7 +71,7 @@ export const readStream = (request: ReadRequest): Observable<Message> => {
         request.cluster
       );
       const uniqueKey = (m: Message): string =>
-        m.content + m.sender + m.timestamp;
+        m.content + m.sender.did + m.timestamp;
 
       return merge(channelInit$, channelStream$)
         .pipe(switchMap((channel: Channel) => channel.messages))

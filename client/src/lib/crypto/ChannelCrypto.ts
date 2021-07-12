@@ -1,4 +1,3 @@
-import { resolve } from '@identity.com/sol-did-client';
 import { VerificationMethod } from 'did-resolver/src/resolver';
 import { DIDDocument } from 'did-resolver';
 import { CEKData } from '../solana/models/CEKData';
@@ -25,6 +24,7 @@ import {
   base58ToBytes,
   bytesToBase58,
 } from './utils';
+import { getDocument } from '../did/get';
 
 export type CEK = Uint8Array;
 
@@ -57,8 +57,7 @@ export const encryptCEKForDID = async (
   cek: CEK,
   did: string
 ): Promise<CEKData[]> => {
-  // TODO add cache here
-  const didDocument = await resolve(did);
+  const didDocument = await getDocument(did);
   const augmentedDIDDocument = augmentDIDDocument(didDocument);
 
   return encryptCEKForDIDDocument(cek, augmentedDIDDocument);
@@ -234,8 +233,7 @@ export const reencryptCEKForDID = async (
   fromPrivateKey: PrivateKey,
   toDID: string
 ): Promise<CEKData[]> => {
-  // TODO add cache here
-  const fromDIDDocument = await resolve(fromDID);
+  const fromDIDDocument = await getDocument(fromDID);
   const fromVerificationMethod = findVerificationMethodForKey(
     fromDIDDocument,
     fromPrivateKey

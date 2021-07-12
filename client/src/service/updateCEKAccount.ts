@@ -1,9 +1,10 @@
-import {Connection, Keypair, PublicKey} from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import {
   debug,
   didToPublicKey,
   ExtendedCluster,
-  isKeypair, pubkeyOf,
+  isKeypair,
+  pubkeyOf,
 } from '../lib/util';
 import { SolariumTransaction } from '../lib/solana/transaction';
 import { get as getDID } from '../lib/did/get';
@@ -11,10 +12,10 @@ import { create as createDID } from '../lib/did/create';
 import { DIDDocument } from 'did-resolver';
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
-import {Channel} from "../lib/Channel";
-import {get} from "./get";
-import {findVerificationMethodForKey} from "../lib/crypto/ChannelCrypto";
-import {resolve} from "@identity.com/sol-did-client";
+import { Channel } from '../lib/Channel';
+import { get } from './get';
+import { findVerificationMethodForKey } from '../lib/crypto/ChannelCrypto';
+import { resolve } from '@identity.com/sol-did-client';
 
 /**
  * If a DID was already registered for this owner, return its document. Else create one
@@ -23,6 +24,7 @@ import {resolve} from "@identity.com/sol-did-client";
  * @param signCallback
  * @param cluster
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getOrCreateDID = async (
   owner: PublicKey,
   payer: Keypair | PublicKey,
@@ -49,14 +51,20 @@ const getChannel = async (
   connection: Connection,
   cluster?: ExtendedCluster
 ): Promise<Channel> => {
-  const channel = await get(channelAddress, connection, ownerDID, owner.secretKey, cluster);
+  const channel = await get(
+    channelAddress,
+    connection,
+    ownerDID,
+    owner.secretKey,
+    cluster
+  );
 
   if (!channel) {
     throw new Error('Error retrieving created channel');
   }
 
   return channel;
-}
+};
 
 /**
  * Adds a key to a CEK account for a channel
@@ -79,17 +87,28 @@ export const updateCEKAccount = async (
 ): Promise<void> => {
   const connection = SolanaUtil.getConnection(cluster);
   const createSignedTx =
-    signCallback || (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
+    signCallback ||
+    (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
   const ownerDIDDocument = await resolve(ownerDID);
   const didKey = didToPublicKey(ownerDID);
 
-  const foundVerificationMethod = findVerificationMethodForKey(ownerDIDDocument, newKey)
+  const foundVerificationMethod = findVerificationMethodForKey(
+    ownerDIDDocument,
+    newKey
+  );
 
-  if (!foundVerificationMethod) throw new Error('New key was not found on the DID')
+  if (!foundVerificationMethod)
+    throw new Error('New key was not found on the DID');
 
-  const channelObject = await getChannel(owner, ownerDID, channel, connection, cluster)
+  const channelObject = await getChannel(
+    owner,
+    ownerDID,
+    channel,
+    connection,
+    cluster
+  );
   const newCEK = await channelObject.encryptCEK(foundVerificationMethod);
 
   await SolariumTransaction.addCEKToAccount(

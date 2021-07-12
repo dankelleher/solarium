@@ -1,11 +1,10 @@
-import {Connection, Keypair, PublicKey} from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { arrayOf, didToPublicKey, ExtendedCluster } from '../lib/util';
 import { SolariumTransaction } from '../lib/solana/transaction';
 import { MESSAGE_SIZE_BYTES } from '../lib/constants';
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
-import {getDirectChannelAccountKey} from "../lib/solana/instruction";
-import {get} from "./get";
-
+import { getDirectChannelAccountKey } from '../lib/solana/instruction';
+import { get } from './get';
 
 const postToChannel = async (
   connection: Connection,
@@ -15,8 +14,15 @@ const postToChannel = async (
   signer: Keypair,
   signCallback: SignCallback | undefined,
   payer: Keypair | undefined,
-  cluster: ExtendedCluster | undefined) => {
-  const channel = await get(channelAddress, connection, senderDID, signer.secretKey, cluster);
+  cluster: ExtendedCluster | undefined
+): Promise<void> => {
+  const channel = await get(
+    channelAddress,
+    connection,
+    senderDID,
+    signer.secretKey,
+    cluster
+  );
   const encryptedMessage = await channel.encrypt(message);
 
   if (encryptedMessage.length > MESSAGE_SIZE_BYTES) {
@@ -60,9 +66,17 @@ export const post = async (
   signCallback?: SignCallback,
   cluster?: ExtendedCluster
 ): Promise<void> => {
-  await postToChannel(connection, channel, message, senderDID, signer, signCallback, payer, cluster)
+  await postToChannel(
+    connection,
+    channel,
+    message,
+    senderDID,
+    signer,
+    signCallback,
+    payer,
+    cluster
+  );
 };
-
 
 /**
  * Post a message to a direct channel
@@ -87,7 +101,19 @@ export const postDirect = async (
 ): Promise<void> => {
   const recipientDIDKey = didToPublicKey(recipientDID);
   const senderDIDKey = didToPublicKey(senderDID);
-  const channelAddress = await getDirectChannelAccountKey(senderDIDKey, recipientDIDKey);
+  const channelAddress = await getDirectChannelAccountKey(
+    senderDIDKey,
+    recipientDIDKey
+  );
 
-  await postToChannel(connection, channelAddress, message, senderDID, signer, signCallback, payer, cluster);
+  await postToChannel(
+    connection,
+    channelAddress,
+    message,
+    senderDID,
+    signer,
+    signCallback,
+    payer,
+    cluster
+  );
 };

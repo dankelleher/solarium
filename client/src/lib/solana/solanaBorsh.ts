@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BinaryReader, BorshError, Schema, serialize } from 'borsh';
-import {PublicKey} from "@solana/web3.js";
-import {bytesToBase58} from "../crypto/utils";
+import { PublicKey } from '@solana/web3.js';
+import { bytesToBase58 } from '../crypto/utils';
 
 // Class wrapping a plain object
 export abstract class Assignable {
@@ -40,7 +41,7 @@ export const SCHEMA: Schema = new Map();
 // TODO PR for leaving extra bytes, a lot of code copied from
 // https://github.com/near/borsh-js/blob/master/borsh-ts/index.ts
 
-const capitalizeFirstLetter = (s: string) =>
+const capitalizeFirstLetter = (s: string): string =>
   s.charAt(0).toUpperCase() + s.slice(1);
 
 function deserializeField(
@@ -77,7 +78,7 @@ function deserializeStruct(
   schema: Schema,
   classType: any,
   reader: BinaryReader
-) {
+): any {
   const structSchema = schema.get(classType);
   if (!structSchema) {
     throw new BorshError(`Class ${classType.name} is missing in schema`);

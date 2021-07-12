@@ -18,4 +18,5 @@ export const get = async (
   return resolve(didForAuthority);
 };
 
-export const getDocument = async (did:string): Promise<DIDDocument> => memoizedResolve(did);
+export const getDocument = async (did: string): Promise<DIDDocument> =>
+  memoizedResolve(did);

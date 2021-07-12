@@ -1,22 +1,30 @@
 import { SolanaUtil } from './solanaUtil';
-import {Connection, Keypair, PublicKey, SystemProgram, TransactionInstruction} from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { SignCallback } from '../wallet';
-import {debug, ExtendedCluster} from '../util';
+import { debug, ExtendedCluster } from '../util';
 import {
   addCEK,
-  addToChannel, createUserDetails,
+  addToChannel,
+  createUserDetails,
   getCekAccountKey,
-  getDirectChannelAccountKey, getUserDetailsKey,
+  getDirectChannelAccountKey,
+  getUserDetailsKey,
   initializeChannel,
   initializeDirectChannel,
-  post
-} from "./instruction";
-import {CEKData} from "./models/CEKData";
-import {ChannelData} from "./models/ChannelData";
-import {PROGRAM_ID} from "../constants";
-import {CEKAccountData} from "./models/CEKAccountData";
-import {MessageData} from "./models/MessageData";
-import {UserDetailsData} from "./models/UserDetailsData";
+  post,
+} from './instruction';
+import { CEKData } from './models/CEKData';
+import { ChannelData } from './models/ChannelData';
+import { PROGRAM_ID } from '../constants';
+import { CEKAccountData } from './models/CEKAccountData';
+import { MessageData } from './models/MessageData';
+import { UserDetailsData } from './models/UserDetailsData';
 
 export class SolariumTransaction {
   static async createGroupChannel(
@@ -33,28 +41,28 @@ export class SolariumTransaction {
     debug(`Channel address: ${channel.publicKey.toBase58()}`);
 
     const size = ChannelData.sizeBytes();
-    const balanceNeeded = await connection.getMinimumBalanceForRentExemption(size)
+    const balanceNeeded = await connection.getMinimumBalanceForRentExemption(
+      size
+    );
     const createChannelAccountInstruction = SystemProgram.createAccount({
       programId: PROGRAM_ID,
       fromPubkey: payer,
       lamports: balanceNeeded,
       newAccountPubkey: channel.publicKey,
-      space: size
-    })
-    
+      space: size,
+    });
+
     const initializeChannelInstruction = await initializeChannel(
       payer,
       channel.publicKey,
       name,
       creatorDID,
       creatorAuthority,
-      initialCEKs);
+      initialCEKs
+    );
 
     await SolariumTransaction.signAndSendTransaction(
-      [
-        createChannelAccountInstruction,
-        initializeChannelInstruction
-      ],
+      [createChannelAccountInstruction, initializeChannelInstruction],
       signCallback,
       [channel],
       cluster
@@ -83,8 +91,8 @@ export class SolariumTransaction {
       creatorAuthority,
       inviteeDID,
       creatorCEKs,
-      inviteeCEKs);
-
+      inviteeCEKs
+    );
 
     await SolariumTransaction.signAndSendTransaction(
       [initializeDirectChannelInstruction],
@@ -112,7 +120,8 @@ export class SolariumTransaction {
       inviteeDID,
       inviterDID,
       inviterAuthority,
-      ceks);
+      ceks
+    );
 
     await SolariumTransaction.signAndSendTransaction(
       [addToChannelInstruction],
@@ -121,13 +130,13 @@ export class SolariumTransaction {
       cluster
     );
   }
-  
+
   static async getChannelData(
     connection: Connection,
     channel: PublicKey
   ): Promise<ChannelData | null> {
     const accountInfo = await connection.getAccountInfo(channel);
-    
+
     if (!accountInfo) return null;
 
     return ChannelData.fromAccount(accountInfo.data);
@@ -177,7 +186,8 @@ export class SolariumTransaction {
       channel,
       memberDID,
       memberAuthority,
-      cek);
+      cek
+    );
 
     await SolariumTransaction.signAndSendTransaction(
       [addToChannelInstruction],
@@ -204,7 +214,8 @@ export class SolariumTransaction {
       did,
       authority,
       alias,
-      size);
+      size
+    );
 
     await SolariumTransaction.signAndSendTransaction(
       [createUserDetailsInstruction],
@@ -239,7 +250,11 @@ export class SolariumTransaction {
       blockhash: recentBlockhash,
     } = await connection.getRecentBlockhash();
 
-    const transaction = await createSignedTx(instructions, { recentBlockhash }, additionalSigners);
+    const transaction = await createSignedTx(
+      instructions,
+      { recentBlockhash },
+      additionalSigners
+    );
 
     // Send the instructions
     return SolanaUtil.sendAndConfirmRawTransaction(connection, transaction);

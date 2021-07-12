@@ -1,23 +1,23 @@
-import {Command, flags} from '@oclif/command'
+import { Command, flags } from "@oclif/command";
 import * as service from "../service/read";
 
 export default class Read extends Command {
-  static description = 'Read a channel'
+  static description = "Read a channel";
 
   static flags = {
-    help: flags.help({char: 'h'}),
-  }
+    help: flags.help({ char: "h" }),
+  };
 
-  static args = [{name: 'channel', required: true}]
-  static aliases = ['get']
+  static args = [{ name: "channel", required: true }];
+  static aliases = ["get"];
 
-  async run() {
-    const {args, flags} = this.parse(Read)
+  async run(): Promise<void> {
+    const { args } = this.parse(Read);
 
     const messages = await service.read(args.channel);
 
     messages
-      .map(m => `From: ${m.sender}: ${m.content}`)
-      .forEach(line => console.log(line))
+      .map((m) => `From: ${m.sender}: ${m.content}`)
+      .forEach((line) => console.log(line));
   }
 }

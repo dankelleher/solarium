@@ -1,7 +1,10 @@
-import {getWallet} from "../lib/config";
-import * as solarium from 'solarium-js';
+import { getWallet } from "../lib/config";
+import * as solarium from "solarium-js";
 
-export const addKey = async (keyIdentifier: string, newKey: string) => {
+export const addKey = async (
+  keyIdentifier: string,
+  newKey: string
+): Promise<void> => {
   const wallet = await getWallet();
 
   await solarium.addKey({
@@ -9,6 +12,6 @@ export const addKey = async (keyIdentifier: string, newKey: string) => {
     signer: wallet.secretKey,
     keyIdentifier,
     newKey,
-    channelsToUpdate: [] // TODO add addressbook
-  })
-}
+    channelsToUpdate: [], // TODO add addressbook
+  });
+};

@@ -1,25 +1,28 @@
-import {Connection, Keypair, PublicKey} from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import {
-  debug,
   didToPublicKey,
   ExtendedCluster,
-  isKeypair, pubkeyOf,
+  isKeypair,
+  pubkeyOf,
 } from '../lib/util';
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolariumTransaction } from '../lib/solana/transaction';
-import {UserDetails} from "../lib/UserDetails";
+import { UserDetails } from '../lib/UserDetails';
 
 export const getUserDetails = async (
   did: string,
-  connection: Connection,
+  connection: Connection
 ): Promise<UserDetails | null> => {
   const didKey = didToPublicKey(did);
-  const encryptedUserDetails = await SolariumTransaction.getUserDetails(connection, didKey);
-  
+  const encryptedUserDetails = await SolariumTransaction.getUserDetails(
+    connection,
+    didKey
+  );
+
   if (!encryptedUserDetails) return null;
 
   return UserDetails.fromChainData(encryptedUserDetails);
-}
+};
 
 /**
  * Create a Solarium user details account for a DID
@@ -41,11 +44,12 @@ export const createUserDetails = async (
   cluster?: ExtendedCluster
 ): Promise<void> => {
   const createSignedTx =
-    signCallback || (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
+    signCallback ||
+    (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
   const ownerDIDKey = didToPublicKey(did);
-  
+
   await SolariumTransaction.createUserDetails(
     pubkeyOf(payer),
     ownerDIDKey,

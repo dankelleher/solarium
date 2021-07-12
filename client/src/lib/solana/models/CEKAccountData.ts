@@ -1,5 +1,5 @@
-import {Assignable, AssignablePublicKey, SCHEMA} from "../solanaBorsh";
-import {CEKData} from "./CEKData";
+import { Assignable, AssignablePublicKey, SCHEMA } from '../solanaBorsh';
+import { CEKData } from './CEKData';
 
 export class CEKAccountData extends Assignable {
   ownerDID: AssignablePublicKey;
@@ -10,7 +10,10 @@ export class CEKAccountData extends Assignable {
     return CEKAccountData.decode<CEKAccountData>(accountData);
   }
 
-  static empty(ownerDID: AssignablePublicKey, channel: AssignablePublicKey): CEKAccountData {
+  static empty(
+    ownerDID: AssignablePublicKey,
+    channel: AssignablePublicKey
+  ): CEKAccountData {
     return new CEKAccountData({
       ownerDID,
       channel,

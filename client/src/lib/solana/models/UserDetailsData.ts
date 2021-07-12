@@ -1,6 +1,4 @@
-import {Assignable, SCHEMA} from "../solanaBorsh";
-import {MessageData} from "./MessageData";
-import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES} from "../../constants";
+import { Assignable, SCHEMA } from '../solanaBorsh';
 
 export class UserDetailsData extends Assignable {
   alias: string;
@@ -10,7 +8,7 @@ export class UserDetailsData extends Assignable {
     return UserDetailsData.decode<UserDetailsData>(accountData);
   }
 
-  static empty(alias: String): UserDetailsData {
+  static empty(alias: string): UserDetailsData {
     return new UserDetailsData({
       alias,
       addressBook: '',

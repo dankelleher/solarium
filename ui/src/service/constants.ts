@@ -1,4 +1,4 @@
-import {clusterApiUrl, Commitment, PublicKey} from "@solana/web3.js";
+import {clusterApiUrl} from "@solana/web3.js";
 import {ExtendedCluster} from "solarium-js";
 
 export const ENDPOINTS = [

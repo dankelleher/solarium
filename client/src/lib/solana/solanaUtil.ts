@@ -3,7 +3,8 @@ import {
   Connection,
   Transaction,
   TransactionSignature,
-  sendAndConfirmRawTransaction, PublicKey,
+  sendAndConfirmRawTransaction,
+  PublicKey,
 } from '@solana/web3.js';
 import { SOLANA_COMMITMENT } from '../constants';
 import { ExtendedCluster, getClusterEndpoint } from '../util';
@@ -11,7 +12,8 @@ import { memoizeWith } from 'ramda';
 
 const memoizedGetConnection = memoizeWith(
   getClusterEndpoint,
-  (cluster?: ExtendedCluster) => new Connection(getClusterEndpoint(cluster), SOLANA_COMMITMENT)
+  (cluster?: ExtendedCluster) =>
+    new Connection(getClusterEndpoint(cluster), SOLANA_COMMITMENT)
 );
 
 export class SolanaUtil {
@@ -30,18 +32,22 @@ export class SolanaUtil {
 
   static async newWalletWithLamports(
     connection: Connection,
-    lamports: number = 1000000
+    lamports = 1000000
   ): Promise<Keypair> {
     const keypair = Keypair.generate();
-    await this.airdrop(connection, keypair.publicKey, lamports)
+    await this.airdrop(connection, keypair.publicKey, lamports);
 
     return keypair;
   }
 
-  static async airdrop(connection: Connection, publicKey: PublicKey, lamports: number = 1000000): Promise<void> {
+  static async airdrop(
+    connection: Connection,
+    publicKey: PublicKey,
+    lamports = 1000000
+  ): Promise<void> {
     let retries = 30;
     await connection.requestAirdrop(publicKey, lamports);
-    for (; ;) {
+    for (;;) {
       await this.sleep(500);
       const balance = await connection.getBalance(publicKey);
       if (lamports <= balance) return;
@@ -55,10 +61,11 @@ export class SolanaUtil {
   }
 }
 
-export const airdrop =
-  (connection: Connection, publicKey: PublicKey, lamports: number = 1000000): Promise<void> => 
-    SolanaUtil.airdrop(connection,publicKey,lamports)
+export const airdrop = (
+  connection: Connection,
+  publicKey: PublicKey,
+  lamports = 1000000
+): Promise<void> => SolanaUtil.airdrop(connection, publicKey, lamports);
 
-export const getConnection =
-  (cluster?: ExtendedCluster): Connection =>
-    SolanaUtil.getConnection(cluster) 
+export const getConnection = (cluster?: ExtendedCluster): Connection =>
+  SolanaUtil.getConnection(cluster);

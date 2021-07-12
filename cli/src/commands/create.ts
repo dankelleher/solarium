@@ -1,17 +1,17 @@
-import {Command, flags} from '@oclif/command'
-import * as service from '../service/create'
+import { Command, flags } from "@oclif/command";
+import * as service from "../service/create";
 
 export default class Create extends Command {
-  static description = 'Create a channel'
+  static description = "Create a channel";
 
   static flags = {
-    help: flags.help({char: 'h'}),
-  }
+    help: flags.help({ char: "h" }),
+  };
 
-  static args = [{name: 'name', required: true}]
+  static args = [{ name: "name", required: true }];
 
-  async run() {
-    const {args, flags} = this.parse(Create)
+  async run(): Promise<void> {
+    const { args } = this.parse(Create);
 
     const channel = await service.create(args.name);
 

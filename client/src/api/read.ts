@@ -6,10 +6,7 @@ import {
 } from '../lib/util';
 import * as service from '../service/get';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
-import {
-  DecentralizedIdentifier,
-  keyToIdentifier,
-} from '@identity.com/sol-did-client';
+import { keyToIdentifier } from '@identity.com/sol-did-client';
 import { distinct, switchMap } from 'rxjs/operators';
 import { from, Observable, merge } from 'rxjs';
 import { PublicKey } from '@solana/web3.js';
@@ -67,13 +64,15 @@ export const readStream = (request: ReadRequest): Observable<Message> => {
 
   return memberDID$.pipe(
     switchMap((memberDID: string) => {
-      const channelInit$ = from(service.get(
+      const channelInit$ = from(
+        service.get(
           new PublicKey(request.channel),
           connection,
           memberDID,
           request.decryptionKey,
           request.cluster
-      ));
+        )
+      );
 
       const channelStream$ = service.getStream(
         new PublicKey(request.channel),
@@ -82,10 +81,12 @@ export const readStream = (request: ReadRequest): Observable<Message> => {
         request.decryptionKey,
         request.cluster
       );
-      const uniqueKey = (m: Message) => m.content + m.sender + m.timestamp;
+      const uniqueKey = (m: Message): string =>
+        m.content + m.sender + m.timestamp;
 
       return merge(channelInit$, channelStream$)
         .pipe(switchMap((channel: Channel) => channel.messages))
         .pipe(distinct(uniqueKey)); // only emit a message once
-    }));
+    })
+  );
 };

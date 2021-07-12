@@ -1,4 +1,4 @@
-import { DecentralizedIdentifier, resolve } from '@identity.com/sol-did-client';
+import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 import { currentCluster, ExtendedCluster, PrivateKey } from './util';
 import { ChannelData } from './solana/models/ChannelData';
 import { CEKAccountData } from './solana/models/CEKAccountData';
@@ -16,13 +16,48 @@ import { VerificationMethod } from 'did-resolver';
 import { CEKData } from './solana/models/CEKData';
 import { getCekAccountKey } from './solana/instruction';
 import { SolanaUtil } from './solana/solanaUtil';
+import { getUserDetails } from '../service/userDetails';
+import { getDocument } from './did/get';
+
+export type MessageSender = {
+  did: string;
+  alias?: string;
+};
 
 export class Message {
   constructor(
-    readonly sender: string,
+    readonly sender: MessageSender,
     readonly content: string,
     readonly timestamp: number
   ) {}
+
+  // Returns the display name for the sender of this message - either an alias or did.
+  displayableSender(): string {
+    return this.sender.alias || this.sender.did;
+  }
+
+  withContent(content: string): Message {
+    return new Message(this.sender, content, this.timestamp);
+  }
+
+  static async build(
+    senderDIDKey: PublicKey,
+    content: string,
+    timestamp: number,
+    cluster?: ExtendedCluster
+  ): Promise<Message> {
+    const senderDID = DecentralizedIdentifier.create(
+      senderDIDKey,
+      currentCluster(cluster)
+    ).toString();
+
+    const connection = SolanaUtil.getConnection(cluster);
+
+    const userDetails = await getUserDetails(senderDID, connection);
+    const alias = userDetails ? userDetails.alias : undefined;
+
+    return new Message({ did: senderDID, alias }, content, timestamp);
+  }
 }
 
 export class Channel {
@@ -92,29 +127,17 @@ export class Channel {
     const decrypt = async (message: Message): Promise<Message> => {
       if (!cek) return message; // only decrypt if a key is provided
       const decrypted = await decryptMessage(message.content, cek);
-      return {
-        ...message,
-        content: decrypted,
-      };
+      return message.withContent(decrypted);
     };
 
-    // TODO add caching
-    const memberDIDDocument = await resolve(memberDID);
+    const memberDIDDocument = await getDocument(memberDID);
     const cek = memberKey ? await getCEK(memberKey) : undefined;
 
     const messagePromises = channelData.messages
-      .map(
-        m =>
-          new Message(
-            DecentralizedIdentifier.create(
-              m.sender.toPublicKey(),
-              currentCluster(cluster)
-            ).toString(),
-            m.content,
-            m.timestamp.toNumber()
-          )
+      .map(m =>
+        Message.build(m.sender.toPublicKey(), m.content, m.timestamp.toNumber())
       )
-      .map(decrypt);
+      .map(messagePromise => messagePromise.then(decrypt));
 
     const messages = await Promise.all(messagePromises);
 

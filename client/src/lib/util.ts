@@ -165,7 +165,8 @@ export type AddToChannelRequest = TransactionRequest & {
 };
 
 export type CreateDIDRequest = TransactionRequest & {
-  owner?: PublicKeyBase58;
+  owner?: KeyMaterial;
+  alias?: string;
 };
 
 export type GetDIDRequest = SolanaRequest & {

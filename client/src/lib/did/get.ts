@@ -1,11 +1,8 @@
-import { keyToIdentifier, resolve } from '@identity.com/sol-did-client';
+import { keyToIdentifier } from '@identity.com/sol-did-client';
 import { PublicKey } from '@solana/web3.js';
 import { DIDDocument } from 'did-resolver';
 import { currentCluster, ExtendedCluster } from '../util';
-
-import { memoizeWith, identity } from 'ramda';
-
-const memoizedResolve = memoizeWith(identity, resolve);
+import { cachedResolve } from './cache';
 
 export const get = async (
   authority: PublicKey,
@@ -15,8 +12,10 @@ export const get = async (
     authority,
     currentCluster(cluster)
   );
-  return resolve(didForAuthority);
+  return getDocument(didForAuthority);
 };
 
-export const getDocument = async (did: string): Promise<DIDDocument> =>
-  memoizedResolve(did);
+export const getDocument = async (
+  did: string,
+  skipCache = false
+): Promise<DIDDocument> => cachedResolve(did, skipCache);

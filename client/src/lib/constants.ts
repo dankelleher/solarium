@@ -11,6 +11,7 @@ export const PROGRAM_ID: PublicKey =
   STAGE === 'development'
     ? new PublicKey(DEV_PROGRAM_ID)
     : new PublicKey(PROD_PROGRAM_ID);
+
 export const SOLANA_COMMITMENT: Commitment = 'single'; // for message channels, the focus is speed rather than safety
 
 // must match get_cek_account_address_with_seed in state.rs

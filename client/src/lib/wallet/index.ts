@@ -1,14 +1,16 @@
 import {
   Keypair,
+  PublicKey,
   SignaturePubkeyPair,
   Transaction,
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { currentCluster } from '../util';
+import { currentCluster, isKeypair } from '../util';
 import { ClusterType } from '@identity.com/sol-did-client';
 import { SolanaUtil } from '../solana/solanaUtil';
 import nacl from 'tweetnacl';
+import { uniqWith } from 'ramda';
 
 export const create = async (): Promise<Keypair> => {
   if (currentCluster() !== ClusterType.mainnetBeta()) {
@@ -36,7 +38,13 @@ export const defaultSignCallback = (
   transactionOpts?: TransactionCtorFields,
   additionalSigners: Keypair[] = []
 ): Promise<Transaction> => {
-  const signerPubkeys: SignaturePubkeyPair[] = signers.map(s => ({
+  // Remove any duplicates from the list of signers (including the payer)
+  // Prefers the first item if two items compare equal based on the predicate.
+  const comparator = (a: Keypair, b: Keypair): boolean =>
+    a.publicKey.equals(b.publicKey);
+  const [, ...uniqueSigners] = uniqWith(comparator, [payer, ...signers]);
+
+  const signerPubkeys: SignaturePubkeyPair[] = uniqueSigners.map(s => ({
     signature: null,
     publicKey: s.publicKey,
   }));
@@ -46,8 +54,8 @@ export const defaultSignCallback = (
     feePayer: payer.publicKey,
   }).add(...instructions);
 
-  if (signers.length + additionalSigners.length) {
-    transaction.partialSign(...signers, ...additionalSigners);
+  if (uniqueSigners.length + additionalSigners.length) {
+    transaction.partialSign(...uniqueSigners, ...additionalSigners);
   }
 
   const message = transaction.serializeMessage();
@@ -55,4 +63,12 @@ export const defaultSignCallback = (
   transaction.addSignature(payer.publicKey, Buffer.from(myAccountSignature));
 
   return transaction;
+};
+
+export const defaultSignCallbackFor = (
+  payer: Keypair,
+  ...potentialSigners: (Keypair | PublicKey)[]
+): SignCallback => {
+  const signers = potentialSigners.filter(s => isKeypair(s)) as Keypair[];
+  return defaultSignCallback(payer, ...signers);
 };

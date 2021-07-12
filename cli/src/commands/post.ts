@@ -1,24 +1,28 @@
-import {Command, flags} from '@oclif/command'
-import * as service from '../service/post'
+import { Command, flags } from "@oclif/command";
+import * as service from "../service/post";
 
 export default class Post extends Command {
-  static description = 'Post to a channel'
+  static description = "Post to a channel";
 
   static flags = {
-    help: flags.help({char: 'h'}),
+    help: flags.help({ char: "h" }),
     // -c, --channel=<ADDRESS>
-    channel: flags.string({char: 'c', description: 'Channel address', required: true}),
+    channel: flags.string({
+      char: "c",
+      description: "Channel address",
+      required: true,
+    }),
     // -i, --from-stdin
-    'from-stdin': flags.boolean({char: 'i'}),
-  }
+    "from-stdin": flags.boolean({ char: "i" }),
+  };
 
-  static args = [{name: 'message'}]
+  static args = [{ name: "message" }];
 
-  async run() {
-    const {args, flags} = this.parse(Post)
+  async run(): Promise<void> {
+    const { args, flags } = this.parse(Post);
 
     if (flags["from-stdin"]) {
-      process.stdin.on('data', async (data:string) => {
+      process.stdin.on("data", async (data: string) => {
         await service.post(data, flags.channel);
       });
     } else {

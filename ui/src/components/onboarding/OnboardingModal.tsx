@@ -1,4 +1,4 @@
-import React, {Fragment, useMemo, useRef, useState} from 'react'
+import React, {Fragment, useMemo, useRef} from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import Wizard from './Wizard'
 import {OnboardingStep} from "./OnboardingController";

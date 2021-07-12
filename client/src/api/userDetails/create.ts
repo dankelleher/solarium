@@ -1,16 +1,11 @@
-import {PublicKey} from '@solana/web3.js';
 import {
-  AddToChannelRequest,
-  CreateDIDRequest, CreateUserDetailsRequest, currentCluster, makeKeypair,
+  CreateUserDetailsRequest,
+  currentCluster,
   pubkeyOf,
-  toSolanaKeyMaterial
+  toSolanaKeyMaterial,
 } from '../../lib/util';
-import { DIDDocument } from 'did-resolver';
-import { create as createDID } from '../../lib/did/create';
-import { get as getDID } from '../../lib/did/get';
-import {createUserDetails} from "../../service/userDetails";
-import {keyToIdentifier} from "@identity.com/sol-did-client";
-
+import { createUserDetails } from '../../service/userDetails';
+import { keyToIdentifier } from '@identity.com/sol-did-client';
 
 const didFromKey = (request: CreateUserDetailsRequest): Promise<string> => {
   if (request.ownerDID) return Promise.resolve(request.ownerDID);
@@ -34,10 +29,22 @@ const didFromKey = (request: CreateUserDetailsRequest): Promise<string> => {
  * Create a userdetails account for a DID
  * @param request
  */
-export const create = async (request: CreateUserDetailsRequest): Promise<void> => {
+export const create = async (
+  request: CreateUserDetailsRequest
+): Promise<void> => {
   const payer = toSolanaKeyMaterial(request.payer);
-  const owner = request.owner ? toSolanaKeyMaterial(request.owner) : pubkeyOf(payer);
+  const owner = request.owner
+    ? toSolanaKeyMaterial(request.owner)
+    : pubkeyOf(payer);
   const ownerDID = await didFromKey(request);
-  
-  await createUserDetails(ownerDID, owner, payer, request.alias, request.size, request.signCallback, request.cluster)
+
+  await createUserDetails(
+    ownerDID,
+    owner,
+    payer,
+    request.alias,
+    request.size,
+    request.signCallback,
+    request.cluster
+  );
 };

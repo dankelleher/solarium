@@ -34,8 +34,8 @@ export const defaultSignCallback = (
 ): SignCallback => async (
   instructions: TransactionInstruction[],
   transactionOpts?: TransactionCtorFields,
-  additionalSigners: Keypair[] =  []
-) => {
+  additionalSigners: Keypair[] = []
+): Promise<Transaction> => {
   const signerPubkeys: SignaturePubkeyPair[] = signers.map(s => ({
     signature: null,
     publicKey: s.publicKey,

@@ -1,15 +1,16 @@
 import {
   currentCluster,
   isKeypair,
-  makeKeypair, PostDirectRequest,
+  makeKeypair,
+  PostDirectRequest,
   PostRequest,
   pubkeyOf,
   toSolanaKeyMaterial,
 } from '../lib/util';
 import * as service from '../service/post';
 import { keyToIdentifier } from '@identity.com/sol-did-client';
-import {PublicKey} from "@solana/web3.js";
-import {SolanaUtil} from "../lib/solana/solanaUtil";
+import { PublicKey } from '@solana/web3.js';
+import { SolanaUtil } from '../lib/solana/solanaUtil';
 
 /**
  * Post a message to a group channel
@@ -70,4 +71,3 @@ export const postDirect = async (request: PostDirectRequest): Promise<void> => {
     request.cluster
   );
 };
-

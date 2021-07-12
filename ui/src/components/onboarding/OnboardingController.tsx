@@ -1,8 +1,7 @@
 import OnboardingModal from "./OnboardingModal";
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useChannel} from "../../service/channels/channel";
 import {useWallet} from "../../service/wallet/wallet";
-import Loader from "../Loader";
 import {DEFAULT_CHANNEL} from "../../service/constants";
 import {useIdentity} from "../../service/identity";
 import WelcomeModal from "./WelcomeModal";

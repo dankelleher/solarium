@@ -1,6 +1,6 @@
-import {Assignable, SCHEMA} from "../solanaBorsh";
-import {MessageData} from "./MessageData";
-import {DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES} from "../../constants";
+import { Assignable, SCHEMA } from '../solanaBorsh';
+import { MessageData } from './MessageData';
+import { DEFAULT_MAX_MESSAGE_COUNT, MESSAGE_SIZE_BYTES } from '../../constants';
 
 export class ChannelData extends Assignable {
   name: string;
@@ -10,7 +10,7 @@ export class ChannelData extends Assignable {
     return ChannelData.decode<ChannelData>(accountData);
   }
 
-  static empty(name: String): ChannelData {
+  static empty(name: string): ChannelData {
     return new ChannelData({
       name,
       messages: [],
@@ -19,7 +19,7 @@ export class ChannelData extends Assignable {
 
   // The size of a channel in bytes - must match size_bytes in state.rs
   static sizeBytes(): number {
-    return (MESSAGE_SIZE_BYTES * DEFAULT_MAX_MESSAGE_COUNT) + 64;
+    return MESSAGE_SIZE_BYTES * DEFAULT_MAX_MESSAGE_COUNT + 64;
   }
 }
 

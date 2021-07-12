@@ -1,3 +1,3 @@
-import Debug from 'debug'
+import Debug from "debug";
 
-export const debug = Debug('solarium-cli')
+export const debug = Debug("solarium-cli");

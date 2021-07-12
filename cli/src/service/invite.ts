@@ -1,7 +1,10 @@
-import {getWallet} from "../lib/config";
-import * as solarium from 'solarium-js';
+import { getWallet } from "../lib/config";
+import * as solarium from "solarium-js";
 
-export const invite = async (inviteeDID: string, channelAddress: string) => {
+export const invite = async (
+  inviteeDID: string,
+  channelAddress: string
+): Promise<void> => {
   const wallet = await getWallet();
 
   return solarium.addToChannel({
@@ -10,6 +13,6 @@ export const invite = async (inviteeDID: string, channelAddress: string) => {
     //  (not just the public key) if no decryptionKey is specified
     decryptionKey: wallet.secretKey,
     channel: channelAddress,
-    inviteeDID
-  })
-}
+    inviteeDID,
+  });
+};

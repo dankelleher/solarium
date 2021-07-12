@@ -49,6 +49,7 @@
     "watch:css": "cross-env TAILWIND_MODE=watch NODE_ENV=development postcss src/styles/tailwind.css -o src/styles/index.css --watch",
     "react-scripts:start": "sleep 5 && react-scripts start",
     "react-scripts:build": "react-scripts build",
+    "lint": "yarn eslint src/",
     "predeploy": "yarn build",
     "deploy": "yarn ipd build/ -d cloudflare"
   },

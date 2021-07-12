@@ -1,7 +1,7 @@
-import {Assignable, SCHEMA} from "../solanaBorsh";
+import { Assignable, SCHEMA } from '../solanaBorsh';
 
 export class CEKData extends Assignable {
-  header: string  // TODO
+  header: string; // TODO
   kid: string;
   encryptedKey: string; // TODO Bytes?
 }

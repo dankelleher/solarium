@@ -6,9 +6,9 @@ import {
 } from '@identity.com/sol-did-client';
 import { DEFAULT_CLUSTER } from './constants';
 import { SignCallback } from './wallet';
-import Debug from 'debug'
+import Debug from 'debug';
 
-export const debug = Debug('solarium-js')
+export const debug = Debug('solarium-js');
 
 // a 64-byte private key on the X25519 curve.
 // In string form it is base58-encoded
@@ -67,7 +67,7 @@ export const generateKeypair = (): EncodedKeyPair => {
 };
 
 export type ExtendedCluster = Cluster | 'localnet';
-export const getClusterEndpoint = (cluster?: ExtendedCluster) => {
+export const getClusterEndpoint = (cluster?: ExtendedCluster): string => {
   if (!cluster) return currentCluster().solanaUrl();
 
   switch (cluster) {
@@ -106,7 +106,7 @@ export type CreateRequest = TransactionRequest & {
 
 export type CreateDirectRequest = TransactionRequest & {
   owner?: KeyMaterial;
-  inviteeDID: string 
+  inviteeDID: string;
 };
 
 export type CloseRequest = TransactionRequest & {
@@ -132,14 +132,14 @@ export type ReadRequest = SolanaRequest & {
   memberDID?: string;
   member?: PublicKeyBase58;
   decryptionKey: PrivateKey;
-  channel: PublicKeyBase58
+  channel: PublicKeyBase58;
 };
 
 export type GetRequest = SolanaRequest & {
   ownerDID?: string;
   owner?: PublicKeyBase58;
   decryptionKey?: PrivateKey;
-  channel: PublicKeyBase58
+  channel: PublicKeyBase58;
 };
 
 export type GetDirectRequest = SolanaRequest & {
@@ -154,14 +154,14 @@ export type AddKeyRequest = TransactionRequest & {
   signer: KeyMaterial;
   newKey: PublicKeyBase58;
   keyIdentifier: string;
-  channelsToUpdate: PublicKeyBase58[]
+  channelsToUpdate: PublicKeyBase58[];
 };
 
 export type AddToChannelRequest = TransactionRequest & {
   ownerDID?: string;
   inviteeDID: string;
   decryptionKey: PrivateKey;
-  channel: PublicKeyBase58
+  channel: PublicKeyBase58;
 };
 
 export type CreateDIDRequest = TransactionRequest & {
@@ -183,10 +183,10 @@ export type GetUserDetailsRequest = SolanaRequest & {
   did: string;
 };
 
-export const didToPublicKey = (did: string) =>
+export const didToPublicKey = (did: string): PublicKey =>
   DecentralizedIdentifier.parse(did).pubkey.toPublicKey();
 
-export const currentCluster = (cluster?: ExtendedCluster) =>
+export const currentCluster = (cluster?: ExtendedCluster): ClusterType =>
   cluster
     ? ClusterType.parse(cluster)
     : process.env.CLUSTER
@@ -206,4 +206,5 @@ export const isPublicKey = (k: KeyMaterial): k is PublicKey =>
 export const pubkeyOf = (k: Keypair | PublicKey): PublicKey =>
   isKeypair(k) ? k.publicKey : k;
 
-export const isString = (value): value is string => typeof value === 'string' || value instanceof String;
+export const isString = (value): value is string =>
+  typeof value === 'string' || value instanceof String;

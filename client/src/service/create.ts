@@ -1,9 +1,9 @@
-import {Connection, Keypair, PublicKey} from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import {
   debug,
   didToPublicKey,
   ExtendedCluster,
-  isKeypair, isString,
+  isKeypair,
   pubkeyOf,
 } from '../lib/util';
 import { SolariumTransaction } from '../lib/solana/transaction';
@@ -12,11 +12,14 @@ import { create as createDID } from '../lib/did/create';
 import { DIDDocument } from 'did-resolver';
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
-import {createEncryptedCEK, encryptCEKForDID, generateCEK} from "../lib/crypto/ChannelCrypto";
-import {ChannelData} from "../lib/solana/models/ChannelData";
-import {resolve} from "@identity.com/sol-did-client";
-import {Channel} from "../lib/Channel";
-import {get} from "./get";
+import {
+  createEncryptedCEK,
+  encryptCEKForDID,
+  generateCEK,
+} from '../lib/crypto/ChannelCrypto';
+import { resolve } from '@identity.com/sol-did-client';
+import { Channel } from '../lib/Channel';
+import { get } from './get';
 
 /**
  * If a DID was already registered for this owner, return its document. Else create one
@@ -52,14 +55,20 @@ const getChannel = async (
   cluster?: ExtendedCluster
 ): Promise<Channel> => {
   const ownerKey = isKeypair(owner) ? owner.secretKey : undefined;
-  const channel = await get(channelAddress, connection, ownerDID, ownerKey, cluster);
+  const channel = await get(
+    channelAddress,
+    connection,
+    ownerDID,
+    ownerKey,
+    cluster
+  );
 
   if (!channel) {
     throw new Error('Error retrieving created channel');
   }
 
   return channel;
-}
+};
 
 /**
  * Creates a group channel
@@ -77,7 +86,8 @@ export const createChannel = async (
   cluster?: ExtendedCluster
 ): Promise<Channel> => {
   const createSignedTx =
-    signCallback || (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
+    signCallback ||
+    (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
   const ownerDIDDocument = await getOrCreateDID(
@@ -87,9 +97,9 @@ export const createChannel = async (
     cluster
   );
   const didKey = didToPublicKey(ownerDIDDocument.id);
-  
+
   const ceks = await createEncryptedCEK(ownerDIDDocument.id);
-  
+
   const connection = SolanaUtil.getConnection(cluster);
 
   const channelAddress = await SolariumTransaction.createGroupChannel(
@@ -102,8 +112,14 @@ export const createChannel = async (
     createSignedTx,
     cluster
   );
-  
-  return getChannel(owner, ownerDIDDocument.id, channelAddress, connection, cluster);
+
+  return getChannel(
+    owner,
+    ownerDIDDocument.id,
+    channelAddress,
+    connection,
+    cluster
+  );
 };
 
 /**
@@ -122,7 +138,8 @@ export const createDirectChannel = async (
   cluster?: ExtendedCluster
 ): Promise<Channel> => {
   const createSignedTx =
-    signCallback || (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
+    signCallback ||
+    (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
   // Create the owner DID if it doesn't exist
@@ -134,8 +151,8 @@ export const createDirectChannel = async (
     cluster
   );
 
-  const inviteeDIDDocument = await resolve(inviteeDID)
-  
+  const inviteeDIDDocument = await resolve(inviteeDID);
+
   // create and encrypt a CEK for the new channel
   const cek = await generateCEK();
   const ownerCEKs = await encryptCEKForDID(cek, ownerDIDDocument.id);
@@ -155,5 +172,11 @@ export const createDirectChannel = async (
     cluster
   );
 
-  return getChannel(owner, ownerDIDDocument.id, channelAddress, connection, cluster);
+  return getChannel(
+    owner,
+    ownerDIDDocument.id,
+    channelAddress,
+    connection,
+    cluster
+  );
 };

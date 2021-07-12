@@ -1,21 +1,13 @@
 import {
   AddToChannelRequest,
-  currentCluster, GetDirectRequest, GetRequest,
-  makeKeypair, pubkeyOf,
-  PublicKeyBase58,
-  ReadRequest, toSolanaKeyMaterial,
+  currentCluster,
+  makeKeypair,
+  pubkeyOf,
+  toSolanaKeyMaterial,
 } from '../lib/util';
 import * as service from '../service/addToChannel';
-import { SolanaUtil } from '../lib/solana/solanaUtil';
-import {
-  DecentralizedIdentifier,
-  keyToIdentifier,
-} from '@identity.com/sol-did-client';
-import { distinct, switchMap } from 'rxjs/operators';
-import { from, Observable } from 'rxjs';
+import { keyToIdentifier } from '@identity.com/sol-did-client';
 import { PublicKey } from '@solana/web3.js';
-import { Channel } from '../lib/Channel';
-
 
 const didFromKey = (request: AddToChannelRequest): Promise<string> => {
   if (request.ownerDID) return Promise.resolve(request.ownerDID);
@@ -29,7 +21,7 @@ const didFromKey = (request: AddToChannelRequest): Promise<string> => {
       pubkeyOf(toSolanaKeyMaterial(request.payer)),
       currentCluster(request.cluster)
     );
-  
+
   throw new Error(
     'Unable to obtain DID from request - set either the owner or decryption key'
   );
@@ -39,7 +31,9 @@ const didFromKey = (request: AddToChannelRequest): Promise<string> => {
  * Adds a DID to a channel
  * @param request
  */
-export const addToChannel = async (request: AddToChannelRequest): Promise<void> => {
+export const addToChannel = async (
+  request: AddToChannelRequest
+): Promise<void> => {
   const ownerDID = await didFromKey(request);
 
   await service.addToChannel(
@@ -51,5 +45,4 @@ export const addToChannel = async (request: AddToChannelRequest): Promise<void> 
     request.signCallback,
     request.cluster
   );
-
 };

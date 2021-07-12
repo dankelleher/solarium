@@ -1,4 +1,4 @@
-import React, { Fragment, useRef, useState } from 'react'
+import React, { Fragment} from 'react'
 import {Dialog, Transition} from "@headlessui/react";
 import Logo from "../logo/Logo";
 
@@ -64,10 +64,10 @@ const WelcomeModal: React.FC<Props> = ({
                   <div className="p-6 text-left">
                     <div className="flow-root mt-1">
                       <p className="mt-1 line-clamp-2">
-                        Solarium is a fully decentralised, end-to-end encrypted, censorship-resistant instant messenger based on the <a className="font-bold" href="https://solana.com" rel="nofollow" target="_blank">Solana</a> blockchain.
+                        Solarium is a fully decentralised, end-to-end encrypted, censorship-resistant instant messenger based on the <a className="font-bold" href="https://solana.com" rel="noopener noreferrer" target="_blank">Solana</a> blockchain.
                       </p>
                       <p className="mt-1 line-clamp-2">
-                        Visit our <a className="font-bold" href="https://github.com/dankelleher/solarium" rel="nofollow" target="_blank">Github Page</a> to find out more about the project!
+                        Visit our <a className="font-bold" href="https://github.com/dankelleher/solarium" rel="noopener noreferrer" target="_blank">Github Page</a> to find out more about the project!
                       </p>
                     </div>
                     <div className="flow-root mt-3">
@@ -75,7 +75,7 @@ const WelcomeModal: React.FC<Props> = ({
                         A Solarium primer video
                       </h3>
                       <div className="aspect-w-16 aspect-h-9">
-                        <iframe src="https://www.youtube.com/embed/C_XVl1fT76Y" frameBorder="0"
+                        <iframe src="https://www.youtube.com/embed/C_XVl1fT76Y" frameBorder="0" title="A Solarium primer video"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen></iframe>
                       </div>
@@ -86,7 +86,7 @@ const WelcomeModal: React.FC<Props> = ({
                         The technology behind solarium
                       </h3>
                       <div className="aspect-w-16 aspect-h-9">
-                        <iframe src="https://www.youtube.com/embed/kgDRefJECIE" frameBorder="0"
+                        <iframe src="https://www.youtube.com/embed/kgDRefJECIE" frameBorder="0" title="The technology behind solarium"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen></iframe>
                       </div>

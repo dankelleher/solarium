@@ -10,19 +10,17 @@ import {
   get,
   addToChannel,
   readStream,
-  Message
+  Message,
 } from '../src';
 import { create as createDID } from '../src/api/id/create';
 import { get as getDID } from '../src/api/id/get';
 import { create as createUserDetails } from '../src/api/userDetails/create';
 import { get as getUserDetails } from '../src/api/userDetails/get';
 import { SolanaUtil } from '../src/lib/solana/solanaUtil';
-import {Keypair} from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js';
 import { repeat } from 'ramda';
 import { DEFAULT_MAX_MESSAGE_COUNT } from '../src/lib/constants';
-import {ClusterType, keyToIdentifier} from "@identity.com/sol-did-client";
-import {getStream} from "../src/service/get";
-import {PrivateKey, PublicKeyBase58} from "../src/lib/util";
+import { ClusterType, keyToIdentifier } from '@identity.com/sol-did-client';
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
@@ -43,19 +41,22 @@ describe('E2E', () => {
     alice = Keypair.generate();
     bob = Keypair.generate();
 
-    aliceDID = await keyToIdentifier(alice.publicKey, ClusterType.development())
-    bobDID = await keyToIdentifier(bob.publicKey, ClusterType.development())
+    aliceDID = await keyToIdentifier(
+      alice.publicKey,
+      ClusterType.development()
+    );
+    bobDID = await keyToIdentifier(bob.publicKey, ClusterType.development());
   });
 
   it('creates a DID and group channel', async () => {
-    const channelName = "dummy channel" + Date.now();
+    const channelName = 'dummy channel' + Date.now();
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: channelName
+      name: channelName,
     });
 
-    const did = await getDID({owner: alice.publicKey.toBase58()});
+    const did = await getDID({ owner: alice.publicKey.toBase58() });
 
     expect(did.id).toEqual(aliceDID);
 
@@ -63,7 +64,7 @@ describe('E2E', () => {
   });
 
   it('creates a group channel with by an existing DID', async () => {
-    const channelName = "dummy channel" + Date.now();
+    const channelName = 'dummy channel' + Date.now();
 
     await createDID({
       payer: payer.secretKey,
@@ -73,7 +74,7 @@ describe('E2E', () => {
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: channelName
+      name: channelName,
     });
   });
 
@@ -86,20 +87,20 @@ describe('E2E', () => {
     await createUserDetails({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      alias: 'Alice'
+      alias: 'Alice',
     });
 
     const aliceUserDetails = await getUserDetails({ did: aliceDID });
 
-      expect(aliceUserDetails?.alias).toEqual('Alice')
+    expect(aliceUserDetails?.alias).toEqual('Alice');
   });
 
   it('adds a user to a group channel', async () => {
-    const channelName = "dummy channel" + Date.now();
+    const channelName = 'dummy channel' + Date.now();
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: channelName
+      name: channelName,
     });
 
     // create Bob's DID
@@ -112,24 +113,24 @@ describe('E2E', () => {
       payer: payer.secretKey,
       decryptionKey: alice.secretKey,
       channel: channel.address.toBase58(),
-      inviteeDID: bobDID
-    })
+      inviteeDID: bobDID,
+    });
 
     // get as Bob
     const channelForBob = await get({
       ownerDID: bobDID,
       channel: channel.address.toBase58(),
       decryptionKey: bob.secretKey,
-    })
+    });
     expect(channelForBob.address).toEqual(channel.address);
   });
 
   it('adds a user twice to a group channel throws an error the second time', async () => {
-    const channelName = "dummy channel " + Date.now();
+    const channelName = 'dummy channel ' + Date.now();
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: channelName
+      name: channelName,
     });
 
     // create Bob's DID
@@ -142,19 +143,19 @@ describe('E2E', () => {
       payer: payer.secretKey,
       decryptionKey: alice.secretKey,
       channel: channel.address.toBase58(),
-      inviteeDID: bobDID
-    })
+      inviteeDID: bobDID,
+    });
 
     const shouldFail = addToChannel({
       payer: payer.secretKey,
       decryptionKey: alice.secretKey,
       channel: channel.address.toBase58(),
-      inviteeDID: bobDID
+      inviteeDID: bobDID,
     });
-    
+
     return expect(shouldFail).rejects.toThrow('DID is already a member');
   });
-  
+
   it('creates a DID and direct channel', async () => {
     await createDID({
       payer: payer.secretKey,
@@ -164,10 +165,10 @@ describe('E2E', () => {
     channel = await createDirect({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      inviteeDID: bobDID
+      inviteeDID: bobDID,
     });
 
-    expect(channel.name).toContain(bobDID.replace('did:sol:localnet:', ''))
+    expect(channel.name).toContain(bobDID.replace('did:sol:localnet:', ''));
   });
 
   it('gets a direct channel as the partner', async () => {
@@ -181,32 +182,32 @@ describe('E2E', () => {
     channel = await createDirect({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      inviteeDID: bobDID
+      inviteeDID: bobDID,
     });
 
     // get as Bob
     const channelForBob = await getDirect({
       ownerDID: bobDID,
       decryptionKey: bob.secretKey,
-      partnerDID: aliceDID
-    })
+      partnerDID: aliceDID,
+    });
 
     // get as Alice
     const channelForAlice = await getDirect({
       ownerDID: aliceDID,
       decryptionKey: alice.secretKey,
-      partnerDID: bobDID
-    })
+      partnerDID: bobDID,
+    });
 
-    expect(channelForAlice!.address).toEqual(channel.address)
-    expect(channelForBob!.address).toEqual(channel.address)
+    expect(channelForAlice.address).toEqual(channel.address);
+    expect(channelForBob.address).toEqual(channel.address);
   });
 
   it('sends a message to a group channel', async () => {
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: 'dummy'
+      name: 'dummy',
     });
 
     const message = 'Hello!';
@@ -221,7 +222,7 @@ describe('E2E', () => {
     const messages = await read({
       channel: channel.address.toBase58(),
       memberDID: aliceDID,
-      decryptionKey: alice.secretKey
+      decryptionKey: alice.secretKey,
     });
 
     expect(messages).toHaveLength(1);
@@ -229,17 +230,16 @@ describe('E2E', () => {
     expect(messages[0].sender).toEqual(aliceDID);
   });
 
-
   it('emits events of old message(s) when subscribing to stream', async () => {
-    expect.assertions(2)
+    expect.assertions(2);
 
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: 'emit-channel'
+      name: 'emit-channel',
     });
 
-    const message = 'Hello 1!'
+    const message = 'Hello 1!';
     await post({
       payer: payer.secretKey,
       channel: channel.address.toBase58(),
@@ -249,29 +249,29 @@ describe('E2E', () => {
     });
 
     const subscription = readStream({
-          channel: channel.address.toBase58(),
-          memberDID: aliceDID,
-          decryptionKey: alice.secretKey
-    }).subscribe( (msg: Message) => {
-      expect(msg.content).toEqual(message)
+      channel: channel.address.toBase58(),
+      memberDID: aliceDID,
+      decryptionKey: alice.secretKey,
+    }).subscribe((msg: Message) => {
+      expect(msg.content).toEqual(message);
       expect(msg.sender).toEqual(aliceDID);
-    })
+    });
 
     // sleep 1000
     await new Promise(r => setTimeout(r, 1000));
-    subscription.unsubscribe()
+    subscription.unsubscribe();
   });
 
   it('emits events of new message(s) after subscribing to stream', async () => {
-    expect.assertions(4)
+    expect.assertions(4);
 
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: 'emit-channel'
+      name: 'emit-channel',
     });
 
-    const messages = ['Hello 1!', 'Hello 2!' ]
+    const messages = ['Hello 1!', 'Hello 2!'];
 
     await post({
       payer: payer.secretKey,
@@ -281,17 +281,16 @@ describe('E2E', () => {
       message: messages[0],
     });
 
-
     let msgIndex = 0;
     const subscription = readStream({
       channel: channel.address.toBase58(),
       memberDID: aliceDID,
-      decryptionKey: alice.secretKey
-    }).subscribe( (msg: Message) => {
-      expect(msg.content).toEqual(messages[msgIndex])
+      decryptionKey: alice.secretKey,
+    }).subscribe((msg: Message) => {
+      expect(msg.content).toEqual(messages[msgIndex]);
       expect(msg.sender).toEqual(aliceDID);
-      msgIndex++
-    })
+      msgIndex++;
+    });
 
     await post({
       payer: payer.secretKey,
@@ -303,11 +302,10 @@ describe('E2E', () => {
 
     // sleep to finish the observable callbacks
     await new Promise(r => setTimeout(r, 50));
-    subscription.unsubscribe()
+    subscription.unsubscribe();
   });
 
   it('sends a message to a direct channel', async () => {
-
     // create bob's did
     await createDID({
       payer: payer.secretKey,
@@ -317,7 +315,7 @@ describe('E2E', () => {
     channel = await createDirect({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      inviteeDID: bobDID
+      inviteeDID: bobDID,
     });
 
     const message = 'Hello Bob!';
@@ -333,7 +331,7 @@ describe('E2E', () => {
     const messagesForBob = await read({
       channel: channel.address.toBase58(),
       memberDID: bobDID,
-      decryptionKey: bob.secretKey
+      decryptionKey: bob.secretKey,
     });
 
     expect(messagesForBob).toHaveLength(1);
@@ -344,7 +342,7 @@ describe('E2E', () => {
     const messagesForAlice = await read({
       channel: channel.address.toBase58(),
       memberDID: aliceDID,
-      decryptionKey: alice.secretKey
+      decryptionKey: alice.secretKey,
     });
 
     expect(messagesForAlice).toEqual(messagesForBob);
@@ -356,7 +354,7 @@ describe('E2E', () => {
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: 'dummy'
+      name: 'dummy',
     });
 
     // send one more message than the channel can hold
@@ -374,7 +372,7 @@ describe('E2E', () => {
     const messages = await read({
       channel: channel.address.toBase58(),
       memberDID: aliceDID,
-      decryptionKey: alice.secretKey
+      decryptionKey: alice.secretKey,
     });
 
     expect(messages).toHaveLength(channelSize);
@@ -385,7 +383,7 @@ describe('E2E', () => {
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: 'dummy'
+      name: 'dummy',
     });
 
     const message = repeat('This is a long message.', 50).join('');
@@ -406,7 +404,7 @@ describe('E2E', () => {
     channel = await create({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      name: 'dummy'
+      name: 'dummy',
     });
 
     const newAliceKey = Keypair.generate();
@@ -417,9 +415,7 @@ describe('E2E', () => {
       signer: alice.secretKey,
       newKey: newAliceKey.publicKey.toBase58(),
       keyIdentifier: 'mobile',
-      channelsToUpdate: [
-        channel.address.toBase58()
-      ]
+      channelsToUpdate: [channel.address.toBase58()],
     });
 
     console.log(newDoc);
@@ -438,7 +434,7 @@ describe('E2E', () => {
     const messagesWithNewKey = await read({
       channel: channel.address.toBase58(),
       memberDID: aliceDID,
-      decryptionKey: newAliceKey.secretKey
+      decryptionKey: newAliceKey.secretKey,
     });
 
     expect(messagesWithNewKey).toHaveLength(1);
@@ -449,7 +445,7 @@ describe('E2E', () => {
     const messagesWithOldKey = await read({
       channel: channel.address.toBase58(),
       memberDID: aliceDID,
-      decryptionKey: alice.secretKey
+      decryptionKey: alice.secretKey,
     });
     expect(messagesWithOldKey).toEqual(messagesWithNewKey);
   });
@@ -467,9 +463,9 @@ describe('E2E', () => {
       signer: alice.secretKey,
       newKey: Keypair.generate().publicKey.toBase58(),
       keyIdentifier: 'mobile',
-      channelsToUpdate: []
+      channelsToUpdate: [],
     });
-    
+
     // creates bob's did
     await createDID({
       payer: payer.secretKey,
@@ -482,16 +478,16 @@ describe('E2E', () => {
       signer: bob.secretKey,
       newKey: Keypair.generate().publicKey.toBase58(),
       keyIdentifier: 'mobile',
-      channelsToUpdate: []
+      channelsToUpdate: [],
     });
 
     // create the direct channel
     channel = await createDirect({
       payer: payer.secretKey,
       owner: alice.secretKey,
-      inviteeDID: bobDID
+      inviteeDID: bobDID,
     });
 
-    expect(channel.name).toContain(bobDID.replace('did:sol:localnet:', ''))
+    expect(channel.name).toContain(bobDID.replace('did:sol:localnet:', ''));
   });
 });

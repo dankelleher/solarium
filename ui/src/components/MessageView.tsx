@@ -1,5 +1,5 @@
 import Avatar from "./Avatar";
-import {Message} from "solarium-js";
+import {Message, MessageSender} from "solarium-js";
 import TimeAgo from 'javascript-time-ago'
 import en from 'javascript-time-ago/locale/en'
 import {useChannel} from "../service/channels/channel";
@@ -22,8 +22,8 @@ const MessageView = ({message}: Props) => {
 
   const [ addContactModal, showAddContactModal ] = useState<boolean>(false);
   const [ addContactDID, setAddContactDID ] = useState<string>();
-  const addContact = useCallback((did:string) => {
-    setAddContactDID(did)
+  const addContact = useCallback((contact:MessageSender) => {
+    setAddContactDID(contact.did)
     showAddContactModal(true)
   }, [setAddContactDID, showAddContactModal]);
 
@@ -34,17 +34,17 @@ const MessageView = ({message}: Props) => {
 
   const getIcon = useCallback(() => {
     const contactChannel = getContactChannel(message.sender)
-    const show = !addressBook?.isOwnDid(message.sender) && channel && channel.address.toBase58() !== contactChannel?.channel.address.toBase58()
+    const show = !addressBook?.isOwnDid(message.sender.did) && channel && channel.address.toBase58() !== contactChannel?.channel.address.toBase58()
 
     return show && (!!contactChannel
-      ? <ChatIcon className="cursor-pointer block ml-2 h-5 w-5" aria-hidden="true" onClick={() => chat(message.sender)}/>
+      ? <ChatIcon className="cursor-pointer block ml-2 h-5 w-5" aria-hidden="true" onClick={() => chat(message.sender.did)}/>
       : <UserAddIcon className="cursor-pointer block ml-2 h-5 w-5" aria-hidden="true" onClick={() => addContact(message.sender)}/>)
   }, [addressBook, channel, chat, addContact, getContactChannel, message])
 
   return (
     <li className="py-4">
       <div className="flex space-x-3">
-        <Avatar address={message.sender}/>
+        <Avatar address={message.sender.did}/>
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between">
             <div className="group flex">

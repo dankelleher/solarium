@@ -7,7 +7,7 @@ type Props = {
   children: React.ReactNode
 }
 
-const Example = ({title, children}: Props) => {
+const ErrorMessage = ({title, children}: Props) => {
   return (
     <div className="rounded-md bg-red-50 p-4">
       <div className="flex">
@@ -25,4 +25,4 @@ const Example = ({title, children}: Props) => {
   )
 }
 
-export default Example
+export default ErrorMessage

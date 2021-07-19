@@ -3,7 +3,7 @@ import {DEFAULT_ENDPOINT_INDEX} from "../web3/connection";
 import {addToChannel, getChannel, getDirectChannel, getOrCreateDirectChannel, createChannel} from "./solarium";
 import {Connection, Keypair} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
-import {Channel, STAGE} from "solarium-js";
+import {Channel, STAGE, MessageSender} from "solarium-js";
 import * as u8a from 'uint8arrays'
 
 const cluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
@@ -102,10 +102,10 @@ export class AddressBookManager {
     return did === this.did
   }
 
-  // if the DID is in this addressbook, return its alias, else return the did
-  getDIDViewName(did: string) : string {
-    if (did === this.did) return "Me";
-    return this.directChannels.find(dc => dc.contact.did === did)?.contact.alias || did;
+  // if the DID is in this addressbook, return its local alias, else return the alias or did
+  getDIDViewName(contact: MessageSender) : string {
+    if (contact.did === this.did) return "Me";
+    return this.directChannels.find(dc => dc.contact.did === contact.did)?.contact.alias || contact.alias || contact.did;
   }
 
   // if the channel is a direct channel in this addressbook, return the contact alias, else return the channel name

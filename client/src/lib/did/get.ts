@@ -1,8 +1,8 @@
-import { keyToIdentifier } from '@identity.com/sol-did-client';
+import { keyToIdentifier, resolve } from '@identity.com/sol-did-client';
 import { PublicKey } from '@solana/web3.js';
 import { DIDDocument } from 'did-resolver';
 import { currentCluster, ExtendedCluster } from '../util';
-import { cachedResolve } from './cache';
+import { SolariumCache } from '../cache';
 
 export const get = async (
   authority: PublicKey,
@@ -15,7 +15,11 @@ export const get = async (
   return getDocument(didForAuthority);
 };
 
+export const didCache = new SolariumCache<
+  DIDDocument,
+  (key: string) => Promise<DIDDocument>
+>(resolve);
 export const getDocument = async (
   did: string,
   skipCache = false
-): Promise<DIDDocument> => cachedResolve(did, skipCache);
+): Promise<DIDDocument> => didCache.load(did, skipCache);

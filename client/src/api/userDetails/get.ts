@@ -11,5 +11,5 @@ export const get = async (
   request: GetUserDetailsRequest
 ): Promise<UserDetails | null> => {
   const connection = SolanaUtil.getConnection(request.cluster);
-  return getUserDetails(request.did, connection);
+  return getUserDetails(request.did, false, connection);
 };

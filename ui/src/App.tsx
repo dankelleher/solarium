@@ -1,5 +1,5 @@
 import {Fragment, useState} from 'react'
-import {Menu, Popover, Transition} from '@headlessui/react'
+import {Popover, Transition} from '@headlessui/react'
 import {BellIcon, MenuIcon, QuestionMarkCircleIcon, XIcon} from '@heroicons/react/outline'
 import Button from "./components/Button";
 import WalletBar from './components/WalletBar'
@@ -8,26 +8,13 @@ import {ChannelProvider} from "./service/channels/channel";
 import ChannelView from "./components/ChannelView";
 import logoText from './logo-text.png'
 import ChannelList from "./components/ChannelList";
-import {classNames} from "./components/util";
 import OnboardingController from "./components/onboarding/OnboardingController";
 import Logo from "./components/logo/Logo";
-import MyAvatar from "./components/MyAvatar";
-import {IdentityProvider, useIdentity} from "./service/identity";
-
-const CopyIdentityMenuItem = (props:{ className: string}) => {
-  const { did }= useIdentity()
-  // eslint-disable-next-line jsx-a11y/anchor-is-valid
-  return (<a href="#" {...props} onClick={
-      () => navigator.clipboard.writeText(did || '')
-    }
-  >
-    Copy Identity
-  </a>);
-}
+import {IdentityProvider} from "./service/identity";
+import {UserMenu} from "./components/userMenu/UserMenu";
 
 export default function App() {
   const [forceShowWelcome, setForceShowWelcome] = useState<boolean>(false)
-
 
   return (
     <WalletProvider>
@@ -60,64 +47,7 @@ export default function App() {
                         <Button icon={BellIcon} text="View notifications"/>
 
                         {/* Profile dropdown */}
-                        <Menu as="div" className="ml-4 relative flex-shrink-0">
-                          {({ open }) => (
-                            <>
-                              <div>
-                                <Menu.Button className="bg-white rounded-full flex text-sm ring-2 ring-white text-white ring-opacity-20 focus:outline-none focus:ring-opacity-100">
-                                  <span className="sr-only">Open user menu</span>
-                                  <MyAvatar className="h-8 w-8" />
-                                </Menu.Button>
-                              </div>
-                              <Transition
-                                show={open}
-                                as={Fragment}
-                                leave="transition ease-in duration-75"
-                                leaveFrom="transform opacity-100 scale-100"
-                                leaveTo="transform opacity-0 scale-95"
-                              >
-                                <Menu.Items
-                                  static
-                                  className="origin-top-right z-40 absolute -right-2 mt-2 w-48 rounded-md shadow-lg py-1 bg-myrtleGreen ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                >
-                                  <Menu.Item>
-                                    {({ active }) =>
-                                      <CopyIdentityMenuItem className={classNames(
-                                        'block px-4 py-2 text-sm',
-                                        active ? 'bg-gray-100 text-myrtleGreen' : 'text-aeroBlue-light'
-                                      )}/>}
-                                  </Menu.Item>
-                                  <Menu.Item>
-                                    {({ active }) => (
-                                      <a
-                                        href="#settings"
-                                        className={classNames(
-                                          'block px-4 py-2 text-sm',
-                                          active ? 'bg-gray-100 text-myrtleGreen' : 'text-aeroBlue-light'
-                                        )}
-                                      >
-                                        Settings
-                                      </a>
-                                    )}
-                                  </Menu.Item>
-                                  <Menu.Item>
-                                    {({ active }) => (
-                                      <a
-                                        href="#signout"
-                                        className={classNames(
-                                          'block px-4 py-2 text-sm',
-                                          active ? 'bg-gray-100 text-myrtleGreen' : 'text-aeroBlue-light'
-                                        )}
-                                      >
-                                        Sign out
-                                      </a>
-                                    )}
-                                  </Menu.Item>
-                                </Menu.Items>
-                              </Transition>
-                            </>
-                          )}
-                        </Menu>
+                        <UserMenu/>
                       </div>
 
                       {/* Menu button */}

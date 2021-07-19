@@ -10,7 +10,7 @@ export { create as createUserDetails } from './api/userDetails/create';
 export { get as getUserDetails } from './api/userDetails/get';
 
 export { STAGE } from './lib/constants';
-export { Channel, Message } from './lib/Channel';
+export { Channel, Message, MessageSender } from './lib/Channel';
 export { UserDetails, AddressBook } from './lib/UserDetails';
 export { create as createWallet, SignCallback } from './lib/wallet';
 export { ExtendedCluster } from './lib/util';

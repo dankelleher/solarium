@@ -5,7 +5,7 @@ import {useWallet} from "../wallet/wallet";
 import {useConnection, useConnectionConfig} from "../web3/connection";
 import {ClusterType, DIDDocument, resolve} from '@identity.com/sol-did-client';
 import {keyToIdentifier} from "solarium-js";
-import {addKey as addKeyToDID, createIdentity as createDID} from "../channels/solarium";
+import {addKey as addKeyToDID, createIdentity as createDID, createUserDetails} from "../channels/solarium";
 
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
   doc.verificationMethod?.find(verificationMethod => verificationMethod.publicKeyBase58 === key.toBase58())
@@ -15,6 +15,7 @@ type IdentityProps = {
   decryptionKey?: Keypair,
   did?: string,
   createIdentity: () => Promise<void>,
+  setAlias: (alias:string) => Promise<void>,
   addKey: () => Promise<void>,
   document?: DIDDocument
 }
@@ -23,6 +24,7 @@ const IdentityContext = React.createContext<IdentityProps>({
   decryptionKey: undefined,
   did: undefined,
   createIdentity: async () => {},
+  setAlias: async () => {},
   addKey: async  () => {},
   document: undefined
 });
@@ -41,10 +43,11 @@ export function IdentityProvider({ children = null as any }) {
 
   const addKey = useCallback(() =>
       addKeyToDID(connection, wallet, decryptionKey.publicKey, did).then(() => {
-        console.log("Key Added. Ready? " + ready);
         setReady(true)
       })
-    , [connection, wallet, decryptionKey, did, setReady, ready ])
+    , [connection, wallet, decryptionKey, did, setReady ])
+  
+  const setAlias = useCallback((alias: string) => createUserDetails(connection, wallet, did, alias), [connection, wallet, did])
 
   // load the DID document whenever the did is changed
   useEffect(() => { if (did) resolve(did).then(doc => {
@@ -57,7 +60,6 @@ export function IdentityProvider({ children = null as any }) {
   // attempt to get the default DID when the wallet is loaded if none is set
   useEffect(() => {
     if (wallet && connected && !did) {
-      console.log("LOAD WALLET DID HERE ", ClusterType.parse(connectionConfig.env));
       keyToIdentifier(wallet.publicKey, ClusterType.parse(connectionConfig.env))
         .then(resolve)
         .then(document => {
@@ -105,16 +107,6 @@ export function IdentityProvider({ children = null as any }) {
       }
     } else {
       console.log("No document or decryption key available yet");
-      if (wallet && connected) {
-        if (!document) {
-          // console.log("Creating new DID");
-          // register({}).then(document => {
-          //   console.log(document);
-          //   //setDocument(document)
-          // })
-        }
-
-      }
     }
   }, [document, decryptionKey, did, setReady, ready, wallet, connected, connection])
 
@@ -124,6 +116,7 @@ export function IdentityProvider({ children = null as any }) {
       decryptionKey,
       did,
       createIdentity,
+      setAlias,
       addKey,
       document
     }}>
@@ -132,14 +125,4 @@ export function IdentityProvider({ children = null as any }) {
   )
 }
 
-export function useIdentity():IdentityProps {
-  const context = useContext(IdentityContext);
-  return {
-    ready: context.ready,
-    decryptionKey: context.decryptionKey,
-    did: context.did,
-    createIdentity: context.createIdentity,
-    addKey: context.addKey,
-    document: context.document
-  };
-}
+export const useIdentity = (): IdentityProps => useContext(IdentityContext);

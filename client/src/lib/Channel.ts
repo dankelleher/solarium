@@ -53,7 +53,7 @@ export class Message {
 
     const connection = SolanaUtil.getConnection(cluster);
 
-    const userDetails = await getUserDetails(senderDID, connection);
+    const userDetails = await getUserDetails(senderDID, false, connection);
     const alias = userDetails ? userDetails.alias : undefined;
 
     return new Message({ did: senderDID, alias }, content, timestamp);
@@ -135,7 +135,12 @@ export class Channel {
 
     const messagePromises = channelData.messages
       .map(m =>
-        Message.build(m.sender.toPublicKey(), m.content, m.timestamp.toNumber())
+        Message.build(
+          m.sender.toPublicKey(),
+          m.content,
+          m.timestamp.toNumber(),
+          cluster
+        )
       )
       .map(messagePromise => messagePromise.then(decrypt));
 

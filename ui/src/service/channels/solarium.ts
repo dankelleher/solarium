@@ -1,17 +1,5 @@
-import {
-  create,
-  createDirect,
-  Channel,
-  Message,
-  post,
-  get,
-  getDirect,
-  readStream,
-  addKey as addKeyToDID,
-  addToChannel as addDIDToChannel,
-  createDID,
-  airdrop
-} from 'solarium-js'
+import * as solarium from 'solarium-js'
+import {Channel, Message} from 'solarium-js';
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {DEFAULT_ENDPOINT_INDEX, sign} from "../web3/connection";
@@ -28,7 +16,7 @@ export const airdropIfNeeded = async (
 
   if (balance < MIN_BALANCE) {
     console.log("Airdropping...");
-    await airdrop(
+    await solarium.airdrop(
       connection,
       wallet.publicKey,
       MIN_BALANCE * 2
@@ -48,7 +36,7 @@ export const createChannel = withAirdrop((
   wallet: Wallet,
   name: string
 ):Promise<Channel> =>
-  create({
+  solarium.create({
     name,
     payer: wallet.publicKey,
     signCallback: sign(connection, wallet),
@@ -60,7 +48,7 @@ export const createDirectChannel = withAirdrop((
   wallet: Wallet,
   inviteeDID: string,
 ):Promise<Channel> =>
-  createDirect({
+  solarium.createDirect({
     inviteeDID,
     payer: wallet.publicKey,
     signCallback: sign(connection, wallet),
@@ -74,7 +62,7 @@ export const getChannel = (
   channelAddress: string,
   decryptionKey?: Keypair,
 ):Promise<Channel | null> =>
-  get({
+  solarium.get({
     channel: channelAddress,
     ownerDID,
     cluster,
@@ -89,7 +77,7 @@ export const getDirectChannel = async (
 ):Promise<Channel | null> => {
   // TODO handle null case in client
   try {
-    return await getDirect({
+    return await solarium.getDirect({
       owner: wallet.publicKey.toBase58(),
       partnerDID,
       cluster,
@@ -111,7 +99,7 @@ export const getOrCreateDirectChannel = withAirdrop(async (
   
   if (channel) return channel;
 
-  return createDirect({
+  return solarium.createDirect({
     inviteeDID: partnerDID,
     payer: wallet.publicKey,
     signCallback: sign(connection, wallet),
@@ -131,7 +119,7 @@ export const getOrCreateChannel = withAirdrop(async (
 
   if (channel) return channel;
 
-  return create({
+  return solarium.create({
     name,
     payer: wallet.publicKey,
     signCallback: sign(connection, wallet),
@@ -158,7 +146,7 @@ export const addKey = withAirdrop(async (
   }
 
   const signCallback = decryptionKey ? sign(connection, wallet, decryptionKey) : sign(connection, wallet);
-  await addKeyToDID({
+  await solarium.addKey({
     signer: decryptionKey?.secretKey || wallet.publicKey,
     channelsToUpdate: channelsToUpdate.map(c => c.address.toBase58()),
     payer: wallet.publicKey,
@@ -178,7 +166,7 @@ export const postToChannel = withAirdrop((
   signer: Keypair,
   message: string
 ): Promise<void> =>
-  post({
+  solarium.post({
     channel: channel.address.toBase58(),
     payer: wallet.publicKey,
     signer: signer.secretKey,
@@ -192,7 +180,7 @@ export const readChannel = (
   channel: Channel,
   decryptionKey: Keypair,
 ): Observable<Message> =>
-  readStream({
+  solarium.readStream({
     channel: channel.address.toBase58(),
     memberDID: did,
     decryptionKey: decryptionKey.secretKey,
@@ -206,7 +194,7 @@ export const addToChannel = withAirdrop((
   channelAddress: string,
   inviteAuthority: Keypair,
   inviteeDID: string
-) => addDIDToChannel({
+) => solarium.addToChannel({
   channel: channelAddress,
   decryptionKey: inviteAuthority.secretKey,
   ownerDID: did,
@@ -220,8 +208,28 @@ export const createIdentity = withAirdrop((
   connection: Connection,
   wallet: Wallet
 ) =>
-  createDID({
+  solarium.createDID({
     payer: wallet.publicKey,
     signCallback: sign(connection, wallet),
     cluster,
   }))
+
+export const getUserDetails = (did: string) => solarium.getUserDetails({
+  did,
+  cluster
+});
+
+export const createUserDetails = (
+  connection: Connection,
+  wallet: Wallet,
+  did: string,
+  alias: string
+  ) => {
+  return solarium.createUserDetails({
+    payer: wallet.publicKey,
+    signCallback: sign(connection, wallet),
+    ownerDID: did,
+    alias,
+    cluster
+  })
+}

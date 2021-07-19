@@ -8,8 +8,9 @@ import {
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolariumTransaction } from '../lib/solana/transaction';
 import { UserDetails } from '../lib/UserDetails';
+import { SolariumCache } from '../lib/cache';
 
-export const getUserDetails = async (
+const getUserDetailsDirect = async (
   did: string,
   connection: Connection
 ): Promise<UserDetails | null> => {
@@ -23,6 +24,12 @@ export const getUserDetails = async (
 
   return UserDetails.fromChainData(encryptedUserDetails);
 };
+export const userDetailsCache = new SolariumCache<
+  UserDetails | null,
+  (key: string, connection: Connection) => Promise<UserDetails | null>
+>(getUserDetailsDirect);
+
+export const getUserDetails = userDetailsCache.load.bind(userDetailsCache);
 
 /**
  * Create a Solarium user details account for a DID

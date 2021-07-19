@@ -8,10 +8,11 @@ type Props = {
   title: string,
   description: string,
   onOK: () => Promise<void>,
+  okEnabled?: boolean,
   onClose: () => void,
   renderIcon?: () => JSX.Element
 }
-const Modal: React.FC<Props> = ({ title, description, onOK, show, onClose, children , renderIcon = () => <CheckIcon className="h-6 w-6 text-green-600" aria-hidden="true" />}) => {
+const Modal: React.FC<Props> = ({ title, description, onOK, okEnabled, show, onClose, children , renderIcon = () => <CheckIcon className="h-6 w-6 text-green-600" aria-hidden="true" />}) => {
   const [onOkError, setOnOkError] = useState<Error>();
 
   useEffect(() => {
@@ -23,9 +24,6 @@ const Modal: React.FC<Props> = ({ title, description, onOK, show, onClose, child
 
   const cancelButtonRef = useRef(null)
   const executeAndClose = useCallback(() => onOK().then(onClose).catch((e: Error) => setOnOkError(e)), [onOK, onClose, setOnOkError])
-
-
-
   return (
     <Transition.Root show={show} as={Fragment}>
       <Dialog as="div" static className="fixed z-10 inset-0 overflow-y-auto" initialFocus={cancelButtonRef} open={show} onClose={onClose}>
@@ -87,7 +85,7 @@ const Modal: React.FC<Props> = ({ title, description, onOK, show, onClose, child
               <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                 <button
                   type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm"
+                  className={(okEnabled === false ? "disabled" : "") + "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm"}
                   onClick={executeAndClose}
                 >
                   OK

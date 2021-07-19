@@ -46,19 +46,14 @@ export type OnboardingStep = {
 
 type OnboardingStepTemplate = Omit<OnboardingStep, 'action' | 'skipCondition'>
 
-type Props = {
-  forceShowWelcome: boolean
-  setForceShowWelcome: (show: boolean) => void,
-}
-
-const OnboardingController = ({forceShowWelcome, setForceShowWelcome} : Props) => {
+const OnboardingController = () => {
   const {wallet, connected} = useWallet();
   const { ready: identityReady, decryptionKey, did, createIdentity, addKey} = useIdentity();
   const { addressBook, joinPublicChannel, initialised } = useChannel()
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const [title, setTitle] = useState<string>(titleNewUser)
-  const [showWelcome, setShowWelcome] = useState<boolean>(true)
+  const [showWelcome, setShowWelcome] = useState<boolean>(false)
 
   useEffect(() => {
     const connectWalletAction = wallet.connect;
@@ -104,9 +99,10 @@ const OnboardingController = ({forceShowWelcome, setForceShowWelcome} : Props) =
     if (nextStep > currentStepIndex) setCurrentStepIndex(nextStep);
   }, [currentStepIndex, steps, setCurrentStepIndex])
 
-  useEffect(() => {
-    setShowWelcome(!did && showWelcome) // will always be false, once showWelcome turns false.
-    }, [did, showWelcome, setShowWelcome])
+  // if a did is not set, this is a new user, show the welcome screen
+  // use the presence/absence of the decryption key to ensure LocalStorage has been loaded
+  // this avoids the "flash" effect when a did exists but is not loaded from LocalStorage yet
+  useEffect(() => setShowWelcome(!did && !!decryptionKey), [did, decryptionKey, setShowWelcome])
 
   const nextStep = useCallback(
     () => {
@@ -121,10 +117,8 @@ const OnboardingController = ({forceShowWelcome, setForceShowWelcome} : Props) =
 
   return (
     <>
-      <WelcomeModal show={forceShowWelcome || showWelcome} setShow={(show) => {setForceShowWelcome(show); setShowWelcome(show)}}/>
+      <WelcomeModal show={showWelcome} setShow={setShowWelcome}/>
       <OnboardingModal show={!showWelcome && steps.length > 0} title={title} steps={steps} currentStepIndex={currentStepIndex} next={nextStep}/>
-      {/* TODO: @Dan I feel this loader did nothing... */}
-      {/*<Loader/>*/}
     </>
   )
 }

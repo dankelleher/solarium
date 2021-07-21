@@ -23,6 +23,7 @@ const menuClasses = (active: boolean) => classNames(
 
 export const UserMenu = () => {
   const [setAliasModal, showSetAliasModal] = useState<boolean>(false);
+  const {userDetails} = useIdentity()
   return <>
     <SetAliasModal show={setAliasModal} setShow={showSetAliasModal}/>
     <Menu as="div" className="ml-4 relative flex-shrink-0">
@@ -46,13 +47,17 @@ export const UserMenu = () => {
               static
               className="origin-top-right z-40 absolute -right-2 mt-2 w-48 rounded-md shadow-lg py-1 bg-myrtleGreen ring-1 ring-black ring-opacity-5 focus:outline-none"
             >
+              {!userDetails &&
               <Menu.Item>
+
                 {({active}) => (
                   // eslint-disable-next-line jsx-a11y/anchor-is-valid
                   <a href="#" className={menuClasses(active)} onClick={() => showSetAliasModal(true)}>
                     Set Alias
-                  </a>)}
+                  </a>)
+                }
               </Menu.Item>
+              }
               <Menu.Item>
                 {({active}) =>
                   <CopyIdentityMenuItem className={menuClasses(active)}/>}

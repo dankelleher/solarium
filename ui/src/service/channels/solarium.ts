@@ -206,10 +206,12 @@ export const addToChannel = withAirdrop((
 
 export const createIdentity = withAirdrop((
   connection: Connection,
-  wallet: Wallet
+  wallet: Wallet,
+  alias?: string
 ) =>
   solarium.createDID({
     payer: wallet.publicKey,
+    alias,
     signCallback: sign(connection, wallet),
     cluster,
   }))

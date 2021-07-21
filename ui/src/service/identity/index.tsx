@@ -14,7 +14,7 @@ type IdentityProps = {
   ready: boolean,
   decryptionKey?: Keypair,
   did?: string,
-  createIdentity: () => Promise<void>,
+  createIdentity: (alias?: string) => Promise<void>,
   setAlias: (alias:string) => Promise<void>,
   addKey: () => Promise<void>,
   document?: DIDDocument
@@ -37,8 +37,8 @@ export function IdentityProvider({ children = null as any }) {
   const [document, setDocument] = useState<DIDDocument>();
   const [ready, setReady] = useState<boolean>(false);
 
-  const createIdentity = useCallback(() =>
-      createDID(connection, wallet).then(document => setDID(document.id))
+  const createIdentity = useCallback((alias?: string) =>
+      createDID(connection, wallet, alias).then(document => setDID(document.id))
     , [connection, wallet, setDID])
 
   const addKey = useCallback(() =>
@@ -68,10 +68,6 @@ export function IdentityProvider({ children = null as any }) {
         .catch(error => {
           if (error.message.startsWith("No DID found")) {
             // console.log("Prompt to create DID");
-            // // TODO trigger this only after prompt. This is just to get us to the "ready" phase
-            // createIdentity(connection, wallet).then(document => {
-            //   setDID(document.id);
-            // })
           }
         })
     }

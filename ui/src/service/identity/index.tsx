@@ -4,8 +4,8 @@ import {useLocalStorageKey, useLocalStorageState} from "../storage";
 import {useWallet} from "../wallet/wallet";
 import {useConnection, useConnectionConfig} from "../web3/connection";
 import {ClusterType, DIDDocument, resolve} from '@identity.com/sol-did-client';
-import {keyToIdentifier} from "solarium-js";
-import {addKey as addKeyToDID, createIdentity as createDID, createUserDetails} from "../channels/solarium";
+import {keyToIdentifier, UserDetails} from "solarium-js";
+import {addKey as addKeyToDID, createIdentity as createDID, createUserDetails, getUserDetails} from "../channels/solarium";
 
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
   doc.verificationMethod?.find(verificationMethod => verificationMethod.publicKeyBase58 === key.toBase58())
@@ -18,15 +18,13 @@ type IdentityProps = {
   setAlias: (alias:string) => Promise<void>,
   addKey: () => Promise<void>,
   document?: DIDDocument
+  userDetails?: UserDetails
 }
 const IdentityContext = React.createContext<IdentityProps>({
   ready: false,
-  decryptionKey: undefined,
-  did: undefined,
   createIdentity: async () => {},
   setAlias: async () => {},
   addKey: async  () => {},
-  document: undefined
 });
 export function IdentityProvider({ children = null as any }) {
   const {wallet, connected} = useWallet();
@@ -35,6 +33,7 @@ export function IdentityProvider({ children = null as any }) {
   const [decryptionKey] = useLocalStorageKey('decryptionKey', Keypair.generate());
   const [did, setDID] = useLocalStorageState<string>('did', undefined);
   const [document, setDocument] = useState<DIDDocument>();
+  const [userDetails, setUserDetails] = useState<UserDetails>();
   const [ready, setReady] = useState<boolean>(false);
 
   const createIdentity = useCallback((alias?: string) =>
@@ -46,8 +45,21 @@ export function IdentityProvider({ children = null as any }) {
         setReady(true)
       })
     , [connection, wallet, decryptionKey, did, setReady ])
+
   
-  const setAlias = useCallback((alias: string) => createUserDetails(connection, wallet, did, alias), [connection, wallet, did])
+  
+  const updateUserDetails = useCallback(() => getUserDetails(did).then(loadedUserDetails => {
+    if (loadedUserDetails) {
+      setUserDetails(loadedUserDetails)
+      console.log(loadedUserDetails);
+    }
+  }).catch(() => {
+    console.log("No UserDetails found");
+  }), [did, setUserDetails]);
+  const setAlias = useCallback(async (alias: string) => {
+    await createUserDetails(connection, wallet, did, alias);
+    await updateUserDetails()
+  }, [connection, wallet, did, updateUserDetails])
 
   // load the DID document whenever the did is changed
   useEffect(() => { if (did) resolve(did).then(doc => {
@@ -56,6 +68,9 @@ export function IdentityProvider({ children = null as any }) {
   }).catch(() => {
     console.log("No DID registered yet");
   }) }, [did]);
+
+  // load the user details if present
+  useEffect(() => { if (did) updateUserDetails() }, [did, updateUserDetails]);
 
   // attempt to get the default DID when the wallet is loaded if none is set
   useEffect(() => {
@@ -114,7 +129,8 @@ export function IdentityProvider({ children = null as any }) {
       createIdentity,
       setAlias,
       addKey,
-      document
+      document,
+      userDetails
     }}>
       {children}
     </IdentityContext.Provider>

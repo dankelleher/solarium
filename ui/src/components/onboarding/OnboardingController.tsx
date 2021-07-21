@@ -6,6 +6,7 @@ import {DEFAULT_CHANNEL} from "../../service/constants";
 import {useIdentity} from "../../service/identity";
 import WelcomeModal from "./WelcomeModal";
 import * as React from "react";
+import RequestAliasModal from "../modal/RequestAliasModal";
 
 enum StepType {
   CONNECT_WALLET = 'Connect Wallet',
@@ -54,10 +55,16 @@ const OnboardingController = () => {
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const [title, setTitle] = useState<string>(titleNewUser)
   const [showWelcome, setShowWelcome] = useState<boolean>(false)
+  const [showSetAlias, setShowSetAlias] = useState<boolean>(false)
+  
+  const createIdentityWithAlias = createIdentity;
 
   useEffect(() => {
     const connectWalletAction = wallet.connect;
-    const createIdentityAction = createIdentity;
+    const createIdentityAction = () => {
+      setShowSetAlias(true)
+      return new Promise<void>(() => {});
+    } 
     const addKeyAction = addKey;
     const joinPublicChannelAction = joinPublicChannel;
     const doneAction = async () => { };
@@ -119,6 +126,7 @@ const OnboardingController = () => {
     <>
       <WelcomeModal show={showWelcome} setShow={setShowWelcome}/>
       <OnboardingModal show={!showWelcome && steps.length > 0} title={title} steps={steps} currentStepIndex={currentStepIndex} next={nextStep}/>
+      <RequestAliasModal show={showSetAlias} setShow={setShowSetAlias} onOk={createIdentityWithAlias}/>
     </>
   )
 }

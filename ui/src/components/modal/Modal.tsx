@@ -13,7 +13,7 @@ type Props = {
   renderIcon?: () => JSX.Element
 }
 const Modal: React.FC<Props> = ({ title, description, onOK, okEnabled, show, onClose, children , renderIcon = () => <CheckIcon className="h-6 w-6 text-green-600" aria-hidden="true" />}) => {
-  const [onOkError, setOnOkError] = useState<Error>();
+  const [onOkError, setOnOkError] = useState<Error>();  
 
   useEffect(() => {
     // reset Error state when bringing to foreground

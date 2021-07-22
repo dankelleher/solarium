@@ -284,6 +284,22 @@ impl SolariumContext {
         self.alice_user_details = Some(alice_user_details);
     }
 
+    pub async fn update_user_details(&mut self, new_alias: &str, new_address_book: &str) -> () {
+        let update_user_details_account = instruction::update_user_details(
+            &self.alice_did,
+            &self.alice.pubkey(),
+            new_alias.to_string(),
+            new_address_book.to_string()
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[update_user_details_account],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.alice],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
+    }
+
     pub async fn get_user_details(&mut self) -> UserDetails {
         let account_info = &self.context
             .banks_client

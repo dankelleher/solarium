@@ -35,7 +35,7 @@ USAGE
 * [`solarium id`](#solarium-id)
 * [`solarium invite [INVITEE] [CHANNEL]`](#solarium-invite-invitee-channel)
 * [`solarium post [MESSAGE]`](#solarium-post-message)
-* [`solarium read [CHANNEL]`](#solarium-read-channel)
+* [`solarium read CHANNEL`](#solarium-read-channel)
 * [`solarium watch [CHANNEL]`](#solarium-watch-channel)
 
 ## `solarium add-key [PUBLICKEY]`
@@ -117,9 +117,11 @@ USAGE
   $ solarium id
 
 OPTIONS
-  -c, --create   Create a DID if missing
-  -h, --help     show CLI help
-  -v, --verbose  Show the entire DID document
+  -a, --alias=alias  Set this ID's public alias
+  -c, --create       Create a DID if missing
+  -h, --help         show CLI help
+  -u, --update       Update a DID's user details
+  -v, --verbose      Show the entire DID document
 ```
 
 _See code: [src/commands/id.ts](https://github.com/dankelleher/solarium/blob/v0.1.11/src/commands/id.ts)_
@@ -161,13 +163,13 @@ OPTIONS
 
 _See code: [src/commands/post.ts](https://github.com/dankelleher/solarium/blob/v0.1.11/src/commands/post.ts)_
 
-## `solarium read [CHANNEL]`
+## `solarium read CHANNEL`
 
 Read a channel
 
 ```
 USAGE
-  $ solarium read [CHANNEL]
+  $ solarium read CHANNEL
 
 OPTIONS
   -h, --help  show CLI help

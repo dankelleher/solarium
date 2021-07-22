@@ -7,6 +7,7 @@ import {
 import { DEFAULT_CLUSTER } from './constants';
 import { SignCallback } from './wallet';
 import Debug from 'debug';
+import { AddressBook } from './UserDetails';
 
 export const debug = Debug('solarium-js');
 
@@ -178,6 +179,13 @@ export type CreateUserDetailsRequest = TransactionRequest & {
   owner?: KeyMaterial;
   alias: string;
   size?: number;
+};
+
+export type UpdateUserDetailsRequest = TransactionRequest & {
+  ownerDID?: string;
+  owner?: KeyMaterial;
+  alias?: string;
+  addressBook?: AddressBook;
 };
 
 export type GetUserDetailsRequest = SolanaRequest & {

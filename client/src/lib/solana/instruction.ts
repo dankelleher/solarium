@@ -48,6 +48,11 @@ export class CreateUserDetails extends Assignable {
   size: number;
 }
 
+export class UpdateUserDetails extends Assignable {
+  alias: string;
+  addressBook: string;
+}
+
 export class SolariumInstruction extends Enum {
   initializeChannel: InitializeChannel;
   initializeDirectChannel: InitializeDirectChannel;
@@ -56,6 +61,7 @@ export class SolariumInstruction extends Enum {
   addCEK: AddCEK;
   removeCEK: RemoveCEK;
   createUserDetails: CreateUserDetails;
+  updateUserDetails: UpdateUserDetails;
 
   static initializeChannel(name: string, CEKs: CEKData[]): SolariumInstruction {
     return new SolariumInstruction({
@@ -104,6 +110,15 @@ export class SolariumInstruction extends Enum {
   ): SolariumInstruction {
     return new SolariumInstruction({
       createUserDetails: new CreateUserDetails({ alias, addressBook, size }),
+    });
+  }
+
+  static updateUserDetails(
+    alias: string,
+    addressBook = ''
+  ): SolariumInstruction {
+    return new SolariumInstruction({
+      updateUserDetails: new UpdateUserDetails({ alias, addressBook }),
     });
   }
 }
@@ -333,6 +348,29 @@ export async function createUserDetails(
   });
 }
 
+export async function updateUserDetails(
+  did: PublicKey,
+  authority: PublicKey,
+  alias: string,
+  addressBook: string
+): Promise<TransactionInstruction> {
+  const userDetailsAccount = await getUserDetailsKey(did);
+  const keys: AccountMeta[] = [
+    { pubkey: did, isSigner: false, isWritable: false },
+    { pubkey: authority, isSigner: true, isWritable: false },
+    { pubkey: userDetailsAccount, isSigner: false, isWritable: true },
+  ];
+  const data = SolariumInstruction.updateUserDetails(
+    alias,
+    addressBook
+  ).encode();
+  return new TransactionInstruction({
+    keys,
+    programId: PROGRAM_ID,
+    data,
+  });
+}
+
 SCHEMA.set(SolariumInstruction, {
   kind: 'enum',
   field: 'enum',
@@ -344,6 +382,7 @@ SCHEMA.set(SolariumInstruction, {
     ['addCEK', AddCEK],
     ['removeCEK', RemoveCEK],
     ['createUserDetails', CreateUserDetails],
+    ['updateUserDetails', updateUserDetails],
   ],
 });
 SCHEMA.set(InitializeChannel, {
@@ -382,5 +421,12 @@ SCHEMA.set(CreateUserDetails, {
     ['alias', 'string'],
     ['addressBook', 'string'],
     ['size', 'u32'],
+  ],
+});
+SCHEMA.set(UpdateUserDetails, {
+  kind: 'struct',
+  fields: [
+    ['alias', 'string'],
+    ['addressBook', 'string'],
   ],
 });

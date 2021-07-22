@@ -7,7 +7,7 @@ import {
 } from '../lib/util';
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolariumTransaction } from '../lib/solana/transaction';
-import { UserDetails } from '../lib/UserDetails';
+import { AddressBook, UserDetails } from '../lib/UserDetails';
 import { SolariumCache } from '../lib/cache';
 
 const getUserDetailsDirect = async (
@@ -64,6 +64,49 @@ export const createUserDetails = async (
     createSignedTx,
     alias,
     size,
+    cluster
+  );
+};
+
+/**
+ * Update a Solarium user details account
+ * @param did
+ * @param connection
+ * @param owner
+ * @param payer
+ * @param alias
+ * @param addressBook
+ * @param signCallback
+ * @param cluster
+ */
+export const updateUserDetails = async (
+  did: string,
+  connection: Connection,
+  owner: Keypair | PublicKey,
+  payer: Keypair | PublicKey,
+  alias?: string,
+  addressBook?: AddressBook,
+  signCallback?: SignCallback,
+  cluster?: ExtendedCluster
+): Promise<void> => {
+  const createSignedTx =
+    signCallback ||
+    (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
+  if (!createSignedTx) throw new Error('No payer or sign callback specified');
+
+  const ownerDIDKey = didToPublicKey(did);
+
+  const existingUserDetails = await getUserDetailsDirect(did, connection);
+
+  if (!existingUserDetails)
+    throw new Error(`DID ${did} has no userDetails account`);
+
+  await SolariumTransaction.updateUserDetails(
+    ownerDIDKey,
+    pubkeyOf(owner),
+    createSignedTx,
+    alias || existingUserDetails.alias,
+    (addressBook || existingUserDetails.addressBook).toChainData(),
     cluster
   );
 };

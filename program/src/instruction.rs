@@ -137,6 +137,20 @@ pub enum SolariumInstruction {
         address_book: String,
         /// The size of the userDetails account
         size: u32
+    },
+
+    /// Updates a UserDetails account 
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    /// 0. `[]` Owner DID account - must be owned by the sol-did program
+    /// 1. `[signer]` Owner authority - must be a key on the owner DID 
+    /// 2. `[writable]` UserDetails account, must be owned by the owner DID
+    UpdateUserDetails {
+        /// The user's new public alias
+        alias: String,
+        /// The user's encrypted address book
+        address_book: String,
     }
 }
 
@@ -278,7 +292,7 @@ pub fn remove_cek(
     )
 }
 
-/// Create a `SolariumInstruction::RemoveCEK` instruction
+/// Create a `SolariumInstruction::CreateUserDetails` instruction
 pub fn create_user_details(
     funder_account: &Pubkey,
     owner_did: &Pubkey,
@@ -297,6 +311,25 @@ pub fn create_user_details(
             AccountMeta::new(owner_userdetails_account, false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
+        ],
+    )
+}
+
+/// Create a `SolariumInstruction::UpdateUserDetails` instruction
+pub fn update_user_details(
+    owner_did: &Pubkey,
+    owner_authority: &Pubkey,
+    alias: String,
+    address_book: String
+) -> Instruction {
+    let (owner_userdetails_account, _) = get_userdetails_account_address_with_seed(&id(), owner_did);
+    Instruction::new_with_borsh(
+        id(),
+        &SolariumInstruction::UpdateUserDetails { alias, address_book },
+        vec![
+            AccountMeta::new_readonly(*owner_did, false),
+            AccountMeta::new_readonly(*owner_authority, true),
+            AccountMeta::new(owner_userdetails_account, false),
         ],
     )
 }

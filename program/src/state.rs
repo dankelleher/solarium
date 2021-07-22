@@ -143,12 +143,12 @@ pub struct UserDetails {
 }
 impl UserDetails {
     /// The recommended default size of a userDetails account 
-    pub const DEFAULT_SIZE_BYTES: u32 = 512;
+    pub const DEFAULT_SIZE_BYTES: u32 = 1536;   //1.5kb
 }
 impl IsInitialized for UserDetails {
-    /// Checks if a CEK account has been initialized
+    /// Checks if a UserDetails account has been initialized
     fn is_initialized(&self) -> bool {
-        !!self.alias.is_empty()
+        !self.alias.is_empty()
     }
 }
 

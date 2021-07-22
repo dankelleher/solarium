@@ -121,3 +121,20 @@ async fn create_user_details() {
     assert_eq!(user_details.alias, "Alice");
     assert_eq!(user_details.address_book, "");
 }
+
+#[tokio::test]
+async fn update_user_details() {
+    let new_alias = "Alicia";
+    let new_address_book = "encrypted data";
+    
+    let mut context = SolariumContext::new().await;
+
+    context.create_user_details().await;
+    
+    context.update_user_details(new_alias, new_address_book).await;
+
+    let user_details = context.get_user_details().await;
+
+    assert_eq!(user_details.alias, new_alias);
+    assert_eq!(user_details.address_book, new_address_book);
+}

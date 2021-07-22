@@ -328,6 +328,38 @@ fn create_cek_account<'a>(
         .map_err(|e| e.into())
 }
 
+fn update_user_details(program_id: &Pubkey, accounts: &[AccountInfo], alias: String, address_book: String) -> ProgramResult {
+    msg!("SolariumInstruction::UpdateUserDetails");
+    let account_info_iter = &mut accounts.iter();
+    let did_info = next_account_info(account_info_iter)?;
+    let authority_info = next_account_info(account_info_iter)?;
+    let user_details_account_info = next_account_info(account_info_iter)?;
+    let mut user_details =
+        program_borsh::try_from_slice_incomplete::<UserDetails>(*user_details_account_info.data.borrow())?;
+
+    if !user_details.is_initialized() {
+        msg!("UserDetails account not initialized");
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    // Check that the signer is an authority on the DID.
+    validate_owner(did_info, &[authority_info]).unwrap();
+
+    // check that the user details account belongs to the DID
+    let (user_details_address,_) = get_userdetails_account_address_with_seed(program_id, did_info.key);
+    if user_details_address != *user_details_account_info.key {
+        msg!("Error: Attempt to update a userdetails account with an address not derived from the DID");
+        return Err(SolariumError::AddressDerivationMismatch.into());
+    }
+    
+    // mutate the UserDetails object
+    user_details.alias = alias;
+    user_details.address_book = address_book;
+
+    user_details.serialize(&mut *user_details_account_info.data.borrow_mut())
+        .map_err(|e| e.into())
+}
+
 fn add_cek(program_id: &Pubkey, accounts: &[AccountInfo], cek: CEKData) -> ProgramResult {
     msg!("SolariumInstruction::AddCEK");
     let account_info_iter = &mut accounts.iter();
@@ -381,11 +413,9 @@ fn create_user_details(program_id: &Pubkey, accounts: &[AccountInfo], alias: Str
     let user_details_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
-    msg!("Extracting accounts");
 
     let rent = &Rent::from_account_info(rent_info)?;
 
-    msg!("Checking userdetails initialised");
     let data_len = user_details_account_info.data.borrow().len();
     if data_len > 0 {
         msg!("Error: Attempt to create a userdetails account for an address that is already in use");
@@ -395,7 +425,6 @@ fn create_user_details(program_id: &Pubkey, accounts: &[AccountInfo], alias: Str
     // Check that the authority is valid for the DID 
     check_authority_of_did(authority_info, did_info).unwrap();
 
-    msg!("Checking userdetails address");
     let (user_details_address, user_details_bump_seed) = get_userdetails_account_address_with_seed(program_id, did_info.key);
     if user_details_address != *user_details_account_info.key {
         msg!("Error: Attempt to create a userdetails account with an address not derived from the DID");
@@ -451,5 +480,6 @@ pub fn process_instruction(
         SolariumInstruction::AddCEK { cek } => add_cek(program_id, accounts, cek),
         SolariumInstruction::RemoveCEK { kid} => remove_cek(program_id, accounts, kid),
         SolariumInstruction::CreateUserDetails { alias, address_book, size } => create_user_details(program_id, accounts, alias, address_book, size),
+        SolariumInstruction::UpdateUserDetails { alias, address_book } => update_user_details(program_id, accounts, alias, address_book),
     }
 }

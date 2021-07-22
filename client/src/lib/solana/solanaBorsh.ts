@@ -20,6 +20,10 @@ export abstract class Assignable {
   }
 }
 
+export interface ChainStorage<T> {
+  toChainData: () => T;
+}
+
 // Class representing a Rust-compatible enum, since enums are only strings or
 // numbers in pure JS
 export abstract class Enum extends Assignable {

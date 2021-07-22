@@ -12,6 +12,7 @@ import {
   addCEK,
   addToChannel,
   createUserDetails,
+  updateUserDetails,
   getCekAccountKey,
   getDirectChannelAccountKey,
   getUserDetailsKey,
@@ -219,6 +220,34 @@ export class SolariumTransaction {
 
     await SolariumTransaction.signAndSendTransaction(
       [createUserDetailsInstruction],
+      signCallback,
+      [],
+      cluster
+    );
+
+    return userDetails;
+  }
+
+  static async updateUserDetails(
+    did: PublicKey,
+    authority: PublicKey,
+    signCallback: SignCallback,
+    alias: string,
+    addressBook: string,
+    cluster?: ExtendedCluster
+  ): Promise<PublicKey> {
+    const userDetails = await getUserDetailsKey(did);
+    debug(`userDetails address: ${userDetails.toBase58()}`);
+
+    const updateUserDetailsInstruction = await updateUserDetails(
+      did,
+      authority,
+      alias,
+      addressBook
+    );
+
+    await SolariumTransaction.signAndSendTransaction(
+      [updateUserDetailsInstruction],
       signCallback,
       [],
       cluster

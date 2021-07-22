@@ -7,6 +7,7 @@ export { addKey } from './api/id/addKey';
 export { get as getDID } from './api/id/get';
 export { create as createDID } from './api/id/create';
 export { create as createUserDetails } from './api/userDetails/create';
+export { update as updateUserDetails } from './api/userDetails/update';
 export { get as getUserDetails } from './api/userDetails/get';
 
 export { STAGE } from './lib/constants';

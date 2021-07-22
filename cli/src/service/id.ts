@@ -1,4 +1,11 @@
-import { createDID, getDID, getUserDetails, UserDetails } from "solarium-js";
+import {
+  createDID,
+  getDID,
+  createUserDetails,
+  getUserDetails,
+  updateUserDetails,
+  UserDetails,
+} from "solarium-js";
 import { DIDDocument } from "did-resolver";
 import { getWallet } from "../lib/config";
 
@@ -42,4 +49,28 @@ export const createId = async (alias?: string): Promise<ExtendedId> => {
     document,
     userDetails: userDetails || undefined,
   };
+};
+
+export const updateId = async (alias: string): Promise<void> => {
+  const wallet = await getWallet();
+
+  const extendedId = await getId();
+
+  if (!extendedId)
+    throw new Error("User has no DID - create it first with solarium id -c");
+
+  const request = {
+    payer: wallet.secretKey,
+    // TODO fix the service functions to add payer private key
+    //  (not just the public key) if no owner is specified
+    owner: wallet.secretKey,
+    alias,
+  };
+
+  if (!extendedId.userDetails) {
+    // the DID has no user details account - create it
+    await createUserDetails(request);
+  } else {
+    await updateUserDetails(request);
+  }
 };

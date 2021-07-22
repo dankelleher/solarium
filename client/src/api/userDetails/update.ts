@@ -1,30 +1,33 @@
 import {
-  CreateUserDetailsRequest,
   pubkeyOf,
   toSolanaKeyMaterial,
+  UpdateUserDetailsRequest,
 } from '../../lib/util';
-import { createUserDetails } from '../../service/userDetails';
+import { updateUserDetails } from '../../service/userDetails';
 import { didFromKey } from './util';
+import { SolanaUtil } from '../../lib/solana/solanaUtil';
 
 /**
- * Create a userdetails account for a DID
+ * Update a userdetails account
  * @param request
  */
-export const create = async (
-  request: CreateUserDetailsRequest
+export const update = async (
+  request: UpdateUserDetailsRequest
 ): Promise<void> => {
   const payer = toSolanaKeyMaterial(request.payer);
   const owner = request.owner
     ? toSolanaKeyMaterial(request.owner)
     : pubkeyOf(payer);
   const ownerDID = await didFromKey(request);
+  const connection = SolanaUtil.getConnection(request.cluster);
 
-  await createUserDetails(
+  await updateUserDetails(
     ownerDID,
+    connection,
     owner,
     payer,
     request.alias,
-    request.size,
+    request.addressBook,
     request.signCallback,
     request.cluster
   );

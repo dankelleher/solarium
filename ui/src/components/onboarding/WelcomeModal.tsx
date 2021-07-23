@@ -72,21 +72,10 @@ const WelcomeModal: React.FC<Props> = ({
                     </div>
                     <div className="flow-root mt-3">
                       <h3 className="text-lg leading-6 font-medium">
-                        A Solarium primer video
+                        Find out more...
                       </h3>
                       <div className="aspect-w-16 aspect-h-9">
                         <iframe src="https://www.youtube.com/embed/C_XVl1fT76Y" frameBorder="0" title="A Solarium primer video"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen></iframe>
-                      </div>
-                    </div>
-
-                    <div className="flow-root mt-3">
-                      <h3 className="text-lg leading-6 font-medium">
-                        The technology behind solarium
-                      </h3>
-                      <div className="aspect-w-16 aspect-h-9">
-                        <iframe src="https://www.youtube.com/embed/kgDRefJECIE" frameBorder="0" title="The technology behind solarium"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen></iframe>
                       </div>
@@ -101,7 +90,7 @@ const WelcomeModal: React.FC<Props> = ({
                   className="w-1/2 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-myrtleGreen text-base font-medium text-aeroBluen hover:bg-myrtleGreen-lightest focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myrtleGreen sm:col-start-2 sm:text-sm"
                   onClick={() => setShow(false)}
                 >
-                  Close
+                  Get started!
                 </button>
               </div>
             </div>

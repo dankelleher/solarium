@@ -48,6 +48,7 @@ const getOrCreateDID = async (
         owner,
         pubkeyOf(payer),
         undefined,
+        undefined,
         signCallback,
         cluster
       );

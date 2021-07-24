@@ -1,4 +1,4 @@
-import { Keypair, Cluster, clusterApiUrl, PublicKey } from '@solana/web3.js';
+import { Cluster, clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js';
 import { decode, encode } from 'bs58';
 import {
   ClusterType,
@@ -8,6 +8,7 @@ import { DEFAULT_CLUSTER } from './constants';
 import { SignCallback } from './wallet';
 import Debug from 'debug';
 import { AddressBook } from './UserDetails';
+import { VerificationMethod } from 'did-resolver';
 
 export const debug = Debug('solarium-js');
 
@@ -55,6 +56,7 @@ export const makeKeypair = (privateKey: PrivateKey): Keypair => {
 export const getPublicKey = (privateKey: PrivateKey): PublicKey =>
   makeKeypair(privateKey).publicKey;
 
+export type DIDKey = { key: PublicKeyBase58; identifier: string };
 type EncodedKeyPair = {
   secretKey: string;
   publicKey: string;
@@ -168,6 +170,7 @@ export type AddToChannelRequest = TransactionRequest & {
 export type CreateDIDRequest = TransactionRequest & {
   owner?: KeyMaterial;
   alias?: string;
+  additionalKeys?: DIDKey[];
 };
 
 export type GetDIDRequest = SolanaRequest & {
@@ -217,3 +220,13 @@ export const pubkeyOf = (k: Keypair | PublicKey): PublicKey =>
 
 export const isString = (value): value is string =>
   typeof value === 'string' || value instanceof String;
+
+export const keyToVerificationMethod = (
+  did: string,
+  didKey: DIDKey
+): VerificationMethod => ({
+  id: did + '#' + didKey.identifier,
+  type: 'Ed25519VerificationKey2018',
+  controller: did,
+  publicKeyBase58: didKey.key,
+});

@@ -3,7 +3,12 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { DIDDocument } from 'did-resolver';
 import { defaultSignCallback, SignCallback } from '../wallet';
 import { SolariumTransaction } from '../solana/transaction';
-import { ExtendedCluster, isKeypair, pubkeyOf } from '../util';
+import {
+  ExtendedCluster,
+  isKeypair,
+  keyToVerificationMethod,
+  pubkeyOf,
+} from '../util';
 import { getDocument } from './get';
 
 export const addKey = async (
@@ -21,13 +26,16 @@ export const addKey = async (
     (payer && isKeypair(signer) && defaultSignCallback(payer, signer));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
-  const keyDID = did + '#' + keyIdentifier;
-
   const existingDoc = await getDocument(did);
+
+  const keyVerificationMethod = keyToVerificationMethod(did, {
+    identifier: keyIdentifier,
+    key: key.toBase58(),
+  });
 
   const appendedCapabilityInvocation = [
     ...(existingDoc.capabilityInvocation || []),
-    keyDID,
+    keyVerificationMethod.id,
   ];
 
   const instruction = await createUpdateInstruction({
@@ -35,14 +43,7 @@ export const addKey = async (
     authority: pubkeyOf(signer),
     mergeBehaviour: 'Append',
     document: {
-      verificationMethod: [
-        {
-          id: keyDID,
-          type: 'Ed25519VerificationKey2018',
-          controller: did,
-          publicKeyBase58: key.toBase58(),
-        },
-      ],
+      verificationMethod: [keyVerificationMethod],
       capabilityInvocation: appendedCapabilityInvocation,
     },
   });

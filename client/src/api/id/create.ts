@@ -24,6 +24,7 @@ export const create = async (
       owner,
       payer,
       request.alias,
+      request.additionalKeys,
       request.signCallback,
       request.cluster
     );

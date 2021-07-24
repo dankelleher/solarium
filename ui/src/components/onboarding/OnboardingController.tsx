@@ -11,7 +11,6 @@ import RequestAliasModal from "../modal/RequestAliasModal";
 enum StepType {
   CONNECT_WALLET = 'Connect Wallet',
   CREATE_IDENTITY = 'Create Identity',
-  ADD_KEY = 'Add Browser Key',
   JOIN_PUBLIC_CHANNEL = 'Join the Public Lobby',
   DONE = 'Done!'
 }
@@ -22,7 +21,6 @@ const firstTimeSteps: OnboardingStepTemplate[] = [
     type: StepType.CREATE_IDENTITY,
     description: 'This is how you tell others who you are. Don\'t worry, it\'s anonymous!',
   },
-  { type: StepType.ADD_KEY, description: 'Messages you send will be encrypted with this.' },
   { type: StepType.JOIN_PUBLIC_CHANNEL, description: 'Be polite!'},
   { type: StepType.DONE, description: '' },
 ]
@@ -30,7 +28,6 @@ const firstTimeSteps: OnboardingStepTemplate[] = [
 const returnUserSteps: OnboardingStepTemplate[] = [
   { type: StepType.CONNECT_WALLET, description: 'Reconnect your wallet to see your latest messages' },
   { type: StepType.CREATE_IDENTITY, description: 'Loading your identity.' },
-  { type: StepType.ADD_KEY, description: 'Validating your key.' },
   { type: StepType.JOIN_PUBLIC_CHANNEL, description: 'Be polite!'},
   { type: StepType.DONE, description: '' },
 ]
@@ -49,7 +46,7 @@ type OnboardingStepTemplate = Omit<OnboardingStep, 'action' | 'skipCondition'>
 
 const OnboardingController = () => {
   const {wallet, connected} = useWallet();
-  const { ready: identityReady, decryptionKey, did, createIdentity, addKey} = useIdentity();
+  const { ready: identityReady, decryptionKey, did, createIdentity} = useIdentity();
   const { addressBook, joinPublicChannel, initialised } = useChannel()
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
@@ -65,20 +62,17 @@ const OnboardingController = () => {
       setShowSetAlias(true)
       return new Promise<void>(() => {});
     } 
-    const addKeyAction = addKey;
     const joinPublicChannelAction = joinPublicChannel;
     const doneAction = async () => { };
 
     const connectWalletSkipCondition = connected;
     const createIdentitySkipCondition = !!did;
-    const addKeySkipCondition = identityReady;
     const joinPublicChannelSkipCondition = !!addressBook?.getChannelByName(DEFAULT_CHANNEL)
 
     const populateStep = (templateStep:OnboardingStepTemplate):OnboardingStep => {
       switch (templateStep.type) {
         case StepType.CONNECT_WALLET: return { ...templateStep, action: connectWalletAction, skipCondition: connectWalletSkipCondition}
         case StepType.CREATE_IDENTITY: return { ...templateStep, action: createIdentityAction, skipCondition: createIdentitySkipCondition}
-        case StepType.ADD_KEY: return { ...templateStep, action: addKeyAction, skipCondition: addKeySkipCondition}
         case StepType.JOIN_PUBLIC_CHANNEL: return { ...templateStep, action: joinPublicChannelAction, skipCondition: joinPublicChannelSkipCondition}
         case StepType.DONE: return { ...templateStep, action: doneAction, skipCondition: false}
       }
@@ -94,7 +88,7 @@ const OnboardingController = () => {
     setTitle(isNewUser ? titleNewUser : titleReturnUser)
     setSteps(populatedSteps)
   }, [
-    did, identityReady, decryptionKey, addKey, createIdentity,
+    did, identityReady, decryptionKey, createIdentity,
     wallet, connected,
     addressBook, joinPublicChannel, initialised])
 

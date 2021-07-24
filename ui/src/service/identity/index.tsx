@@ -37,8 +37,8 @@ export function IdentityProvider({ children = null as any }) {
   const [ready, setReady] = useState<boolean>(false);
 
   const createIdentity = useCallback((alias?: string) =>
-      createDID(connection, wallet, alias).then(document => setDID(document.id))
-    , [connection, wallet, setDID])
+      createDID(connection, wallet, decryptionKey, alias).then(document => setDID(document.id))
+    , [connection, wallet, setDID, decryptionKey])
 
   const addKey = useCallback(() =>
       addKeyToDID(connection, wallet, decryptionKey.publicKey, did).then(() => {

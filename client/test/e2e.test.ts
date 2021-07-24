@@ -21,7 +21,11 @@ import { SolanaUtil } from '../src/lib/solana/solanaUtil';
 import { Keypair } from '@solana/web3.js';
 import { repeat } from 'ramda';
 import { DEFAULT_MAX_MESSAGE_COUNT } from '../src/lib/constants';
-import { ClusterType, keyToIdentifier } from '@identity.com/sol-did-client';
+import {
+  ClusterType,
+  keyToIdentifier,
+  PrivateKey,
+} from '@identity.com/sol-did-client';
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
@@ -64,7 +68,7 @@ describe('E2E', () => {
     expect(channel.name).toEqual(channelName);
   });
 
-  it('creates a group channel with by an existing DID', async () => {
+  it('creates a group channel with an existing DID', async () => {
     const channelName = 'dummy channel' + Date.now();
 
     await createDID({
@@ -465,6 +469,65 @@ describe('E2E', () => {
 
     return expect(shouldFail).rejects.toThrow(/Message too long/);
   });
+
+  // This test checks that a useer can add two keys (e.g. a wallet key and browser key)
+  // to a DID when creating it
+  it('creates a DID with two keys', async () => {
+    const browserKey = Keypair.generate();
+    const messageWithDefaultKey = 'Hello using default key!';
+    const messageWithBrowserKey = 'Hello using browser key!';
+
+    const expectMessagesCorrect = (messages: Message[]): void => {
+      expect(messages).toHaveLength(2);
+      expect(messages[0].content).toEqual(messageWithDefaultKey);
+      expect(messages[0].displayableSender()).toEqual(aliceDID);
+      expect(messages[1].content).toEqual(messageWithBrowserKey);
+      expect(messages[1].displayableSender()).toEqual(aliceDID);
+    };
+
+    await createDID({
+      payer: payer.secretKey,
+      owner: alice.publicKey.toBase58(),
+      additionalKeys: [
+        { key: browserKey.publicKey.toBase58(), identifier: 'browser' },
+      ],
+    });
+
+    // create a channel to post to
+    channel = await create({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: 'dummy',
+    });
+    const postToChannel = (
+      signer: PrivateKey,
+      message: string
+    ): Promise<void> =>
+      post({
+        payer: payer.secretKey,
+        channel: channel.address.toBase58(),
+        senderDID: aliceDID,
+        signer,
+        message,
+      });
+    const readChannel = (decryptionKey: PrivateKey): Promise<Message[]> =>
+      read({
+        channel: channel.address.toBase58(),
+        memberDID: aliceDID,
+        decryptionKey,
+      });
+
+    // Alice posts messages with both keys
+    await postToChannel(alice.secretKey, messageWithDefaultKey);
+    await postToChannel(browserKey.secretKey, messageWithBrowserKey);
+
+    // Check Alice can read the channel with bboth keys
+    const messagesWithDefaultKey = await readChannel(alice.secretKey);
+    const messagesWithBrowserKey = await readChannel(browserKey.secretKey);
+
+    expectMessagesCorrect(messagesWithDefaultKey);
+    expectMessagesCorrect(messagesWithBrowserKey);
+  }, 15000);
 
   // This test checks that if a user adds a key to their DID,
   // they can read messages in channels they belong to with this new key

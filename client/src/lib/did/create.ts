@@ -8,20 +8,44 @@ import { DIDDocument } from 'did-resolver';
 import {
   currentCluster,
   debug,
-  didToPublicKey,
+  DIDKey,
   ExtendedCluster,
   isKeypair,
+  keyToVerificationMethod,
   pubkeyOf,
 } from '../util';
 import { defaultSignCallbackFor, SignCallback } from '../wallet';
 import { SolariumTransaction } from '../solana/transaction';
 import { createUserDetails } from '../solana/instruction';
 import { getDocument } from './get';
+import { pluck } from 'ramda';
+
+const makeDocumentForKeys = (
+  did: string,
+  additionalKeys?: DIDKey[]
+): Partial<DIDDocument> | undefined => {
+  if (!additionalKeys) return undefined;
+
+  const keyVerificationMethods = additionalKeys.map(key =>
+    keyToVerificationMethod(did, key)
+  );
+
+  const capabilityInvocation = [
+    `${did}#default`, // TODO expose DEFAULT_KEY_ID from sol-did
+    ...pluck('id', keyVerificationMethods),
+  ];
+
+  return {
+    verificationMethod: keyVerificationMethods,
+    capabilityInvocation,
+  };
+};
 
 export const create = async (
   owner: Keypair | PublicKey,
   payer: Keypair | PublicKey,
   alias?: string,
+  additionalKeys?: DIDKey[],
   signCallback?: SignCallback,
   cluster?: ExtendedCluster
 ): Promise<DIDDocument> => {
@@ -29,19 +53,21 @@ export const create = async (
     signCallback || (isKeypair(payer) && defaultSignCallbackFor(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
+  const didForAuthority = await keyToIdentifier(
+    pubkeyOf(owner),
+    currentCluster(cluster)
+  );
+
+  const document = makeDocumentForKeys(didForAuthority, additionalKeys);
+
   const [registerInstruction, didKey] = await createRegisterInstruction({
     payer: pubkeyOf(payer),
     authority: pubkeyOf(owner),
+    document,
   });
 
   const instructions = [registerInstruction];
   if (alias) {
-    const didForAuthority = await keyToIdentifier(
-      pubkeyOf(owner),
-      currentCluster(cluster)
-    );
-    const didKey = didToPublicKey(didForAuthority);
-
     debug('Creating user-details for the new DID: ' + didForAuthority);
     const createUserDetailsInstruction = await createUserDetails(
       pubkeyOf(payer),

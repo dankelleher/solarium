@@ -6,6 +6,7 @@ import {DEFAULT_ENDPOINT_INDEX, sign} from "../web3/connection";
 import {Observable} from "rxjs";
 import {ENDPOINTS, MIN_BALANCE} from "../constants";
 
+const DECRYPTION_KEY_IDENTIFIER = 'browser';
 const cluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
 
 export const airdropIfNeeded = async (
@@ -151,7 +152,7 @@ export const addKey = withAirdrop(async (
     channelsToUpdate: channelsToUpdate.map(c => c.address.toBase58()),
     payer: wallet.publicKey,
     ownerDID,
-    keyIdentifier: 'browser',
+    keyIdentifier: DECRYPTION_KEY_IDENTIFIER,
     newKey: newKey.toBase58(),
     signCallback,
     cluster
@@ -207,11 +208,13 @@ export const addToChannel = withAirdrop((
 export const createIdentity = withAirdrop((
   connection: Connection,
   wallet: Wallet,
+  decryptionKey: Keypair,
   alias?: string
 ) =>
   solarium.createDID({
     payer: wallet.publicKey,
     alias,
+    additionalKeys: [{ identifier: DECRYPTION_KEY_IDENTIFIER, key: decryptionKey.publicKey.toBase58()}],
     signCallback: sign(connection, wallet),
     cluster,
   }))

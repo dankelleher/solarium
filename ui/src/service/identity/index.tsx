@@ -45,6 +45,7 @@ export function IdentityProvider({ children = null as any }) {
         setReady(true)
       })
     , [connection, wallet, decryptionKey, did, setReady ])
+
   
   const updateUserDetailsInState = useCallback(() => getUserDetails(did).then(loadedUserDetails => {
     if (loadedUserDetails) {

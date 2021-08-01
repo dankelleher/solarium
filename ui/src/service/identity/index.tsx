@@ -5,7 +5,7 @@ import {useWallet} from "../wallet/wallet";
 import {useConnection, useConnectionConfig} from "../web3/connection";
 import {ClusterType, DIDDocument, resolve} from '@identity.com/sol-did-client';
 import {keyToIdentifier, UserDetails} from "solarium-js";
-import {addKey as addKeyToDID, createIdentity as createDID, createUserDetails, getUserDetails} from "../channels/solarium";
+import {addKey as addKeyToDID, createIdentity as createDID, createUserDetails, updateUserDetails, getUserDetails} from "../channels/solarium";
 
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
   doc.verificationMethod?.find(verificationMethod => verificationMethod.publicKeyBase58 === key.toBase58())
@@ -47,19 +47,19 @@ export function IdentityProvider({ children = null as any }) {
     , [connection, wallet, decryptionKey, did, setReady ])
 
   
-  
-  const updateUserDetails = useCallback(() => getUserDetails(did).then(loadedUserDetails => {
+  const updateUserDetailsInState = useCallback(() => getUserDetails(did).then(loadedUserDetails => {
     if (loadedUserDetails) {
       setUserDetails(loadedUserDetails)
-      console.log(loadedUserDetails);
     }
   }).catch(() => {
     console.log("No UserDetails found");
   }), [did, setUserDetails]);
+  
   const setAlias = useCallback(async (alias: string) => {
-    await createUserDetails(connection, wallet, did, alias);
-    await updateUserDetails()
-  }, [connection, wallet, did, updateUserDetails])
+    const setAliasFn = userDetails ? updateUserDetails : createUserDetails
+    await setAliasFn(connection, wallet, did, alias);
+    await updateUserDetailsInState()
+  }, [connection, wallet, did, userDetails, updateUserDetailsInState])
 
   // load the DID document whenever the did is changed
   useEffect(() => { if (did) resolve(did).then(doc => {
@@ -70,7 +70,7 @@ export function IdentityProvider({ children = null as any }) {
   }) }, [did]);
 
   // load the user details if present
-  useEffect(() => { if (did) updateUserDetails() }, [did, updateUserDetails]);
+  useEffect(() => { if (did) updateUserDetailsInState() }, [did, updateUserDetailsInState]);
 
   // attempt to get the default DID when the wallet is loaded if none is set
   useEffect(() => {

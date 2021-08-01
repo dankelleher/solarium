@@ -235,3 +235,18 @@ export const createUserDetails = (
     cluster
   })
 }
+
+export const updateUserDetails = (
+  connection: Connection,
+  wallet: Wallet,
+  did: string,
+  alias: string
+) => {
+  return solarium.updateUserDetails({
+    payer: wallet.publicKey,
+    signCallback: sign(connection, wallet),
+    ownerDID: did,
+    alias,
+    cluster
+  })
+}

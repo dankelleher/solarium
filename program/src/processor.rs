@@ -25,7 +25,7 @@ use {
         sysvar::Sysvar
     }
 };
-use crate::state::{CHANNEL_ADDRESS_SEED, direct_channel_address_order, UserDetails, get_userdetails_account_address_with_seed, USERDETAILS_ACCOUNT_ADDRESS_SEED};
+use crate::state::{CHANNEL_ADDRESS_SEED, direct_channel_address_order, UserDetails, get_userdetails_account_address_with_seed, USERDETAILS_ACCOUNT_ADDRESS_SEED, get_notifications_account_address_with_seed, NotificationType, Notifications, Notification, NOTIFICATIONS_ACCOUNT_ADDRESS_SEED};
 
 /// Checks that the authority_info account is an authority for the DID,
 /// And that the CEK Account is owned by that DID
@@ -431,7 +431,7 @@ fn create_user_details(program_id: &Pubkey, accounts: &[AccountInfo], alias: Str
         return Err(SolariumError::AddressDerivationMismatch.into());
     }
 
-    // Create the new cek account for the invitee
+    // Create the new userdetails account for the invitee
     let new_user_details = UserDetails {
         alias,
         address_book
@@ -464,6 +464,94 @@ fn create_user_details(program_id: &Pubkey, accounts: &[AccountInfo], alias: Str
         .map_err(|e| e.into())
 }
 
+fn create_notifications(program_id: &Pubkey, accounts: &[AccountInfo], size: u8) -> ProgramResult {
+    msg!("SolariumInstruction::CreateNotifications");
+    let account_info_iter = &mut accounts.iter();
+    let funder_info = next_account_info(account_info_iter)?;
+    let did_info = next_account_info(account_info_iter)?;
+    let authority_info = next_account_info(account_info_iter)?;
+    let notifications_account_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
+
+    let rent = &Rent::from_account_info(rent_info)?;
+
+    let data_len = notifications_account_info.data.borrow().len();
+    if data_len > 0 {
+        msg!("Error: Attempt to create a notifications account for an address that is already in use");
+        return Err(SolariumError::AlreadyInUse.into());
+    }
+
+    // Check that the authority is valid for the DID 
+    check_authority_of_did(authority_info, did_info).unwrap();
+
+    let (notifications_address, notifications_bump_seed) = get_notifications_account_address_with_seed(program_id, did_info.key);
+    if notifications_address != *notifications_account_info.key {
+        msg!("Error: Attempt to create a notifications account with an address not derived from the DID");
+        return Err(SolariumError::AddressDerivationMismatch.into());
+    }
+
+    // Create the new notifications account
+    let new_notifications = Notifications::new(size);
+    let notifications_size = new_notifications.size_bytes();
+
+    let notifications_account_signer_seeds: &[&[_]] =
+        &[
+            &did_info.key.to_bytes(),
+            NOTIFICATIONS_ACCOUNT_ADDRESS_SEED,
+            &[notifications_bump_seed]
+        ];
+
+    invoke_signed(
+        &system_instruction::create_account(
+            funder_info.key,
+            notifications_account_info.key,
+            1.max(rent.minimum_balance(notifications_size as usize)),
+            notifications_size as u64,
+            program_id,
+        ),
+        &[
+            funder_info.clone(),
+            notifications_account_info.clone(),
+            system_program_info.clone(),
+        ],
+        &[&notifications_account_signer_seeds],
+    )?;
+
+    new_notifications.serialize(&mut *notifications_account_info.data.borrow_mut())
+        .map_err(|e| e.into())
+}
+
+fn add_notification(program_id: &Pubkey, accounts: &[AccountInfo], notification_type: NotificationType, pubkey: &Pubkey) -> ProgramResult {
+    msg!("SolariumInstruction::AddNotification");
+    let account_info_iter = &mut accounts.iter();
+    let notifications_info = next_account_info(account_info_iter)?;
+    let sender_did_info = next_account_info(account_info_iter)?;
+    let sender_authority_info = next_account_info(account_info_iter)?;
+
+    let mut notifications =
+        program_borsh::try_from_slice_incomplete::<Notifications>(*notifications_info.data.borrow())?;
+    if !notifications.is_initialized() {
+        msg!("Notifications account not initialized");
+        return Err(ProgramError::UninitializedAccount);
+    }
+    
+    if notifications_info.owner != program_id {
+        msg!("Error: Notifications account is not a Solarium program account");
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    // Check that the sender of the message is valid
+    // the sender signer is an authority on the DID.
+    validate_owner(sender_did_info, &[sender_authority_info]).unwrap();
+
+    let notification = Notification { notification_type, pubkey: *pubkey };
+    notifications.add(notification);
+    
+    notifications.serialize(&mut *notifications_info.data.borrow_mut())
+        .map_err(|e| e.into())
+}
+
 /// Instruction processor
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -481,5 +569,7 @@ pub fn process_instruction(
         SolariumInstruction::RemoveCEK { kid} => remove_cek(program_id, accounts, kid),
         SolariumInstruction::CreateUserDetails { alias, address_book, size } => create_user_details(program_id, accounts, alias, address_book, size),
         SolariumInstruction::UpdateUserDetails { alias, address_book } => update_user_details(program_id, accounts, alias, address_book),
+        SolariumInstruction::CreateNotifications { size } => create_notifications(program_id, accounts, size),
+        SolariumInstruction::AddNotification { notification_type, pubkey } => add_notification(program_id, accounts, notification_type, &pubkey),
     }
 }

@@ -21,7 +21,7 @@ use solarium::{
     borsh as program_borsh,
     processor::process_instruction
 };
-use solarium::state::{Message, CEKAccountData, get_channel_address_with_seed, get_userdetails_account_address_with_seed, UserDetails};
+use solarium::state::{Message, CEKAccountData, get_channel_address_with_seed, get_userdetails_account_address_with_seed, UserDetails, get_notifications_account_address_with_seed, Notifications, NotificationType};
 
 pub struct SolariumContext {
     pub context: ProgramTestContext,
@@ -32,6 +32,7 @@ pub struct SolariumContext {
     pub bob_did: Pubkey,
     pub alice_cek: Option<Pubkey>,
     pub alice_user_details: Option<Pubkey>,
+    pub alice_notifications: Option<Pubkey>,
 }
 impl SolariumContext {
     async fn make_did(context: &mut ProgramTestContext, authority: &Keypair) -> Pubkey {
@@ -57,7 +58,7 @@ impl SolariumContext {
             ProgramTest::new("solarium", id(), processor!(process_instruction));
         test.add_program("sol_did", did_program_id(), None);
         let mut context = test.start_with_context().await;
-        
+
         let alice = Keypair::new();
         let bob = Keypair::new();
         let alice_did = SolariumContext::make_did(&mut context, &alice).await;
@@ -71,10 +72,11 @@ impl SolariumContext {
             bob_did,
             alice_cek: None,
             alice_user_details: None,
+            alice_notifications: None,
             channel: None
         }
     }
-    
+
     pub async fn create_channel(&mut self) -> () {
         let channel = Keypair::new();
         let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
@@ -92,7 +94,7 @@ impl SolariumContext {
             channel_size,
             &id()
         );
-        
+
         let initialize_channel = instruction::initialize_channel(
             &self.context.payer.pubkey(),
             &channel.pubkey(),
@@ -108,7 +110,7 @@ impl SolariumContext {
             self.context.last_blockhash,
         );
         self.context.banks_client.process_transaction(transaction).await.unwrap();
-        
+
         let (alice_cek_account, _) = get_cek_account_address_with_seed(&id(), &self.alice_did, &channel.pubkey());
         self.alice_cek = Some(alice_cek_account);
         self.channel = Some(channel.pubkey());
@@ -117,10 +119,10 @@ impl SolariumContext {
     pub async fn create_direct_channel(&mut self) -> () {
         let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
         let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
-        
+
         let (channel, _) = get_channel_address_with_seed(
             &id(),
-            &self.alice_did, 
+            &self.alice_did,
             &self.bob_did);
         let initialize_direct_channel = instruction::initialize_direct_channel(
             &self.context.payer.pubkey(),
@@ -131,7 +133,7 @@ impl SolariumContext {
             alice_ceks,
             bob_ceks
         );
-        
+
         let transaction = Transaction::new_signed_with_payer(
             &[initialize_direct_channel],
             Some(&self.context.payer.pubkey()),
@@ -167,7 +169,7 @@ impl SolariumContext {
 
     pub async fn post(&mut self, message: &str) -> () {
         let message_obj = Message::new(self.alice_did, message.to_string());
-        
+
         let post = instruction::post(
             &self.channel.unwrap(),
             &self.alice.pubkey(),
@@ -202,7 +204,7 @@ impl SolariumContext {
     pub fn make_dummy_cekdata(kid: &str) -> CEKData {
         CEKData { header: "".to_string(), kid: kid.to_string(), encrypted_key: "".to_string() }
     }
-    
+
     pub async fn get_channel(&mut self) -> ChannelData {
         let account_info = &self.context
             .banks_client
@@ -212,7 +214,7 @@ impl SolariumContext {
             .unwrap();
         let account_data =
             program_borsh::try_from_slice_incomplete::<ChannelData>(&account_info.data).unwrap();
-        
+
         account_data
     }
 
@@ -311,5 +313,55 @@ impl SolariumContext {
             program_borsh::try_from_slice_incomplete::<UserDetails>(&account_info.data).unwrap();
 
         account_data
+    }
+
+    pub async fn create_notifications(&mut self) -> () {
+        let (alice_notifications, _) = get_notifications_account_address_with_seed(&id(), &self.alice_did);
+
+        let create_notifications_account = instruction::create_notifications(
+            &self.context.payer.pubkey(),
+            &self.alice_did,
+            &self.alice.pubkey(),
+            Notifications::DEFAULT_SIZE
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[create_notifications_account],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.alice],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
+
+        self.alice_notifications = Some(alice_notifications);
+    }
+
+    pub async fn get_notifications(&mut self) -> Notifications {
+        let account_info = &self.context
+            .banks_client
+            .get_account(self.alice_notifications.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        let account_data =
+            program_borsh::try_from_slice_incomplete::<Notifications>(&account_info.data).unwrap();
+
+        account_data
+    }
+
+    pub async fn add_notification(&mut self, notification_type: NotificationType, pubkey: &Pubkey) -> () {
+        let add_notification = instruction::add_notification(
+            notification_type,
+            pubkey, 
+            &self.alice_did,
+            &self.bob_did,
+            &self.bob.pubkey()
+        );
+        let transaction = Transaction::new_signed_with_payer(
+            &[add_notification],
+            Some(&self.context.payer.pubkey()),
+            &[&self.context.payer, &self.bob],
+            self.context.last_blockhash,
+        );
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
     }
 }

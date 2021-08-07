@@ -5,7 +5,9 @@ use solana_program_test::tokio;
 use {
     crate::solarium_context::SolariumContext
 };
-use solarium::state::ChannelData;
+use solarium::state::{Notification, ChannelData};
+use solarium::state::NotificationType::GroupChannel;
+use solana_sdk::signature::{Keypair, Signer};
 
 mod solarium_context;
 
@@ -137,4 +139,30 @@ async fn update_user_details() {
 
     assert_eq!(user_details.alias, new_alias);
     assert_eq!(user_details.address_book, new_address_book);
+}
+
+#[tokio::test]
+async fn create_notifications() {
+    let mut context = SolariumContext::new().await;
+
+    context.create_notifications().await;
+
+    let notifications = context.get_notifications().await;
+
+    assert_eq!(notifications.notifications, vec![]);
+}
+
+#[tokio::test]
+async fn add_notification() {
+    let mut context = SolariumContext::new().await;
+
+    context.create_notifications().await;
+
+    let group_channel_pubkey = Keypair::new().pubkey();
+    
+    context.add_notification(GroupChannel, &group_channel_pubkey).await;
+
+    let notifications = context.get_notifications().await;
+
+    assert_eq!(notifications.notifications[0], Notification { notification_type: GroupChannel, pubkey: group_channel_pubkey });
 }

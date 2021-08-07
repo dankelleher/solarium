@@ -12,6 +12,7 @@ use {
         system_program, sysvar,
     },
 };
+use crate::state::{NotificationType, get_notifications_account_address_with_seed};
 
 /// Instructions supported by the program
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, PartialEq)]
@@ -151,7 +152,35 @@ pub enum SolariumInstruction {
         alias: String,
         /// The user's encrypted address book
         address_book: String,
-    }
+    },
+    
+    /// Creates a Notifications account 
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    /// 0. `[writable, signer]` Funding account, must be a system account
+    /// 1. `[]` Owner DID account - must be owned by the sol-did program
+    /// 2. `[signer]` Owner authority - must be a key on the owner DID 
+    /// 3. `[writable]` Notifications account, must be owned by the owner DID
+    /// 4. `[]` Rent sysvar
+    /// 5. `[]` System program
+    CreateNotifications {
+        /// The size of the notifications cache
+        size: u8
+    },
+    
+    /// Add a notification for a user
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    /// 0. `[writable]` Notifications account, must be previously initialized
+    AddNotification {
+        /// The notification type
+        notification_type: NotificationType,
+        /// The public key relating to the notification.
+        /// The key should be interpreted in relation to the notification type.
+        pubkey: Pubkey,
+    },
 }
 
 /// Create a `SolariumInstruction::InitializeChannel` instruction
@@ -330,6 +359,43 @@ pub fn update_user_details(
             AccountMeta::new_readonly(*owner_did, false),
             AccountMeta::new_readonly(*owner_authority, true),
             AccountMeta::new(owner_userdetails_account, false),
+        ],
+    )
+}
+
+/// Create a `SolariumInstruction::CreateNotifications` instruction
+pub fn create_notifications(
+    funder_account: &Pubkey,
+    owner_did: &Pubkey,
+    owner_authority: &Pubkey,
+    size: u8
+) -> Instruction {
+    let (owner_notifications_account, _) = get_notifications_account_address_with_seed(&id(), owner_did);
+    Instruction::new_with_borsh(
+        id(),
+        &SolariumInstruction::CreateNotifications { size },
+        vec![
+            AccountMeta::new(*funder_account, true),
+            AccountMeta::new_readonly(*owner_did, false),
+            AccountMeta::new_readonly(*owner_authority, true),
+            AccountMeta::new(owner_notifications_account, false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+            AccountMeta::new_readonly(system_program::id(), false),
+        ],
+    )
+}
+
+
+/// Create a `SolariumInstruction::AddNotification` instruction
+pub fn add_notification(notification_type: NotificationType, pubkey: &Pubkey, owner_did: &Pubkey, sender_did: &Pubkey, sender_authority: &Pubkey) -> Instruction {
+    let (owner_notifications_account, _) = get_notifications_account_address_with_seed(&id(), owner_did);
+    Instruction::new_with_borsh(
+        id(),
+        &SolariumInstruction::AddNotification { pubkey: *pubkey, notification_type },
+        vec![
+            AccountMeta::new(owner_notifications_account, false),
+            AccountMeta::new_readonly(*sender_did, false),
+            AccountMeta::new_readonly(*sender_authority, true),
         ],
     )
 }

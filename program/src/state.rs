@@ -4,7 +4,6 @@ use {
     solana_program::{
         pubkey::Pubkey,
         program_pack::IsInitialized,
-        msg,
         sysvar::{
             clock::{Clock}, Sysvar
         },
@@ -14,6 +13,18 @@ use {
     },
 };
 use crate::error::SolariumError;
+use crate::state::NotificationType::GroupChannel;
+
+fn push_into_deque<T>(vec: Vec<T>, entry: T, size: usize) -> Vec<T> {
+    let mut deque: VecDeque<T> = VecDeque::from(vec);
+    deque.push_back(entry);
+
+    if deque.len() > usize::from(size) {
+        deque.pop_front();
+    }
+
+    deque.into()
+}
 
 /// Structure of a channel
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
@@ -42,19 +53,11 @@ impl ChannelData {
     pub fn post(&mut self, mut message: Message) {
         let clock = Clock::get().unwrap();
         message.timestamp = clock.unix_timestamp;
-        let mut message_deque: VecDeque<Message> = self.messages.clone().into();
-        message_deque.push_back(message);
-        
-        msg!("deque len {}, vec capacity {}", message_deque.len(), usize::from(ChannelData::DEFAULT_SIZE) );
-        if message_deque.len() > usize::from(ChannelData::DEFAULT_SIZE) {
-            message_deque.pop_front();
-        }
-        
-        self.messages = message_deque.into()
+        self.messages = push_into_deque(self.messages.clone(), message, ChannelData::DEFAULT_SIZE as usize);
     }
     
     /// The maximum size of a channel in bytes 
-    pub fn size_bytes() -> u64 {    
+    pub fn size_bytes() -> u64 {
         (((ChannelData::DEFAULT_SIZE as u32) * ChannelData::MESSAGE_SIZE) + 64) as u64   // TODO max title size
     }
 }
@@ -152,6 +155,67 @@ impl IsInitialized for UserDetails {
     }
 }
 
+/// Struct for the NotificationType object
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
+pub enum NotificationType {
+    /// The user has been added to a group channel. The pubkey is the channel address.
+    GroupChannel,
+    /// The user has been added to a direct channel.
+    /// The pubkey is the address of the DID of the other user in the direct channel.
+    DirectChannel
+}
+impl Default for NotificationType {
+    fn default() -> NotificationType { GroupChannel }
+}
+
+/// Struct for the Notification object
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
+pub struct Notification {
+    /// The type of event that this notification is about
+    pub notification_type: NotificationType,
+    /// The public key relating to the notification.
+    /// The key should be interpreted in relation to the notification type.
+    pub pubkey: Pubkey,
+}
+
+
+/// Defines a Notifications account structure
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
+pub struct Notifications {
+    /// The circular buffer of notifications for the user
+    pub notifications: Vec<Notification>,
+    /// The amount of notifications this user can hold simultaneously
+    pub size: u8,
+}
+impl Notifications {
+    /// Default size of the notifications buffer
+    pub const DEFAULT_SIZE: u8 = 8;
+    
+    /// Create a new notifications account
+    pub fn new(size: u8) -> Self {
+        Self {
+            notifications: Vec::with_capacity(usize::from(size)),
+            size
+        }
+    }
+    
+    /// Add a notification to the account - pushing out an old one if necessary
+    pub fn add(&mut self, notification: Notification) {
+        self.notifications = push_into_deque(self.notifications.clone(), notification, self.size as usize);
+    }
+
+    /// Get the allocated size of the Notifications account in bytes
+    pub fn size_bytes(&self) -> u64 {
+        (((8 + 1) * self.size) + 1) as u64
+    }
+}
+impl IsInitialized for Notifications {
+    /// Checks if a Notifications account has been initialized
+    fn is_initialized(&self) -> bool {
+        self.size > 0
+    }
+}
+
 /// The seed string used to derive a program address for a Solarium channel (for direct channels)
 pub const CHANNEL_ADDRESS_SEED: &'static [u8; 16] = br"solarium_channel";
 
@@ -161,6 +225,9 @@ pub const CEK_ACCOUNT_ADDRESS_SEED: &'static [u8; 20] = br"solarium_cek_account"
 /// The seed string used to derive a program address for a Solarium cek account
 pub const USERDETAILS_ACCOUNT_ADDRESS_SEED: &'static [u8; 28] = br"solarium_userdetails_account";
 
+/// The seed string used to derive a program address for a Solarium notifications account
+pub const NOTIFICATIONS_ACCOUNT_ADDRESS_SEED: &'static [u8; 30] = br"solarium_notifications_account";
+
 /// Get program-derived cek account address for the did and channel 
 pub fn get_cek_account_address_with_seed(program_id: &Pubkey, did: &Pubkey, channel: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[&did.to_bytes(), &channel.to_bytes(), CEK_ACCOUNT_ADDRESS_SEED], program_id)
@@ -169,6 +236,11 @@ pub fn get_cek_account_address_with_seed(program_id: &Pubkey, did: &Pubkey, chan
 /// Get program-derived user details account address for the did 
 pub fn get_userdetails_account_address_with_seed(program_id: &Pubkey, did: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[&did.to_bytes(), USERDETAILS_ACCOUNT_ADDRESS_SEED], program_id)
+}
+
+/// Get program-derived notifications account address for the did 
+pub fn get_notifications_account_address_with_seed(program_id: &Pubkey, did: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[&did.to_bytes(), NOTIFICATIONS_ACCOUNT_ADDRESS_SEED], program_id)
 }
 
 /// To ensure predictable account addresses, sort the DIDs.

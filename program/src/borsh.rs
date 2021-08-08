@@ -10,7 +10,6 @@ pub fn try_from_slice_incomplete<T: BorshDeserialize>(data: &[u8]) -> Result<T, 
     Ok(result)
 }
 
-
 /// Helper struct which to count how much data would be written during serialization
 #[derive(Default)]
 struct WriteCounter {

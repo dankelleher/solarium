@@ -12,4 +12,3 @@ pub mod state;
 pub use solana_program;
 
 solana_program::declare_id!("boxndjnzQZEWbBku3YipL4pchYRc1zi4nNSrFUwawWo");
-

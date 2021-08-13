@@ -1,8 +1,10 @@
-import { Enum, Assignable, SCHEMA } from './solanaBorsh';
+import { Enum, Assignable, SCHEMA, AssignablePublicKey } from './solanaBorsh';
 import {
   CEK_ACCOUNT_NONCE_SEED_STRING,
   CHANNEL_NONCE_SEED_STRING,
+  DEFAULT_MAX_NOTIFICATIONS_COUNT,
   DEFAULT_USER_DETAILS_SIZE,
+  NOTIFICATIONS_ACCOUNT_NONCE_SEED_STRING,
   PROGRAM_ID,
   USER_DETAILS_ACCOUNT_NONCE_SEED_STRING,
 } from '../constants';
@@ -15,6 +17,7 @@ import {
 } from '@solana/web3.js';
 import { CEKData } from './models/CEKData';
 import { MessageData } from './models/MessageData';
+import { NotificationType } from './models/NotificationsData';
 
 export class InitializeChannel extends Assignable {
   name: string;
@@ -53,6 +56,15 @@ export class UpdateUserDetails extends Assignable {
   addressBook: string;
 }
 
+export class CreateNotifications extends Assignable {
+  size: number;
+}
+
+export class AddNotification extends Assignable {
+  notificationType: NotificationType;
+  pubkey: AssignablePublicKey;
+}
+
 export class SolariumInstruction extends Enum {
   initializeChannel: InitializeChannel;
   initializeDirectChannel: InitializeDirectChannel;
@@ -62,6 +74,8 @@ export class SolariumInstruction extends Enum {
   removeCEK: RemoveCEK;
   createUserDetails: CreateUserDetails;
   updateUserDetails: UpdateUserDetails;
+  createNotifications: CreateNotifications;
+  addNotification: AddNotification;
 
   static initializeChannel(name: string, CEKs: CEKData[]): SolariumInstruction {
     return new SolariumInstruction({
@@ -121,6 +135,23 @@ export class SolariumInstruction extends Enum {
       updateUserDetails: new UpdateUserDetails({ alias, addressBook }),
     });
   }
+
+  static createNotifications(
+    size: number = DEFAULT_MAX_NOTIFICATIONS_COUNT
+  ): SolariumInstruction {
+    return new SolariumInstruction({
+      createNotifications: new CreateNotifications({ size }),
+    });
+  }
+
+  static addNotification(
+    notificationType: NotificationType,
+    pubkey: AssignablePublicKey
+  ): SolariumInstruction {
+    return new SolariumInstruction({
+      addNotification: new AddNotification({ notificationType, pubkey }),
+    });
+  }
 }
 
 export async function getCekAccountKey(
@@ -143,6 +174,17 @@ export async function getUserDetailsKey(did: PublicKey): Promise<PublicKey> {
     [
       did.toBuffer(),
       Buffer.from(USER_DETAILS_ACCOUNT_NONCE_SEED_STRING, 'utf8'),
+    ],
+    PROGRAM_ID
+  );
+  return publicKeyNonce[0];
+}
+
+export async function getNotificationsKey(did: PublicKey): Promise<PublicKey> {
+  const publicKeyNonce = await PublicKey.findProgramAddress(
+    [
+      did.toBuffer(),
+      Buffer.from(NOTIFICATIONS_ACCOUNT_NONCE_SEED_STRING, 'utf8'),
     ],
     PROGRAM_ID
   );
@@ -371,6 +413,51 @@ export async function updateUserDetails(
   });
 }
 
+export async function createNotifications(
+  payer: PublicKey,
+  did: PublicKey,
+  size?: number
+): Promise<TransactionInstruction> {
+  const notificationsAccount = await getNotificationsKey(did);
+  const keys: AccountMeta[] = [
+    { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: did, isSigner: false, isWritable: false },
+    { pubkey: notificationsAccount, isSigner: false, isWritable: true },
+    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+  ];
+  const data = SolariumInstruction.createNotifications(size).encode();
+  return new TransactionInstruction({
+    keys,
+    programId: PROGRAM_ID,
+    data,
+  });
+}
+
+export async function addNotification(
+  inviteeDID: PublicKey,
+  inviterDID: PublicKey,
+  inviterAuthority: PublicKey,
+  notificationType: NotificationType,
+  pubkey: PublicKey
+): Promise<TransactionInstruction> {
+  const notificationsAccount = await getNotificationsKey(inviteeDID);
+  const keys: AccountMeta[] = [
+    { pubkey: notificationsAccount, isSigner: false, isWritable: true },
+    { pubkey: inviterDID, isSigner: false, isWritable: false },
+    { pubkey: inviterAuthority, isSigner: true, isWritable: false },
+  ];
+  const data = SolariumInstruction.addNotification(
+    notificationType,
+    AssignablePublicKey.fromPublicKey(pubkey)
+  ).encode();
+  return new TransactionInstruction({
+    keys,
+    programId: PROGRAM_ID,
+    data,
+  });
+}
+
 SCHEMA.set(SolariumInstruction, {
   kind: 'enum',
   field: 'enum',
@@ -383,6 +470,8 @@ SCHEMA.set(SolariumInstruction, {
     ['removeCEK', RemoveCEK],
     ['createUserDetails', CreateUserDetails],
     ['updateUserDetails', updateUserDetails],
+    ['createNotifications', CreateNotifications],
+    ['addNotification', AddNotification],
   ],
 });
 SCHEMA.set(InitializeChannel, {
@@ -428,5 +517,16 @@ SCHEMA.set(UpdateUserDetails, {
   fields: [
     ['alias', 'string'],
     ['addressBook', 'string'],
+  ],
+});
+SCHEMA.set(CreateNotifications, {
+  kind: 'struct',
+  fields: [['size', 'u8']],
+});
+SCHEMA.set(AddNotification, {
+  kind: 'struct',
+  fields: [
+    ['notificationType', NotificationType],
+    ['pubkey', AssignablePublicKey],
   ],
 });

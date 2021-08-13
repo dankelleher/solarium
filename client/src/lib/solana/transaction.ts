@@ -7,7 +7,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { SignCallback } from '../wallet';
-import { debug, ExtendedCluster } from '../util';
+import { debug, ExtendedCluster, filterNil } from '../util';
 import {
   addCEK,
   addToChannel,
@@ -19,13 +19,29 @@ import {
   initializeChannel,
   initializeDirectChannel,
   post,
+  addNotification,
+  getNotificationsKey,
+  createNotifications,
 } from './instruction';
 import { CEKData } from './models/CEKData';
 import { ChannelData } from './models/ChannelData';
-import { PROGRAM_ID } from '../constants';
+import { NOTIFICATIONS_ENABLED, PROGRAM_ID } from '../constants';
 import { CEKAccountData } from './models/CEKAccountData';
 import { MessageData } from './models/MessageData';
 import { UserDetailsData } from './models/UserDetailsData';
+import {
+  DirectChannel,
+  GroupChannel,
+  NotificationsData,
+  NotificationType,
+} from './models/NotificationsData';
+
+const canAddNotification = async (
+  inviteeDID: PublicKey,
+  cluster?: ExtendedCluster
+): Promise<boolean> =>
+  NOTIFICATIONS_ENABLED &&
+  (await NotificationsData.exists(inviteeDID, cluster));
 
 export class SolariumTransaction {
   static async createGroupChannel(
@@ -95,14 +111,96 @@ export class SolariumTransaction {
       inviteeCEKs
     );
 
+    const notificationInstruction = (await canAddNotification(
+      inviteeDID,
+      cluster
+    ))
+      ? await this.addDirectChannelNotificationInstruction(
+          creatorDID,
+          creatorAuthority,
+          inviteeDID
+        )
+      : null;
+
     await SolariumTransaction.signAndSendTransaction(
-      [initializeDirectChannelInstruction],
+      filterNil([initializeDirectChannelInstruction, notificationInstruction]),
       signCallback,
       [],
       cluster
     );
 
     return channel;
+  }
+
+  private static addGroupChannelNotificationInstruction(
+    inviterDID: PublicKey,
+    inviterAuthority: PublicKey,
+    inviteeDID: PublicKey,
+    channel: PublicKey
+  ): Promise<TransactionInstruction> {
+    return addNotification(
+      inviteeDID,
+      inviterDID,
+      inviterAuthority,
+      new NotificationType({
+        groupChannel: new GroupChannel({}),
+      }),
+      channel
+    );
+  }
+
+  private static addDirectChannelNotificationInstruction(
+    inviterDID: PublicKey,
+    inviterAuthority: PublicKey,
+    inviteeDID: PublicKey
+  ): Promise<TransactionInstruction> {
+    return addNotification(
+      inviteeDID,
+      inviterDID,
+      inviterAuthority,
+      new NotificationType({
+        directChannel: new DirectChannel({}),
+      }),
+      inviterDID
+    );
+  }
+
+  static async createNotificationsAccount(
+    payer: PublicKey,
+    did: PublicKey,
+    signCallback: SignCallback,
+    size?: number,
+    cluster?: ExtendedCluster
+  ): Promise<PublicKey> {
+    const notifications = await getNotificationsKey(did);
+    debug(`Notifications address: ${notifications.toBase58()}`);
+
+    const initializeNotificationsInstruction = await createNotifications(
+      payer,
+      did,
+      size
+    );
+
+    await SolariumTransaction.signAndSendTransaction(
+      [initializeNotificationsInstruction],
+      signCallback,
+      [],
+      cluster
+    );
+
+    return notifications;
+  }
+
+  static async getNotifications(
+    connection: Connection,
+    did: PublicKey
+  ): Promise<NotificationsData | null> {
+    const notifications = await getNotificationsKey(did);
+    const accountInfo = await connection.getAccountInfo(notifications);
+
+    if (!accountInfo) return null;
+
+    return NotificationsData.fromAccount(accountInfo.data);
   }
 
   static async addDIDToChannel(
@@ -124,8 +222,17 @@ export class SolariumTransaction {
       ceks
     );
 
+    const notificationInstruction = NOTIFICATIONS_ENABLED
+      ? await this.addGroupChannelNotificationInstruction(
+          inviterDID,
+          inviterAuthority,
+          inviteeDID,
+          channel
+        )
+      : null;
+
     await SolariumTransaction.signAndSendTransaction(
-      [addToChannelInstruction],
+      filterNil([addToChannelInstruction, notificationInstruction]),
       signCallback,
       [],
       cluster

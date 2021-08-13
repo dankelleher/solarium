@@ -163,7 +163,6 @@ pub enum SolariumInstruction {
     ///
     /// 0. `[writable, signer]` Funding account, must be a system account
     /// 1. `[]` Owner DID account - must be owned by the sol-did program
-    /// 2. `[signer]` Owner authority - must be a key on the owner DID
     /// 3. `[writable]` Notifications account, must be owned by the owner DID
     /// 4. `[]` Rent sysvar
     /// 5. `[]` System program
@@ -382,7 +381,6 @@ pub fn update_user_details(
 pub fn create_notifications(
     funder_account: &Pubkey,
     owner_did: &Pubkey,
-    owner_authority: &Pubkey,
     size: u8,
 ) -> Instruction {
     let (owner_notifications_account, _) =
@@ -393,7 +391,6 @@ pub fn create_notifications(
         vec![
             AccountMeta::new(*funder_account, true),
             AccountMeta::new_readonly(*owner_did, false),
-            AccountMeta::new_readonly(*owner_authority, true),
             AccountMeta::new(owner_notifications_account, false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),

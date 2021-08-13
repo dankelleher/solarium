@@ -356,13 +356,12 @@ impl SolariumContext {
         let create_notifications_account = instruction::create_notifications(
             &self.context.payer.pubkey(),
             &self.alice_did,
-            &self.alice.pubkey(),
             Notifications::DEFAULT_SIZE,
         );
         let transaction = Transaction::new_signed_with_payer(
             &[create_notifications_account],
             Some(&self.context.payer.pubkey()),
-            &[&self.context.payer, &self.alice],
+            &[&self.context.payer],
             self.context.last_blockhash,
         );
         self.context

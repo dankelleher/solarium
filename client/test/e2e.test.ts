@@ -194,7 +194,7 @@ describe('E2E', () => {
     });
 
     return expect(shouldFail).rejects.toThrow('DID is already a member');
-  });
+  }, 10_000);
 
   it('creates a DID and direct channel', async () => {
     await createDID({

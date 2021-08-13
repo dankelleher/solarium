@@ -91,6 +91,7 @@ function deserializeStruct(
   if (structSchema.kind === 'struct') {
     const result = {};
     for (const [fieldName, fieldType] of schema.get(classType).fields) {
+      console.log('deserializing ' + fieldName);
       result[fieldName] = deserializeField(
         schema,
         fieldName,

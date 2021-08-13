@@ -553,7 +553,6 @@ fn create_notifications(program_id: &Pubkey, accounts: &[AccountInfo], size: u8)
     let account_info_iter = &mut accounts.iter();
     let funder_info = next_account_info(account_info_iter)?;
     let did_info = next_account_info(account_info_iter)?;
-    let authority_info = next_account_info(account_info_iter)?;
     let notifications_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
@@ -565,9 +564,6 @@ fn create_notifications(program_id: &Pubkey, accounts: &[AccountInfo], size: u8)
         msg!("Error: Attempt to create a notifications account for an address that is already in use");
         return Err(SolariumError::AlreadyInUse.into());
     }
-
-    // Check that the authority is valid for the DID
-    check_authority_of_did(authority_info, did_info).unwrap();
 
     let (notifications_address, notifications_bump_seed) =
         get_notifications_account_address_with_seed(program_id, did_info.key);

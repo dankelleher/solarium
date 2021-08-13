@@ -47,14 +47,18 @@ const MessageView = ({message}: Props) => {
         <Avatar address={message.sender.did}/>
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between">
+            {/* Logo and Identifier */}
             <div className="group flex">
               <h3 className="text-sm font-medium">{addressBook?.getDIDViewName(message.sender) || message.sender}</h3>
               <div className="flex opacity-0 group-hover:opacity-100 text-white">
                 { getIcon() }
               </div>
-
             </div>
-            <p className="text-sm text-aeroBlue-light">{toDate(message.timestamp)}</p>
+
+            {/* Timestamp */}
+            <div className="flex-none">
+              <p className="text-sm text-aeroBlue-light">{toDate(message.timestamp)}</p>
+            </div>
           </div>
           <p className="text-sm text-aeroBlue-light">
             {message.content}

@@ -8,3 +8,12 @@ export const getInviteChannelJoinURL = (name: string, address: string) => {
   searchParams.append(URL_PARAM_JOIN_ADDRESS, address)
   return window.location.origin + window.location.pathname + '?' + searchParams.toString()
 }
+
+const DID_IDENTIFIER_MAX_LENGTH = 10
+
+export const shortenDidEllipsis = (did: string) => {
+  const didElements = did.split(':')
+  const identifier = didElements[ didElements.length - 1 ]
+  didElements[ didElements.length - 1 ] = identifier.length > DID_IDENTIFIER_MAX_LENGTH ? identifier.substr(0,DID_IDENTIFIER_MAX_LENGTH/2) + '...' + identifier.substr(-DID_IDENTIFIER_MAX_LENGTH/2) : identifier
+  return didElements.join(':')
+}

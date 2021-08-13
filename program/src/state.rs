@@ -183,10 +183,10 @@ pub struct Notification {
 /// Defines a Notifications account structure
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
 pub struct Notifications {
-    /// The circular buffer of notifications for the user
-    pub notifications: Vec<Notification>,
     /// The amount of notifications this user can hold simultaneously
     pub size: u8,
+    /// The circular buffer of notifications for the user
+    pub notifications: Vec<Notification>,
 }
 impl Notifications {
     /// Default size of the notifications buffer
@@ -195,8 +195,8 @@ impl Notifications {
     /// Create a new notifications account
     pub fn new(size: u8) -> Self {
         Self {
-            notifications: Vec::with_capacity(usize::from(size)),
             size,
+            notifications: Vec::with_capacity(usize::from(size)),
         }
     }
 

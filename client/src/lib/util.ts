@@ -9,6 +9,7 @@ import { SignCallback } from './wallet';
 import Debug from 'debug';
 import { AddressBook } from './UserDetails';
 import { VerificationMethod } from 'did-resolver';
+import { complement, isNil } from 'ramda';
 
 export const debug = Debug('solarium-js');
 
@@ -230,3 +231,6 @@ export const keyToVerificationMethod = (
   controller: did,
   publicKeyBase58: didKey.key,
 });
+
+export const filterNil = <T>(array: (T | null | undefined)[]): T[] =>
+  array.filter(complement(isNil)) as T[];

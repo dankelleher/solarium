@@ -23,6 +23,9 @@ export const CHANNEL_NONCE_SEED_STRING = 'solarium_channel';
 export const USER_DETAILS_ACCOUNT_NONCE_SEED_STRING =
   'solarium_userdetails_account';
 
+export const NOTIFICATIONS_ACCOUNT_NONCE_SEED_STRING =
+  'solarium_notifications_account';
+
 // The cluster reference for the sol-did client - used to generate
 // DIDs that can be unambiguously resolved to any solana cluster
 // e.g. did:sol:devnet:abcde
@@ -32,3 +35,9 @@ export const MESSAGE_SIZE_BYTES = 512;
 export const DEFAULT_MAX_MESSAGE_COUNT = 8;
 
 export const DEFAULT_USER_DETAILS_SIZE = 512;
+
+// Should match Notifications::DEFAULT_SIZE in state.rs
+export const DEFAULT_MAX_NOTIFICATIONS_COUNT = 8;
+
+// Notifications are enabled by default
+export const NOTIFICATIONS_ENABLED = !process.env.DISABLE_NOTIFICATIONS;

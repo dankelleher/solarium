@@ -16,9 +16,10 @@ import {
 } from '../util';
 import { defaultSignCallbackFor, SignCallback } from '../wallet';
 import { SolariumTransaction } from '../solana/transaction';
-import { createUserDetails } from '../solana/instruction';
+import { createNotifications, createUserDetails } from '../solana/instruction';
 import { getDocument } from './get';
 import { pluck } from 'ramda';
+import { NOTIFICATIONS_ENABLED } from '../constants';
 
 const makeDocumentForKeys = (
   did: string,
@@ -76,6 +77,15 @@ export const create = async (
       alias
     );
     instructions.push(createUserDetailsInstruction);
+  }
+
+  if (NOTIFICATIONS_ENABLED) {
+    debug('Creating notifications account for the new DID: ' + didForAuthority);
+    const notificationsInstruction = await createNotifications(
+      pubkeyOf(payer),
+      didKey,
+    );
+    instructions.push(notificationsInstruction);
   }
 
   await SolariumTransaction.signAndSendTransaction(

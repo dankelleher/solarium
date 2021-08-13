@@ -5,6 +5,7 @@ import {Connection, Keypair} from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import {Channel, STAGE, MessageSender} from "solarium-js";
 import * as u8a from 'uint8arrays'
+import {shortenDidEllipsis} from "../../components/util";
 
 const cluster = ENDPOINTS[DEFAULT_ENDPOINT_INDEX].name;
 
@@ -105,7 +106,7 @@ export class AddressBookManager {
   // if the DID is in this addressbook, return its local alias, else return the alias or did
   getDIDViewName(contact: MessageSender) : string {
     if (contact.did === this.did) return "Me";
-    return this.directChannels.find(dc => dc.contact.did === contact.did)?.contact.alias || contact.alias || contact.did;
+    return this.directChannels.find(dc => dc.contact.did === contact.did)?.contact.alias || contact.alias || shortenDidEllipsis(contact.did);
   }
 
   // if the channel is a direct channel in this addressbook, return the contact alias, else return the channel name
@@ -130,7 +131,7 @@ export class AddressBookManager {
   async joinChannel(channelConfig: GroupChannelConfig): Promise<Channel> {
     if (channelConfig.inviteAuthority) {
       const inviteAuthorityKeypair = Keypair.fromSecretKey(base58ToBytes(channelConfig.inviteAuthority));
-      
+
       try {
         await addToChannel(this.connection, this.wallet, undefined, channelConfig.address, inviteAuthorityKeypair, this.did)
       } catch (error) {

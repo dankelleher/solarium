@@ -1,23 +1,27 @@
+use solana_program_test::{ProgramTestContext, ProgramTest, processor};
 use sol_did::{
-    id as did_program_id, instruction as did_instruction,
-    state::{get_sol_address_with_seed, SolData},
+    id as did_program_id,
+    instruction as did_instruction,
+    state::{SolData, get_sol_address_with_seed}
 };
-use solana_program_test::{processor, ProgramTest, ProgramTestContext};
 use solana_sdk::{
-    pubkey::Pubkey, signature::Keypair, signature::Signer, system_instruction::create_account,
+    signature::Signer,
     transaction::Transaction,
-};
-use solarium::state::{
-    get_channel_address_with_seed, get_notifications_account_address_with_seed,
-    get_userdetails_account_address_with_seed, CEKAccountData, Message, NotificationType,
-    Notifications, UserDetails,
+    pubkey::Pubkey,
+    signature::Keypair,
+    system_instruction::{create_account},
 };
 use solarium::{
-    borsh as program_borsh, id, instruction,
-    processor::process_instruction,
-    state::get_cek_account_address_with_seed,
-    state::{CEKData, ChannelData},
+    state::{
+        get_cek_account_address_with_seed,
+    },
+    instruction,
+    id,
+    state::{ChannelData, CEKData},
+    borsh as program_borsh,
+    processor::process_instruction
 };
+use solarium::state::{Message, CEKAccountData, get_channel_address_with_seed, get_userdetails_account_address_with_seed, UserDetails, get_notifications_account_address_with_seed, Notifications, NotificationType};
 
 pub struct SolariumContext {
     pub context: ProgramTestContext,
@@ -44,17 +48,14 @@ impl SolariumContext {
             &[&context.payer],
             context.last_blockhash,
         );
-        context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        context.banks_client.process_transaction(transaction).await.unwrap();
 
         did_address
     }
 
     pub async fn new() -> Self {
-        let mut test = ProgramTest::new("solarium", id(), processor!(process_instruction));
+        let mut test =
+            ProgramTest::new("solarium", id(), processor!(process_instruction));
         test.add_program("sol_did", did_program_id(), None);
         let mut context = test.start_with_context().await;
 
@@ -72,7 +73,7 @@ impl SolariumContext {
             alice_cek: None,
             alice_user_details: None,
             alice_notifications: None,
-            channel: None,
+            channel: None
         }
     }
 
@@ -81,9 +82,7 @@ impl SolariumContext {
         let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
 
         let channel_size = ChannelData::size_bytes();
-        let lamports = self
-            .context
-            .banks_client
+        let lamports = self.context.banks_client
             .get_rent()
             .await
             .unwrap()
@@ -93,7 +92,7 @@ impl SolariumContext {
             &channel.pubkey(),
             lamports,
             channel_size,
-            &id(),
+            &id()
         );
 
         let initialize_channel = instruction::initialize_channel(
@@ -102,7 +101,7 @@ impl SolariumContext {
             "test channel".to_string(),
             &self.alice_did,
             &self.alice.pubkey(),
-            alice_ceks,
+            alice_ceks
         );
         let transaction = Transaction::new_signed_with_payer(
             &[create_channel, initialize_channel],
@@ -110,14 +109,9 @@ impl SolariumContext {
             &[&self.context.payer, &channel, &self.alice],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
 
-        let (alice_cek_account, _) =
-            get_cek_account_address_with_seed(&id(), &self.alice_did, &channel.pubkey());
+        let (alice_cek_account, _) = get_cek_account_address_with_seed(&id(), &self.alice_did, &channel.pubkey());
         self.alice_cek = Some(alice_cek_account);
         self.channel = Some(channel.pubkey());
     }
@@ -126,7 +120,10 @@ impl SolariumContext {
         let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
         let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
 
-        let (channel, _) = get_channel_address_with_seed(&id(), &self.alice_did, &self.bob_did);
+        let (channel, _) = get_channel_address_with_seed(
+            &id(),
+            &self.alice_did,
+            &self.bob_did);
         let initialize_direct_channel = instruction::initialize_direct_channel(
             &self.context.payer.pubkey(),
             &channel,
@@ -134,7 +131,7 @@ impl SolariumContext {
             &self.alice.pubkey(),
             &self.bob_did,
             alice_ceks,
-            bob_ceks,
+            bob_ceks
         );
 
         let transaction = Transaction::new_signed_with_payer(
@@ -143,14 +140,9 @@ impl SolariumContext {
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
 
-        let (alice_cek_account, _) =
-            get_cek_account_address_with_seed(&id(), &self.alice_did, &channel);
+        let (alice_cek_account, _) = get_cek_account_address_with_seed(&id(), &self.alice_did, &channel);
         self.alice_cek = Some(alice_cek_account);
         self.channel = Some(channel);
     }
@@ -164,7 +156,7 @@ impl SolariumContext {
             &self.bob_did,
             &self.alice_did,
             &self.alice.pubkey(),
-            bob_ceks,
+            bob_ceks
         );
         let transaction = Transaction::new_signed_with_payer(
             &[add_to_channel],
@@ -172,58 +164,49 @@ impl SolariumContext {
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
     }
 
     pub async fn post(&mut self, message: &str) -> () {
         let message_obj = Message::new(self.alice_did, message.to_string());
 
-        let post = instruction::post(&self.channel.unwrap(), &self.alice.pubkey(), &message_obj);
+        let post = instruction::post(
+            &self.channel.unwrap(),
+            &self.alice.pubkey(),
+            &message_obj
+        );
         let transaction = Transaction::new_signed_with_payer(
             &[post],
             Some(&self.context.payer.pubkey()),
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
     }
 
     pub async fn post_as_bob(&mut self, message: &str) -> () {
         let message_obj = Message::new(self.bob_did, message.to_string());
 
-        let post = instruction::post(&self.channel.unwrap(), &self.bob.pubkey(), &message_obj);
+        let post = instruction::post(
+            &self.channel.unwrap(),
+            &self.bob.pubkey(),
+            &message_obj
+        );
         let transaction = Transaction::new_signed_with_payer(
             &[post],
             Some(&self.context.payer.pubkey()),
             &[&self.context.payer, &self.bob],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
     }
 
     pub fn make_dummy_cekdata(kid: &str) -> CEKData {
-        CEKData {
-            header: "".to_string(),
-            kid: kid.to_string(),
-            encrypted_key: "".to_string(),
-        }
+        CEKData { header: "".to_string(), kid: kid.to_string(), encrypted_key: "".to_string() }
     }
 
     pub async fn get_channel(&mut self) -> ChannelData {
-        let account_info = &self
-            .context
+        let account_info = &self.context
             .banks_client
             .get_account(self.channel.unwrap())
             .await
@@ -236,8 +219,7 @@ impl SolariumContext {
     }
 
     pub async fn get_cek_account(&mut self, address: Pubkey) -> CEKAccountData {
-        let account_info = &self
-            .context
+        let account_info = &self.context
             .banks_client
             .get_account(address)
             .await
@@ -254,7 +236,7 @@ impl SolariumContext {
             &self.alice_did,
             &self.alice.pubkey(),
             &self.channel.unwrap(),
-            cek,
+            cek
         );
         let transaction = Transaction::new_signed_with_payer(
             &[add_cek],
@@ -262,11 +244,9 @@ impl SolariumContext {
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap_or_else(|e| println!("{:#?}", e));
+        self.context.banks_client.process_transaction(transaction).await.unwrap_or_else(|e| {
+            println!("{:#?}",e)
+        });
     }
 
     pub async fn remove_cek(&mut self, kid: &str) -> () {
@@ -274,7 +254,7 @@ impl SolariumContext {
             &self.alice_did,
             &self.alice.pubkey(),
             &self.channel.unwrap(),
-            kid.to_string(),
+            kid.to_string()
         );
         let transaction = Transaction::new_signed_with_payer(
             &[remove_cek],
@@ -282,23 +262,18 @@ impl SolariumContext {
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
     }
 
     pub async fn create_user_details(&mut self) -> () {
-        let (alice_user_details, _) =
-            get_userdetails_account_address_with_seed(&id(), &self.alice_did);
+        let (alice_user_details, _) = get_userdetails_account_address_with_seed(&id(), &self.alice_did);
 
         let create_user_details_account = instruction::create_user_details(
             &self.context.payer.pubkey(),
             &self.alice_did,
             &self.alice.pubkey(),
             "Alice".to_string(),
-            UserDetails::DEFAULT_SIZE_BYTES,
+            UserDetails::DEFAULT_SIZE_BYTES
         );
         let transaction = Transaction::new_signed_with_payer(
             &[create_user_details_account],
@@ -306,11 +281,7 @@ impl SolariumContext {
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
 
         self.alice_user_details = Some(alice_user_details);
     }
@@ -320,7 +291,7 @@ impl SolariumContext {
             &self.alice_did,
             &self.alice.pubkey(),
             new_alias.to_string(),
-            new_address_book.to_string(),
+            new_address_book.to_string()
         );
         let transaction = Transaction::new_signed_with_payer(
             &[update_user_details_account],
@@ -328,16 +299,11 @@ impl SolariumContext {
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
     }
 
     pub async fn get_user_details(&mut self) -> UserDetails {
-        let account_info = &self
-            .context
+        let account_info = &self.context
             .banks_client
             .get_account(self.alice_user_details.unwrap())
             .await
@@ -350,14 +316,13 @@ impl SolariumContext {
     }
 
     pub async fn create_notifications(&mut self) -> () {
-        let (alice_notifications, _) =
-            get_notifications_account_address_with_seed(&id(), &self.alice_did);
+        let (alice_notifications, _) = get_notifications_account_address_with_seed(&id(), &self.alice_did);
 
         let create_notifications_account = instruction::create_notifications(
             &self.context.payer.pubkey(),
             &self.alice_did,
             &self.alice.pubkey(),
-            Notifications::DEFAULT_SIZE,
+            Notifications::DEFAULT_SIZE
         );
         let transaction = Transaction::new_signed_with_payer(
             &[create_notifications_account],
@@ -365,18 +330,13 @@ impl SolariumContext {
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
 
         self.alice_notifications = Some(alice_notifications);
     }
 
     pub async fn get_notifications(&mut self) -> Notifications {
-        let account_info = &self
-            .context
+        let account_info = &self.context
             .banks_client
             .get_account(self.alice_notifications.unwrap())
             .await
@@ -388,17 +348,13 @@ impl SolariumContext {
         account_data
     }
 
-    pub async fn add_notification(
-        &mut self,
-        notification_type: NotificationType,
-        pubkey: &Pubkey,
-    ) -> () {
+    pub async fn add_notification(&mut self, notification_type: NotificationType, pubkey: &Pubkey) -> () {
         let add_notification = instruction::add_notification(
             notification_type,
-            pubkey,
+            pubkey, 
             &self.alice_did,
             &self.bob_did,
-            &self.bob.pubkey(),
+            &self.bob.pubkey()
         );
         let transaction = Transaction::new_signed_with_payer(
             &[add_notification],
@@ -406,10 +362,6 @@ impl SolariumContext {
             &[&self.context.payer, &self.bob],
             self.context.last_blockhash,
         );
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
-            .unwrap();
+        self.context.banks_client.process_transaction(transaction).await.unwrap();
     }
 }

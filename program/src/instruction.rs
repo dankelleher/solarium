@@ -1,13 +1,9 @@
 //! Program instructions
 
-use crate::state::{get_notifications_account_address_with_seed, NotificationType};
 use {
     crate::{
         id,
-        state::{
-            get_cek_account_address_with_seed, get_userdetails_account_address_with_seed, CEKData,
-            Message,
-        },
+        state::{get_cek_account_address_with_seed, get_userdetails_account_address_with_seed, CEKData, Message},
     },
     borsh::{BorshDeserialize, BorshSerialize},
     solana_program::{
@@ -16,6 +12,7 @@ use {
         system_program, sysvar,
     },
 };
+use crate::state::{NotificationType, get_notifications_account_address_with_seed};
 
 /// Instructions supported by the program
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, PartialEq)]
@@ -39,7 +36,7 @@ pub enum SolariumInstruction {
 
         /// The initial set of CEKs that are added to the creator's CEK Account
         /// They should be signed by each key in the creator DID.
-        ceks: Vec<CEKData>,
+        ceks: Vec<CEKData>
     },
 
     /// Create a new direct channel with two participants
@@ -47,7 +44,7 @@ pub enum SolariumInstruction {
     /// Accounts expected by this instruction:
     ///
     /// 0. `[writable, signer]` Funding account, must be a system account
-    /// 1. `[writable]` Unallocated channel account, must be a program address, derived from the participants' DIDs
+    /// 1. `[writable]` Unallocated channel account, must be a program address, derived from the participants' DIDs 
     /// 2. `[]` Creator DID account - must be owned by the sol-did program
     /// 3. `[signer]` Creator authority - must be a key on the creator DID
     /// 4. `[writeable]` Unallocated creator CEK account, must be a program address
@@ -62,7 +59,7 @@ pub enum SolariumInstruction {
 
         /// The initial set of CEKs that are added to the invited user's CEK Account
         /// They should be signed by each key in the invitee DID.
-        invitee_ceks: Vec<CEKData>,
+        invitee_ceks: Vec<CEKData>
     },
 
     /// Post a message to the provided channel account
@@ -79,7 +76,7 @@ pub enum SolariumInstruction {
     },
 
     /// Create a new CEK Account for a DID and a channel
-    ///
+    /// 
     /// Creating a CEK account is equivalent to adding the DID to the channel.
     /// Only an existing member of a channel can add someone to the channel.
     ///
@@ -100,37 +97,37 @@ pub enum SolariumInstruction {
         ceks: Vec<CEKData>,
     },
 
-    /// Add a CEK to an existing CEKAccount
+    /// Add a CEK to an existing CEKAccount 
     ///
     /// Accounts expected by this instruction:
     ///
     /// 0. `[]` Owner DID account - must be owned by the sol-did program
-    /// 1. `[signer]` Owner authority - must be a key on the owner DID
+    /// 1. `[signer]` Owner authority - must be a key on the owner DID 
     /// 2. `[writable]` CEK account, must be owned by the owner DID
     AddCEK {
         /// A new CEK to add to the account
-        cek: CEKData,
+        cek: CEKData
     },
 
-    /// Remove a CEK from an existing CEKAccount
+    /// Remove a CEK from an existing CEKAccount 
     ///
     /// Accounts expected by this instruction:
     ///
     /// 0. `[]` Owner DID account - must be owned by the sol-did program
-    /// 1. `[signer]` Owner authority - must be a key on the owner DID
+    /// 1. `[signer]` Owner authority - must be a key on the owner DID 
     /// 2. `[writable]` CEK account, must be owned by the owner DID
     RemoveCEK {
         /// The key id of the CEK to remove
-        kid: String,
+        kid: String
     },
 
-    /// Creates a UserDetails account
+    /// Creates a UserDetails account 
     ///
     /// Accounts expected by this instruction:
     ///
     /// 0. `[writable, signer]` Funding account, must be a system account
     /// 1. `[]` Owner DID account - must be owned by the sol-did program
-    /// 2. `[signer]` Owner authority - must be a key on the owner DID
+    /// 2. `[signer]` Owner authority - must be a key on the owner DID 
     /// 3. `[writable]` UserDetails account, must be owned by the owner DID
     /// 4. `[]` Rent sysvar
     /// 5. `[]` System program
@@ -140,15 +137,15 @@ pub enum SolariumInstruction {
         /// The user's encrypted address book
         address_book: String,
         /// The size of the userDetails account
-        size: u32,
+        size: u32
     },
 
-    /// Updates a UserDetails account
+    /// Updates a UserDetails account 
     ///
     /// Accounts expected by this instruction:
     ///
     /// 0. `[]` Owner DID account - must be owned by the sol-did program
-    /// 1. `[signer]` Owner authority - must be a key on the owner DID
+    /// 1. `[signer]` Owner authority - must be a key on the owner DID 
     /// 2. `[writable]` UserDetails account, must be owned by the owner DID
     UpdateUserDetails {
         /// The user's new public alias
@@ -156,22 +153,22 @@ pub enum SolariumInstruction {
         /// The user's encrypted address book
         address_book: String,
     },
-
-    /// Creates a Notifications account
+    
+    /// Creates a Notifications account 
     ///
     /// Accounts expected by this instruction:
     ///
     /// 0. `[writable, signer]` Funding account, must be a system account
     /// 1. `[]` Owner DID account - must be owned by the sol-did program
-    /// 2. `[signer]` Owner authority - must be a key on the owner DID
+    /// 2. `[signer]` Owner authority - must be a key on the owner DID 
     /// 3. `[writable]` Notifications account, must be owned by the owner DID
     /// 4. `[]` Rent sysvar
     /// 5. `[]` System program
     CreateNotifications {
         /// The size of the notifications cache
-        size: u8,
+        size: u8
     },
-
+    
     /// Add a notification for a user
     ///
     /// Accounts expected by this instruction:
@@ -193,7 +190,7 @@ pub fn initialize_channel(
     name: String,
     creator_did: &Pubkey,
     creator_authority: &Pubkey,
-    ceks: Vec<CEKData>,
+    ceks: Vec<CEKData>
 ) -> Instruction {
     let (creator_cek_account, _) = get_cek_account_address_with_seed(&id(), creator_did, channel);
     Instruction::new_with_borsh(
@@ -219,7 +216,7 @@ pub fn initialize_direct_channel(
     creator_authority: &Pubkey,
     invitee_did: &Pubkey,
     creator_ceks: Vec<CEKData>,
-    invitee_ceks: Vec<CEKData>,
+    invitee_ceks: Vec<CEKData>
 ) -> Instruction {
     let (creator_cek_account, _) = get_cek_account_address_with_seed(&id(), creator_did, channel);
     let (invitee_cek_account, _) = get_cek_account_address_with_seed(&id(), invitee_did, channel);
@@ -227,7 +224,7 @@ pub fn initialize_direct_channel(
         id(),
         &SolariumInstruction::InitializeDirectChannel {
             creator_ceks,
-            invitee_ceks,
+            invitee_ceks
         },
         vec![
             AccountMeta::new(*funder_account, true),
@@ -245,13 +242,10 @@ pub fn initialize_direct_channel(
 
 /// Create a `SolariumInstruction::Post` instruction
 pub fn post(channel: &Pubkey, sender_authority: &Pubkey, message: &Message) -> Instruction {
-    let (sender_cek_account, _) =
-        get_cek_account_address_with_seed(&id(), &message.sender, channel);
+    let (sender_cek_account, _) = get_cek_account_address_with_seed(&id(), &message.sender, channel);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::Post {
-            message: message.content.to_string(),
-        },
+        &SolariumInstruction::Post { message: message.content.to_string() },
         vec![
             AccountMeta::new(*channel, false),
             AccountMeta::new_readonly(message.sender, false),
@@ -264,11 +258,11 @@ pub fn post(channel: &Pubkey, sender_authority: &Pubkey, message: &Message) -> I
 /// Create a `SolariumInstruction::AddToChannel` instruction
 pub fn add_to_channel(
     funder_account: &Pubkey,
-    channel: &Pubkey,
+    channel: &Pubkey, 
     invitee_did: &Pubkey,
     inviter_did: &Pubkey,
     inviter_authority: &Pubkey,
-    ceks: Vec<CEKData>,
+    ceks: Vec<CEKData>
 ) -> Instruction {
     let (inviter_cek_account, _) = get_cek_account_address_with_seed(&id(), inviter_did, channel);
     let (invitee_cek_account, _) = get_cek_account_address_with_seed(&id(), invitee_did, channel);
@@ -294,7 +288,7 @@ pub fn add_cek(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
     channel: &Pubkey,
-    cek: CEKData,
+    cek: CEKData
 ) -> Instruction {
     let (owner_cek_account, _) = get_cek_account_address_with_seed(&id(), owner_did, channel);
     Instruction::new_with_borsh(
@@ -313,7 +307,7 @@ pub fn remove_cek(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
     channel: &Pubkey,
-    kid: String,
+    kid: String
 ) -> Instruction {
     let (owner_cek_account, _) = get_cek_account_address_with_seed(&id(), owner_did, channel);
     Instruction::new_with_borsh(
@@ -333,17 +327,12 @@ pub fn create_user_details(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
     alias: String,
-    size: u32,
+    size: u32
 ) -> Instruction {
-    let (owner_userdetails_account, _) =
-        get_userdetails_account_address_with_seed(&id(), owner_did);
+    let (owner_userdetails_account, _) = get_userdetails_account_address_with_seed(&id(), owner_did);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::CreateUserDetails {
-            alias,
-            address_book: "".to_string(),
-            size,
-        },
+        &SolariumInstruction::CreateUserDetails { alias, address_book: "".to_string(), size },
         vec![
             AccountMeta::new(*funder_account, true),
             AccountMeta::new_readonly(*owner_did, false),
@@ -360,16 +349,12 @@ pub fn update_user_details(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
     alias: String,
-    address_book: String,
+    address_book: String
 ) -> Instruction {
-    let (owner_userdetails_account, _) =
-        get_userdetails_account_address_with_seed(&id(), owner_did);
+    let (owner_userdetails_account, _) = get_userdetails_account_address_with_seed(&id(), owner_did);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::UpdateUserDetails {
-            alias,
-            address_book,
-        },
+        &SolariumInstruction::UpdateUserDetails { alias, address_book },
         vec![
             AccountMeta::new_readonly(*owner_did, false),
             AccountMeta::new_readonly(*owner_authority, true),
@@ -383,10 +368,9 @@ pub fn create_notifications(
     funder_account: &Pubkey,
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
-    size: u8,
+    size: u8
 ) -> Instruction {
-    let (owner_notifications_account, _) =
-        get_notifications_account_address_with_seed(&id(), owner_did);
+    let (owner_notifications_account, _) = get_notifications_account_address_with_seed(&id(), owner_did);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::CreateNotifications { size },
@@ -401,22 +385,13 @@ pub fn create_notifications(
     )
 }
 
+
 /// Create a `SolariumInstruction::AddNotification` instruction
-pub fn add_notification(
-    notification_type: NotificationType,
-    pubkey: &Pubkey,
-    owner_did: &Pubkey,
-    sender_did: &Pubkey,
-    sender_authority: &Pubkey,
-) -> Instruction {
-    let (owner_notifications_account, _) =
-        get_notifications_account_address_with_seed(&id(), owner_did);
+pub fn add_notification(notification_type: NotificationType, pubkey: &Pubkey, owner_did: &Pubkey, sender_did: &Pubkey, sender_authority: &Pubkey) -> Instruction {
+    let (owner_notifications_account, _) = get_notifications_account_address_with_seed(&id(), owner_did);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::AddNotification {
-            pubkey: *pubkey,
-            notification_type,
-        },
+        &SolariumInstruction::AddNotification { pubkey: *pubkey, notification_type },
         vec![
             AccountMeta::new(owner_notifications_account, false),
             AccountMeta::new_readonly(*sender_did, false),
@@ -429,7 +404,7 @@ pub fn add_notification(
 mod tests {
     use super::*;
     use solana_program::program_error::ProgramError;
-
+    
     #[test]
     fn deserialize_invalid_instruction() {
         let expected = vec![12];

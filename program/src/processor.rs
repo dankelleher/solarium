@@ -1,23 +1,17 @@
 //! Program state processor
 
-use crate::state::{
-    direct_channel_address_order, get_notifications_account_address_with_seed,
-    get_userdetails_account_address_with_seed, Notification, NotificationType, Notifications,
-    UserDetails, CHANNEL_ADDRESS_SEED, NOTIFICATIONS_ACCOUNT_ADDRESS_SEED,
-    USERDETAILS_ACCOUNT_ADDRESS_SEED,
-};
 use {
     crate::{
         borsh as program_borsh,
         error::SolariumError,
         instruction::SolariumInstruction,
         state::{
-            get_cek_account_address_with_seed, get_channel_address_with_seed, CEKAccountData,
-            CEKData, ChannelData, Message, CEK_ACCOUNT_ADDRESS_SEED,
-        },
+            get_cek_account_address_with_seed,
+            get_channel_address_with_seed,
+            CEKAccountData, CEKData, ChannelData, Message, CEK_ACCOUNT_ADDRESS_SEED},
     },
     borsh::{BorshDeserialize, BorshSerialize},
-    sol_did::validate_owner,
+    sol_did::{validate_owner},
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,
@@ -28,26 +22,21 @@ use {
         pubkey::Pubkey,
         rent::Rent,
         system_instruction,
-        sysvar::Sysvar,
-    },
+        sysvar::Sysvar
+    }
 };
+use crate::state::{CHANNEL_ADDRESS_SEED, direct_channel_address_order, UserDetails, get_userdetails_account_address_with_seed, USERDETAILS_ACCOUNT_ADDRESS_SEED, get_notifications_account_address_with_seed, NotificationType, Notifications, Notification, NOTIFICATIONS_ACCOUNT_ADDRESS_SEED};
 
 /// Checks that the authority_info account is an authority for the DID,
 /// And that the CEK Account is owned by that DID
-fn check_authority_of_cek(
-    program_id: &Pubkey,
-    authority_info: &AccountInfo,
-    did: &AccountInfo,
-    cek_account_info: &AccountInfo,
-) -> ProgramResult {
+fn check_authority_of_cek(program_id: &Pubkey, authority_info: &AccountInfo, did: &AccountInfo, cek_account_info: &AccountInfo) -> ProgramResult {
     check_authority_of_did(authority_info, did).unwrap();
 
-    let cek_account = program_borsh::try_from_slice_incomplete::<CEKAccountData>(
-        *cek_account_info.data.borrow(),
-    )?;
+    let cek_account =
+        program_borsh::try_from_slice_incomplete::<CEKAccountData>(*cek_account_info.data.borrow())?;
     if !(cek_account.owner_did.eq(did.key)) {
         msg!("Incorrect CEKAccount authority provided");
-        return Err(SolariumError::IncorrectAuthority.into());
+        return Err(SolariumError::IncorrectAuthority.into())
     }
 
     if cek_account_info.owner != program_id {
@@ -69,33 +58,23 @@ fn check_authority_of_did(authority_info: &AccountInfo, did: &AccountInfo) -> Pr
 }
 
 /// Checks that the cek account belongs to the channel, and that it is owned by this program
-fn check_cek_account(
-    program_id: &Pubkey,
-    cek_account_info: &AccountInfo,
-    channel_info: &AccountInfo,
-) -> ProgramResult {
+fn check_cek_account(program_id: &Pubkey, cek_account_info: &AccountInfo, channel_info: &AccountInfo) -> ProgramResult {
     if channel_info.owner != program_id {
         msg!("Error: channel is not a Solarium program account");
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    let cek_account = program_borsh::try_from_slice_incomplete::<CEKAccountData>(
-        *cek_account_info.data.borrow(),
-    )?;
+    let cek_account =
+        program_borsh::try_from_slice_incomplete::<CEKAccountData>(*cek_account_info.data.borrow())?;
     if cek_account.channel != *channel_info.key {
         msg!("Error: cek account is not for the correct channel");
         return Err(SolariumError::CEKIncorrectChannel.into());
     }
-
+    
     Ok(())
 }
 
-fn initialize_channel(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    name: String,
-    ceks: Vec<CEKData>,
-) -> ProgramResult {
+fn initialize_channel(program_id: &Pubkey, accounts: &[AccountInfo], name: String, ceks: Vec<CEKData>) -> ProgramResult {
     msg!("SolariumInstruction::InitializeChannel");
     let account_info_iter = &mut accounts.iter();
     let funder_info = next_account_info(account_info_iter)?;
@@ -120,34 +99,26 @@ fn initialize_channel(
         return Err(SolariumError::AlreadyInUse.into());
     }
 
-    // Check that the authority is valid for the DID
+    // Check that the authority is valid for the DID 
     check_authority_of_did(creator_authority_info, creator_did_info).unwrap();
 
     create_cek_account(
         program_id,
         ceks,
-        funder_info.clone(),
-        creator_did_info,
-        creator_cek_account_info.clone(),
-        channel_info,
-        system_program_info.clone(),
-        rent,
-    )
-    .unwrap();
+        funder_info.clone(), 
+        creator_did_info, 
+        creator_cek_account_info.clone(), 
+        channel_info, 
+        system_program_info.clone(), 
+        rent).unwrap();
 
     let channel = ChannelData::new(name);
 
-    channel
-        .serialize(&mut *channel_info.data.borrow_mut())
+    channel.serialize(&mut *channel_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
-fn initialize_direct_channel(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    creator_ceks: Vec<CEKData>,
-    invitee_ceks: Vec<CEKData>,
-) -> ProgramResult {
+fn initialize_direct_channel(program_id: &Pubkey, accounts: &[AccountInfo], creator_ceks: Vec<CEKData>, invitee_ceks: Vec<CEKData>) -> ProgramResult {
     msg!("SolariumInstruction::InitializeDirectChannel");
     let account_info_iter = &mut accounts.iter();
     let funder_info = next_account_info(account_info_iter)?;
@@ -163,8 +134,7 @@ fn initialize_direct_channel(
     let rent = &Rent::from_account_info(rent_info)?;
 
     msg!("Checking channel address");
-    let (channel_address, channel_bump_seed) =
-        get_channel_address_with_seed(program_id, creator_did_info.key, invitee_did_info.key);
+    let (channel_address, channel_bump_seed) = get_channel_address_with_seed(program_id, creator_did_info.key, invitee_did_info.key);
     // Check that the new direct channel address has been derived correctly
     // for the creator and invitee
     if channel_address != *channel_info.key {
@@ -180,7 +150,7 @@ fn initialize_direct_channel(
     }
 
     msg!("Checking creator authority");
-    // Check that the authority is valid for the DID
+    // Check that the authority is valid for the DID 
     check_authority_of_did(creator_authority_info, creator_did_info).unwrap();
 
     msg!("Creating creator cek account");
@@ -192,9 +162,7 @@ fn initialize_direct_channel(
         creator_cek_account_info.clone(),
         channel_info,
         system_program_info.clone(),
-        rent,
-    )
-    .unwrap();
+        rent).unwrap();
 
     msg!("Creating invitee cek account");
     create_cek_account(
@@ -205,20 +173,14 @@ fn initialize_direct_channel(
         invitee_cek_account_info.clone(),
         channel_info,
         system_program_info.clone(),
-        rent,
-    )
-    .unwrap();
+        rent).unwrap();
 
     msg!("Creating channel");
 
     let size = ChannelData::size_bytes();
     let did_seeds = direct_channel_address_order(creator_did_info.key, invitee_did_info.key);
-    let channel_signer_seeds: &[&[_]] = &[
-        &did_seeds[0].to_bytes(),
-        &did_seeds[1].to_bytes(),
-        CHANNEL_ADDRESS_SEED,
-        &[channel_bump_seed],
-    ];
+    let channel_signer_seeds: &[&[_]] =
+        &[&did_seeds[0].to_bytes(), &did_seeds[1].to_bytes(), CHANNEL_ADDRESS_SEED, &[channel_bump_seed]];
 
     invoke_signed(
         &system_instruction::create_account(
@@ -237,14 +199,9 @@ fn initialize_direct_channel(
     )?;
 
     msg!("Serializing");
-    let name = format!(
-        "{}/{}",
-        creator_did_info.key.to_string(),
-        invitee_did_info.key.to_string()
-    );
+    let name = format!("{}/{}", creator_did_info.key.to_string(), invitee_did_info.key.to_string());
     let channel = ChannelData::new(name);
-    channel
-        .serialize(&mut *channel_info.data.borrow_mut())
+    channel.serialize(&mut *channel_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
@@ -257,7 +214,7 @@ fn post(program_id: &Pubkey, accounts: &[AccountInfo], message: String) -> Progr
     let sender_cek_account_info = next_account_info(account_info_iter)?;
     let mut channel =
         program_borsh::try_from_slice_incomplete::<ChannelData>(*channel_info.data.borrow())?;
-
+    
     if !channel.is_initialized() {
         msg!("Channel account not initialized");
         return Err(ProgramError::UninitializedAccount);
@@ -268,28 +225,17 @@ fn post(program_id: &Pubkey, accounts: &[AccountInfo], message: String) -> Progr
     validate_owner(sender_did_info, &[sender_authority_info]).unwrap();
 
     // check that the sender is allowed to post to this channel
-    check_authority_of_cek(
-        program_id,
-        sender_authority_info,
-        sender_did_info,
-        &sender_cek_account_info,
-    )
-    .unwrap();
+    check_authority_of_cek(program_id, sender_authority_info, sender_did_info, &sender_cek_account_info).unwrap();
 
     let message_info = Message::new(*sender_did_info.key, message);
 
     channel.post(message_info);
 
-    channel
-        .serialize(&mut *channel_info.data.borrow_mut())
+    channel.serialize(&mut *channel_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
-fn add_to_channel(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    ceks: Vec<CEKData>,
-) -> ProgramResult {
+fn add_to_channel(program_id: &Pubkey, accounts: &[AccountInfo], ceks: Vec<CEKData>) -> ProgramResult {
     msg!("SolariumInstruction::AddToChannel");
     let account_info_iter = &mut accounts.iter();
     let funder_info = next_account_info(account_info_iter)?;
@@ -303,33 +249,26 @@ fn add_to_channel(
     let system_program_info = next_account_info(account_info_iter)?;
 
     let rent = &Rent::from_account_info(rent_info)?;
-
+    
     // Check that the inviter has permissions to invite to this channel
     check_cek_account(program_id, inviter_cek_account_info, channel_info).unwrap();
 
-    // Check that the inviter signer is valid for the DID
-    // and that the inviter DID owns the inviter CEK account
-    check_authority_of_cek(
-        program_id,
-        inviter_authority_info,
-        inviter_did_info,
-        inviter_cek_account_info,
-    )
-    .unwrap();
+    // Check that the inviter signer is valid for the DID 
+    // and that the inviter DID owns the inviter CEK account 
+    check_authority_of_cek(program_id, inviter_authority_info, inviter_did_info, inviter_cek_account_info).unwrap();
 
     create_cek_account(
         program_id,
         ceks,
         funder_info.clone(),
-        invitee_did_info,
-        invitee_cek_account_info.clone(),
+        invitee_did_info, 
+        invitee_cek_account_info.clone(), 
         channel_info,
         system_program_info.clone(),
-        rent,
+        rent
     )
 }
 
-#[allow(clippy::too_many_arguments)]
 fn create_cek_account<'a>(
     program_id: &Pubkey,
     ceks: Vec<CEKData>,
@@ -338,12 +277,10 @@ fn create_cek_account<'a>(
     invitee_cek_account_info: AccountInfo<'a>,
     channel_info: &AccountInfo,
     system_program_info: AccountInfo<'a>,
-    rent: &Rent,
-) -> ProgramResult {
-    let (cek_account_address, cek_account_bump_seed) =
-        get_cek_account_address_with_seed(program_id, invitee_did_info.key, channel_info.key);
+    rent:&Rent) -> ProgramResult {
+    let (cek_account_address, cek_account_bump_seed) = get_cek_account_address_with_seed(program_id, invitee_did_info.key, channel_info.key);
 
-    // Check that we are not overwriting an existing cek account
+    // Check that we are not overwriting an existing cek account 
     let data_len = invitee_cek_account_info.data.borrow().len();
     if data_len > 0 {
         msg!("CEK account already initialized");
@@ -360,15 +297,16 @@ fn create_cek_account<'a>(
     // Create the new cek account for the invitee
     let mut cek_account = CEKAccountData::new(*invitee_did_info.key, *channel_info.key);
     cek_account.add_all(ceks);
-
+    
     let max_cek_size: u64 = 100;
     let size = (CEKAccountData::MAX_CEKS as u64 * max_cek_size) + 32 + 32;
-    let cek_account_signer_seeds: &[&[_]] = &[
-        &invitee_did_info.key.to_bytes(),
-        &channel_info.key.to_bytes(),
-        CEK_ACCOUNT_ADDRESS_SEED,
-        &[cek_account_bump_seed],
-    ];
+    let cek_account_signer_seeds: &[&[_]] =
+        &[
+            &invitee_did_info.key.to_bytes(), 
+            &channel_info.key.to_bytes(), 
+            CEK_ACCOUNT_ADDRESS_SEED, 
+            &[cek_account_bump_seed]
+        ];
 
     invoke_signed(
         &system_instruction::create_account(
@@ -386,25 +324,18 @@ fn create_cek_account<'a>(
         &[&cek_account_signer_seeds],
     )?;
 
-    cek_account
-        .serialize(&mut *invitee_cek_account_info.data.borrow_mut())
+    cek_account.serialize(&mut *invitee_cek_account_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
-fn update_user_details(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    alias: String,
-    address_book: String,
-) -> ProgramResult {
+fn update_user_details(program_id: &Pubkey, accounts: &[AccountInfo], alias: String, address_book: String) -> ProgramResult {
     msg!("SolariumInstruction::UpdateUserDetails");
     let account_info_iter = &mut accounts.iter();
     let did_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
     let user_details_account_info = next_account_info(account_info_iter)?;
-    let mut user_details = program_borsh::try_from_slice_incomplete::<UserDetails>(
-        *user_details_account_info.data.borrow(),
-    )?;
+    let mut user_details =
+        program_borsh::try_from_slice_incomplete::<UserDetails>(*user_details_account_info.data.borrow())?;
 
     if !user_details.is_initialized() {
         msg!("UserDetails account not initialized");
@@ -415,19 +346,17 @@ fn update_user_details(
     validate_owner(did_info, &[authority_info]).unwrap();
 
     // check that the user details account belongs to the DID
-    let (user_details_address, _) =
-        get_userdetails_account_address_with_seed(program_id, did_info.key);
+    let (user_details_address,_) = get_userdetails_account_address_with_seed(program_id, did_info.key);
     if user_details_address != *user_details_account_info.key {
         msg!("Error: Attempt to update a userdetails account with an address not derived from the DID");
         return Err(SolariumError::AddressDerivationMismatch.into());
     }
-
+    
     // mutate the UserDetails object
     user_details.alias = alias;
     user_details.address_book = address_book;
 
-    user_details
-        .serialize(&mut *user_details_account_info.data.borrow_mut())
+    user_details.serialize(&mut *user_details_account_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
@@ -437,23 +366,21 @@ fn add_cek(program_id: &Pubkey, accounts: &[AccountInfo], cek: CEKData) -> Progr
     let did_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
     let cek_account_info = next_account_info(account_info_iter)?;
-
+    
     msg!("checking authority");
-    // Check that the authority is valid for the DID
-    // and that the DID owns the CEK account
+    // Check that the authority is valid for the DID 
+    // and that the DID owns the CEK account 
     check_authority_of_cek(program_id, authority_info, did_info, cek_account_info).unwrap();
 
     msg!("checking account");
-    let mut cek_account = program_borsh::try_from_slice_incomplete::<CEKAccountData>(
-        *cek_account_info.data.borrow(),
-    )?;
-
+    let mut cek_account =
+        program_borsh::try_from_slice_incomplete::<CEKAccountData>(*cek_account_info.data.borrow())?;
+    
     msg!("adding");
     cek_account.add(cek);
 
     msg!("serializing");
-    cek_account
-        .serialize(&mut *cek_account_info.data.borrow_mut())
+    cek_account.serialize(&mut *cek_account_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
@@ -464,28 +391,20 @@ fn remove_cek(program_id: &Pubkey, accounts: &[AccountInfo], kid: String) -> Pro
     let authority_info = next_account_info(account_info_iter)?;
     let cek_account_info = next_account_info(account_info_iter)?;
 
-    // Check that the authority is valid for the DID
-    // and that the DID owns the CEK account
+    // Check that the authority is valid for the DID 
+    // and that the DID owns the CEK account 
     check_authority_of_cek(program_id, authority_info, did_info, cek_account_info).unwrap();
 
-    let mut cek_account = program_borsh::try_from_slice_incomplete::<CEKAccountData>(
-        *cek_account_info.data.borrow(),
-    )?;
+    let mut cek_account =
+        program_borsh::try_from_slice_incomplete::<CEKAccountData>(*cek_account_info.data.borrow())?;
 
     cek_account.remove(kid).unwrap();
 
-    cek_account
-        .serialize(&mut *cek_account_info.data.borrow_mut())
+    cek_account.serialize(&mut *cek_account_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
-fn create_user_details(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    alias: String,
-    address_book: String,
-    size: u32,
-) -> ProgramResult {
+fn create_user_details(program_id: &Pubkey, accounts: &[AccountInfo], alias: String, address_book: String, size: u32) -> ProgramResult {
     msg!("SolariumInstruction::CreateUserDetails");
     let account_info_iter = &mut accounts.iter();
     let funder_info = next_account_info(account_info_iter)?;
@@ -499,17 +418,14 @@ fn create_user_details(
 
     let data_len = user_details_account_info.data.borrow().len();
     if data_len > 0 {
-        msg!(
-            "Error: Attempt to create a userdetails account for an address that is already in use"
-        );
+        msg!("Error: Attempt to create a userdetails account for an address that is already in use");
         return Err(SolariumError::AlreadyInUse.into());
     }
 
-    // Check that the authority is valid for the DID
+    // Check that the authority is valid for the DID 
     check_authority_of_did(authority_info, did_info).unwrap();
 
-    let (user_details_address, user_details_bump_seed) =
-        get_userdetails_account_address_with_seed(program_id, did_info.key);
+    let (user_details_address, user_details_bump_seed) = get_userdetails_account_address_with_seed(program_id, did_info.key);
     if user_details_address != *user_details_account_info.key {
         msg!("Error: Attempt to create a userdetails account with an address not derived from the DID");
         return Err(SolariumError::AddressDerivationMismatch.into());
@@ -518,14 +434,15 @@ fn create_user_details(
     // Create the new userdetails account for the invitee
     let new_user_details = UserDetails {
         alias,
-        address_book,
+        address_book
     };
 
-    let user_details_account_signer_seeds: &[&[_]] = &[
-        &did_info.key.to_bytes(),
-        USERDETAILS_ACCOUNT_ADDRESS_SEED,
-        &[user_details_bump_seed],
-    ];
+    let user_details_account_signer_seeds: &[&[_]] =
+        &[
+            &did_info.key.to_bytes(),
+            USERDETAILS_ACCOUNT_ADDRESS_SEED,
+            &[user_details_bump_seed]
+        ];
 
     invoke_signed(
         &system_instruction::create_account(
@@ -543,8 +460,7 @@ fn create_user_details(
         &[&user_details_account_signer_seeds],
     )?;
 
-    new_user_details
-        .serialize(&mut *user_details_account_info.data.borrow_mut())
+    new_user_details.serialize(&mut *user_details_account_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
@@ -566,11 +482,10 @@ fn create_notifications(program_id: &Pubkey, accounts: &[AccountInfo], size: u8)
         return Err(SolariumError::AlreadyInUse.into());
     }
 
-    // Check that the authority is valid for the DID
+    // Check that the authority is valid for the DID 
     check_authority_of_did(authority_info, did_info).unwrap();
 
-    let (notifications_address, notifications_bump_seed) =
-        get_notifications_account_address_with_seed(program_id, did_info.key);
+    let (notifications_address, notifications_bump_seed) = get_notifications_account_address_with_seed(program_id, did_info.key);
     if notifications_address != *notifications_account_info.key {
         msg!("Error: Attempt to create a notifications account with an address not derived from the DID");
         return Err(SolariumError::AddressDerivationMismatch.into());
@@ -580,11 +495,12 @@ fn create_notifications(program_id: &Pubkey, accounts: &[AccountInfo], size: u8)
     let new_notifications = Notifications::new(size);
     let notifications_size = new_notifications.size_bytes();
 
-    let notifications_account_signer_seeds: &[&[_]] = &[
-        &did_info.key.to_bytes(),
-        NOTIFICATIONS_ACCOUNT_ADDRESS_SEED,
-        &[notifications_bump_seed],
-    ];
+    let notifications_account_signer_seeds: &[&[_]] =
+        &[
+            &did_info.key.to_bytes(),
+            NOTIFICATIONS_ACCOUNT_ADDRESS_SEED,
+            &[notifications_bump_seed]
+        ];
 
     invoke_signed(
         &system_instruction::create_account(
@@ -602,31 +518,24 @@ fn create_notifications(program_id: &Pubkey, accounts: &[AccountInfo], size: u8)
         &[&notifications_account_signer_seeds],
     )?;
 
-    new_notifications
-        .serialize(&mut *notifications_account_info.data.borrow_mut())
+    new_notifications.serialize(&mut *notifications_account_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
-fn add_notification(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    notification_type: NotificationType,
-    pubkey: &Pubkey,
-) -> ProgramResult {
+fn add_notification(program_id: &Pubkey, accounts: &[AccountInfo], notification_type: NotificationType, pubkey: &Pubkey) -> ProgramResult {
     msg!("SolariumInstruction::AddNotification");
     let account_info_iter = &mut accounts.iter();
     let notifications_info = next_account_info(account_info_iter)?;
     let sender_did_info = next_account_info(account_info_iter)?;
     let sender_authority_info = next_account_info(account_info_iter)?;
 
-    let mut notifications = program_borsh::try_from_slice_incomplete::<Notifications>(
-        *notifications_info.data.borrow(),
-    )?;
+    let mut notifications =
+        program_borsh::try_from_slice_incomplete::<Notifications>(*notifications_info.data.borrow())?;
     if !notifications.is_initialized() {
         msg!("Notifications account not initialized");
         return Err(ProgramError::UninitializedAccount);
     }
-
+    
     if notifications_info.owner != program_id {
         msg!("Error: Notifications account is not a Solarium program account");
         return Err(ProgramError::IncorrectProgramId);
@@ -636,14 +545,10 @@ fn add_notification(
     // the sender signer is an authority on the DID.
     validate_owner(sender_did_info, &[sender_authority_info]).unwrap();
 
-    let notification = Notification {
-        notification_type,
-        pubkey: *pubkey,
-    };
+    let notification = Notification { notification_type, pubkey: *pubkey };
     notifications.add(notification);
-
-    notifications
-        .serialize(&mut *notifications_info.data.borrow_mut())
+    
+    notifications.serialize(&mut *notifications_info.data.borrow_mut())
         .map_err(|e| e.into())
 }
 
@@ -656,32 +561,15 @@ pub fn process_instruction(
     let instruction = SolariumInstruction::try_from_slice(input)?;
 
     match instruction {
-        SolariumInstruction::InitializeChannel { name, ceks } => {
-            initialize_channel(program_id, accounts, name, ceks)
-        }
-        SolariumInstruction::InitializeDirectChannel {
-            creator_ceks,
-            invitee_ceks,
-        } => initialize_direct_channel(program_id, accounts, creator_ceks, invitee_ceks),
+        SolariumInstruction::InitializeChannel { name, ceks} => initialize_channel(program_id, accounts, name, ceks),
+        SolariumInstruction::InitializeDirectChannel { creator_ceks, invitee_ceks} => initialize_direct_channel(program_id, accounts, creator_ceks, invitee_ceks),
         SolariumInstruction::Post { message } => post(program_id, accounts, message),
         SolariumInstruction::AddToChannel { ceks } => add_to_channel(program_id, accounts, ceks),
         SolariumInstruction::AddCEK { cek } => add_cek(program_id, accounts, cek),
-        SolariumInstruction::RemoveCEK { kid } => remove_cek(program_id, accounts, kid),
-        SolariumInstruction::CreateUserDetails {
-            alias,
-            address_book,
-            size,
-        } => create_user_details(program_id, accounts, alias, address_book, size),
-        SolariumInstruction::UpdateUserDetails {
-            alias,
-            address_book,
-        } => update_user_details(program_id, accounts, alias, address_book),
-        SolariumInstruction::CreateNotifications { size } => {
-            create_notifications(program_id, accounts, size)
-        }
-        SolariumInstruction::AddNotification {
-            notification_type,
-            pubkey,
-        } => add_notification(program_id, accounts, notification_type, &pubkey),
+        SolariumInstruction::RemoveCEK { kid} => remove_cek(program_id, accounts, kid),
+        SolariumInstruction::CreateUserDetails { alias, address_book, size } => create_user_details(program_id, accounts, alias, address_book, size),
+        SolariumInstruction::UpdateUserDetails { alias, address_book } => update_user_details(program_id, accounts, alias, address_book),
+        SolariumInstruction::CreateNotifications { size } => create_notifications(program_id, accounts, size),
+        SolariumInstruction::AddNotification { notification_type, pubkey } => add_notification(program_id, accounts, notification_type, &pubkey),
     }
 }

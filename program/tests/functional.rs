@@ -1,11 +1,13 @@
 // Mark this test as BPF-only due to current `ProgramTest` limitations when CPIing into the system program
 #![cfg(feature = "test-bpf")]
 
-use crate::solarium_context::SolariumContext;
 use solana_program_test::tokio;
-use solana_sdk::signature::{Keypair, Signer};
+use {
+    crate::solarium_context::SolariumContext
+};
+use solarium::state::{Notification, ChannelData};
 use solarium::state::NotificationType::GroupChannel;
-use solarium::state::{ChannelData, Notification};
+use solana_sdk::signature::{Keypair, Signer};
 
 mod solarium_context;
 
@@ -22,9 +24,7 @@ async fn add_cek() {
     let mut context = SolariumContext::new().await;
 
     context.create_channel().await;
-    context
-        .add_cek(SolariumContext::make_dummy_cekdata(kid))
-        .await;
+    context.add_cek(SolariumContext::make_dummy_cekdata(kid)).await;
 
     let cek_account = context.get_cek_account(context.alice_cek.unwrap()).await;
     let found = cek_account.ceks.iter().any(|cek| cek.kid == kid);
@@ -51,21 +51,21 @@ async fn add_to_channel() {
     let mut context = SolariumContext::new().await;
 
     context.create_channel().await;
-
+    
     context.add_to_channel().await
 }
 
 #[tokio::test]
 async fn post() {
     let message = "hello world";
-
+    
     let mut context = SolariumContext::new().await;
 
     context.create_channel().await;
     context.post(message).await;
-
+    
     let channel = context.get_channel().await;
-
+    
     assert_eq!(channel.messages.len(), 1);
     assert_eq!(channel.messages[0].content, message);
     assert_eq!(channel.messages[0].sender, context.alice_did);
@@ -89,10 +89,7 @@ async fn post_multiple() {
 
     // check the most recent DEFAULT_SIZE messages were retained
     assert_eq!(channel.messages.len(), ChannelData::DEFAULT_SIZE as usize);
-    assert_eq!(
-        channel.messages[0].content,
-        format!("{}{}", message, ChannelData::DEFAULT_SIZE)
-    );
+    assert_eq!(channel.messages[0].content, format!("{}{}", message, ChannelData::DEFAULT_SIZE));
 }
 
 #[tokio::test]
@@ -103,7 +100,7 @@ async fn create_direct_channel() {
 
     let alices_message = "hi from alice";
     let bobs_message = "hi from bob";
-
+    
     context.post(alices_message).await;
     context.post_as_bob(bobs_message).await;
 
@@ -122,7 +119,7 @@ async fn create_user_details() {
     context.create_user_details().await;
 
     let user_details = context.get_user_details().await;
-
+    
     assert_eq!(user_details.alias, "Alice");
     assert_eq!(user_details.address_book, "");
 }
@@ -131,14 +128,12 @@ async fn create_user_details() {
 async fn update_user_details() {
     let new_alias = "Alicia";
     let new_address_book = "encrypted data";
-
+    
     let mut context = SolariumContext::new().await;
 
     context.create_user_details().await;
-
-    context
-        .update_user_details(new_alias, new_address_book)
-        .await;
+    
+    context.update_user_details(new_alias, new_address_book).await;
 
     let user_details = context.get_user_details().await;
 
@@ -164,18 +159,10 @@ async fn add_notification() {
     context.create_notifications().await;
 
     let group_channel_pubkey = Keypair::new().pubkey();
-
-    context
-        .add_notification(GroupChannel, &group_channel_pubkey)
-        .await;
+    
+    context.add_notification(GroupChannel, &group_channel_pubkey).await;
 
     let notifications = context.get_notifications().await;
 
-    assert_eq!(
-        notifications.notifications[0],
-        Notification {
-            notification_type: GroupChannel,
-            pubkey: group_channel_pubkey
-        }
-    );
+    assert_eq!(notifications.notifications[0], Notification { notification_type: GroupChannel, pubkey: group_channel_pubkey });
 }

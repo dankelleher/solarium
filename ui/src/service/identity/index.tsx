@@ -8,7 +8,8 @@ import {keyToIdentifier, UserDetails} from "solarium-js";
 import {addKey as addKeyToDID, createIdentity as createDID, createUserDetails, updateUserDetails, getUserDetails} from "../channels/solarium";
 
 export type IdentityError =
-  'WALLET_DID_MISMATCH'
+  'WALLET_DID_MISMATCH' |
+  'MISSING_OR_INVALID_DECRYPTION_KEY'
 
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
   doc.verificationMethod?.find(verificationMethod => verificationMethod.publicKeyBase58 === key.toBase58())
@@ -117,12 +118,8 @@ export function IdentityProvider({ children = null as any }) {
         if (wallet && connected) {
           console.log("Checking if wallet key is on document");
           if (docHasKey(document, wallet.publicKey)) {
-            // if (window.confirm(`Add key to ${did}?`)) {
-            //   addKeyToDID(connection, wallet, decryptionKey.publicKey, did).then(() => setReady(true))
-            // } else {
-            //   // handle no decryption possible
-            //   console.log("Add decryption key rejected");
-            // }
+            console.log("DID is correct but the decryption key is missing")
+            setError('MISSING_OR_INVALID_DECRYPTION_KEY')
           } else {
             console.log("This DID does not belong to the wallet");
             setError('WALLET_DID_MISMATCH')

@@ -78,7 +78,17 @@ export const ChannelProvider: React.FC = ({ children = null }) => {
 
   // load addressbook when identity ready
   useEffect(() => {
-    if (!wallet || !connected || !identityReady || !did || !decryptionKey || addressBook) return;
+    if (!wallet || !connected || !identityReady || !did || !decryptionKey || addressBook) {
+      console.log({
+        wallet,
+        connected,
+        identityReady,
+        did,
+        decryptionKey,
+        addressBook
+      });
+      return;
+    }
 
     AddressBookManager
       .load(addressBookStore, connection, wallet, did, decryptionKey, setAddressBookStore)

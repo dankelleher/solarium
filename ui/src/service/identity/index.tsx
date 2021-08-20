@@ -7,14 +7,19 @@ import {ClusterType, DIDDocument, resolve} from '@identity.com/sol-did-client';
 import {keyToIdentifier, UserDetails} from "solarium-js";
 import {addKey as addKeyToDID, createIdentity as createDID, createUserDetails, updateUserDetails, getUserDetails} from "../channels/solarium";
 
+export type IdentityError =
+  'WALLET_DID_MISMATCH'
+
 const docHasKey = (doc: DIDDocument, key: PublicKey) =>
   doc.verificationMethod?.find(verificationMethod => verificationMethod.publicKeyBase58 === key.toBase58())
 
 type IdentityProps = {
   ready: boolean,
+  error?: IdentityError
   decryptionKey?: Keypair,
   did?: string,
   createIdentity: (alias?: string) => Promise<void>,
+  clearIdentity: () => void,
   setAlias: (alias:string) => Promise<void>,
   addKey: () => Promise<void>,
   document?: DIDDocument
@@ -23,6 +28,7 @@ type IdentityProps = {
 const IdentityContext = React.createContext<IdentityProps>({
   ready: false,
   createIdentity: async () => {},
+  clearIdentity: () => {},
   setAlias: async () => {},
   addKey: async  () => {},
 });
@@ -31,43 +37,55 @@ export function IdentityProvider({ children = null as any }) {
   const connection = useConnection();
   const connectionConfig = useConnectionConfig();
   const [decryptionKey] = useLocalStorageKey('decryptionKey', Keypair.generate());
-  const [did, setDID] = useLocalStorageState<string>('did', undefined);
+  const [did, setDID] = useLocalStorageState<string | null>('did', undefined);
   const [document, setDocument] = useState<DIDDocument>();
   const [userDetails, setUserDetails] = useState<UserDetails>();
   const [ready, setReady] = useState<boolean>(false);
+  const [error, setError] = useState<IdentityError>();
+
+  const clearIdentity = useCallback(() => {
+    setDID(null);
+  }, [setDID])
 
   const createIdentity = useCallback((alias?: string) =>
       createDID(connection, wallet, decryptionKey, alias).then(document => setDID(document.id))
     , [connection, wallet, setDID, decryptionKey])
 
   const addKey = useCallback(() =>
-      addKeyToDID(connection, wallet, decryptionKey.publicKey, did).then(() => {
+      addKeyToDID(connection, wallet, decryptionKey.publicKey, did || undefined).then(() => {
         setReady(true)
       })
     , [connection, wallet, decryptionKey, did, setReady ])
 
-  
-  const updateUserDetailsInState = useCallback(() => getUserDetails(did).then(loadedUserDetails => {
+
+  const updateUserDetailsInState = useCallback(() => did && getUserDetails(did).then(loadedUserDetails => {
     if (loadedUserDetails) {
       setUserDetails(loadedUserDetails)
     }
   }).catch(() => {
     console.log("No UserDetails found");
   }), [did, setUserDetails]);
-  
+
   const setAlias = useCallback(async (alias: string) => {
+    if (!did) return;
     const setAliasFn = userDetails ? updateUserDetails : createUserDetails
     await setAliasFn(connection, wallet, did, alias);
     await updateUserDetailsInState()
   }, [connection, wallet, did, userDetails, updateUserDetailsInState])
 
   // load the DID document whenever the did is changed
-  useEffect(() => { if (did) resolve(did).then(doc => {
-    setDocument(doc)
-    console.log(doc);
-  }).catch(() => {
-    console.log("No DID registered yet");
-  }) }, [did]);
+  useEffect(() => {
+    if (did) {
+      resolve(did).then(doc => {
+        setDocument(doc)
+        console.log(doc);
+      }).catch(() => {
+        console.log("No DID registered yet");
+      })
+    } else {
+      setDocument(undefined);
+    }
+  }, [did]);
 
   // load the user details if present
   useEffect(() => { if (did) updateUserDetailsInState() }, [did, updateUserDetailsInState]);
@@ -107,7 +125,7 @@ export function IdentityProvider({ children = null as any }) {
             // }
           } else {
             console.log("This DID does not belong to the wallet");
-            // prompt to request add key
+            setError('WALLET_DID_MISMATCH')
           }
         } else {
           console.log("wallet is not connected yet");
@@ -119,14 +137,16 @@ export function IdentityProvider({ children = null as any }) {
     } else {
       console.log("No document or decryption key available yet");
     }
-  }, [document, decryptionKey, did, setReady, ready, wallet, connected, connection])
+  }, [document, decryptionKey, did, setReady, ready, setError, wallet, connected, connection])
 
   return (
     <IdentityContext.Provider value={{
       ready,
+      error,
       decryptionKey,
-      did,
+      did: did || undefined,
       createIdentity,
+      clearIdentity,
       setAlias,
       addKey,
       document,

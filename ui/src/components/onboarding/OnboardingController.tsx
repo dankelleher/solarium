@@ -7,6 +7,7 @@ import {useIdentity} from "../../service/identity";
 import WelcomeModal from "./WelcomeModal";
 import * as React from "react";
 import RequestAliasModal from "../modal/RequestAliasModal";
+import ResetIdentityModal from "../modal/ResetIdentityModal";
 
 enum StepType {
   CONNECT_WALLET = 'Connect Wallet',
@@ -46,13 +47,16 @@ type OnboardingStepTemplate = Omit<OnboardingStep, 'action' | 'skipCondition'>
 
 const OnboardingController = () => {
   const {wallet, connected} = useWallet();
-  const { ready: identityReady, decryptionKey, did, createIdentity} = useIdentity();
+  const { ready: identityReady, decryptionKey, did, createIdentity, clearIdentity, error: identityError } = useIdentity();
   const { addressBook, joinPublicChannel, initialised } = useChannel()
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const [title, setTitle] = useState<string>(titleNewUser)
+  
+  // modal toggles
   const [showWelcome, setShowWelcome] = useState<boolean>(false)
   const [showSetAlias, setShowSetAlias] = useState<boolean>(false)
+  const [showResetIdentity, setShowResetIdentity] = useState<boolean>(false)
   
   const createIdentityWithAlias = createIdentity;
 
@@ -99,6 +103,17 @@ const OnboardingController = () => {
     }
     if (nextStep > currentStepIndex) setCurrentStepIndex(nextStep);
   }, [currentStepIndex, steps, setCurrentStepIndex])
+  
+  // error handler
+  useEffect(() => {
+    if (identityError) {
+      switch (identityError) {
+        case "WALLET_DID_MISMATCH":
+          if (!showResetIdentity && did) setShowResetIdentity(true);
+          break
+      }
+    }
+  }, [identityError, did, showResetIdentity, setShowResetIdentity])
 
   // if a did is not set, this is a new user, show the welcome screen
   // use the presence/absence of the decryption key to ensure LocalStorage has been loaded
@@ -113,6 +128,8 @@ const OnboardingController = () => {
     },
     [currentStepIndex, setCurrentStepIndex, steps]
   );
+  
+  const resetIdentity = useCallback(clearIdentity, [clearIdentity]);
 
   // const done = useMemo(() => currentStepIndex >= steps.length, [currentStepIndex, steps])
 
@@ -121,6 +138,7 @@ const OnboardingController = () => {
       <WelcomeModal show={showWelcome} setShow={setShowWelcome}/>
       <OnboardingModal show={!showWelcome && steps.length > 0} title={title} steps={steps} currentStepIndex={currentStepIndex} next={nextStep}/>
       <RequestAliasModal show={showSetAlias} setShow={setShowSetAlias} onOk={createIdentityWithAlias}/>
+      <ResetIdentityModal show={showResetIdentity} setShow={setShowResetIdentity} onOk={resetIdentity}/>
     </>
   )
 }

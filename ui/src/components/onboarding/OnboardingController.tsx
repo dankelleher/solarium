@@ -8,6 +8,7 @@ import WelcomeModal from "./WelcomeModal";
 import * as React from "react";
 import RequestAliasModal from "../modal/RequestAliasModal";
 import ResetIdentityModal from "../modal/ResetIdentityModal";
+import AddKeyModal from "../modal/AddKeyModal";
 
 enum StepType {
   CONNECT_WALLET = 'Connect Wallet',
@@ -47,7 +48,15 @@ type OnboardingStepTemplate = Omit<OnboardingStep, 'action' | 'skipCondition'>
 
 const OnboardingController = () => {
   const {wallet, connected} = useWallet();
-  const { ready: identityReady, decryptionKey, did, createIdentity, clearIdentity, error: identityError } = useIdentity();
+  const { 
+    ready: identityReady,
+    error: identityError,
+    decryptionKey,
+    did,
+    createIdentity,
+    clearIdentity,
+    addKey
+  } = useIdentity();
   const { addressBook, joinPublicChannel, initialised } = useChannel()
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
@@ -57,6 +66,7 @@ const OnboardingController = () => {
   const [showWelcome, setShowWelcome] = useState<boolean>(false)
   const [showSetAlias, setShowSetAlias] = useState<boolean>(false)
   const [showResetIdentity, setShowResetIdentity] = useState<boolean>(false)
+  const [showAddKey, setShowAddKey] = useState<boolean>(false)
   
   const createIdentityWithAlias = createIdentity;
 
@@ -110,7 +120,10 @@ const OnboardingController = () => {
       switch (identityError) {
         case "WALLET_DID_MISMATCH":
           if (!showResetIdentity && did) setShowResetIdentity(true);
-          break
+          break;
+        case "MISSING_OR_INVALID_DECRYPTION_KEY":
+          if (!showAddKey) setShowAddKey(true);
+          break;
       }
     }
   }, [identityError, did, showResetIdentity, setShowResetIdentity])
@@ -130,6 +143,7 @@ const OnboardingController = () => {
   );
   
   const resetIdentity = useCallback(clearIdentity, [clearIdentity]);
+  const addKeyToIdentity = useCallback(addKey, [addKey]);
 
   // const done = useMemo(() => currentStepIndex >= steps.length, [currentStepIndex, steps])
 
@@ -139,6 +153,7 @@ const OnboardingController = () => {
       <OnboardingModal show={!showWelcome && steps.length > 0} title={title} steps={steps} currentStepIndex={currentStepIndex} next={nextStep}/>
       <RequestAliasModal show={showSetAlias} setShow={setShowSetAlias} onOk={createIdentityWithAlias}/>
       <ResetIdentityModal show={showResetIdentity} setShow={setShowResetIdentity} onOk={resetIdentity}/>
+      <AddKeyModal show={showAddKey} setShow={setShowAddKey} onOk={addKeyToIdentity}/>
     </>
   )
 }

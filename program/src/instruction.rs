@@ -1,11 +1,11 @@
 //! Program instructions
 
-use crate::state::{get_notifications_account_address_with_seed, NotificationType};
+use crate::state::{get_notifications_account_address_with_seed, NotificationType, EncryptedKeyData, UserPubKey, Kid};
 use {
     crate::{
         id,
         state::{
-            get_cek_account_address_with_seed, get_userdetails_account_address_with_seed, CEKData,
+            get_cek_account_address_with_seed, get_userdetails_account_address_with_seed,
             Message,
         },
     },
@@ -37,9 +37,8 @@ pub enum SolariumInstruction {
         /// The channel name
         name: String,
 
-        /// The initial set of CEKs that are added to the creator's CEK Account
-        /// They should be signed by each key in the creator DID.
-        ceks: Vec<CEKData>,
+        /// The encrypted CEK signed by the invitee's user key
+        cek: EncryptedKeyData,
     },
 
     /// Create a new direct channel with two participants
@@ -56,13 +55,11 @@ pub enum SolariumInstruction {
     /// 7. `[]` Rent sysvar
     /// 8. `[]` System program
     InitializeDirectChannel {
-        /// The initial set of CEKs that are added to the creator's CEK Account
-        /// They should be signed by each key in the creator DID.
-        creator_ceks: Vec<CEKData>,
+        /// The encrypted CEK signed by the creator's user key
+        creator_cek: EncryptedKeyData,
 
-        /// The initial set of CEKs that are added to the invited user's CEK Account
-        /// They should be signed by each key in the invitee DID.
-        invitee_ceks: Vec<CEKData>,
+        /// The encrypted CEK signed by the invitee's user key
+        invitee_cek: EncryptedKeyData,
     },
 
     /// Post a message to the provided channel account
@@ -95,33 +92,32 @@ pub enum SolariumInstruction {
     /// 7. `[]` Rent sysvar
     /// 8. `[]` System program
     AddToChannel {
-        /// The initial set of CEKs that are added to the invited user's CEK Account
-        /// They should be signed by each key in the DID.
-        ceks: Vec<CEKData>,
+        /// The encrypted channel CEK, signed by the invitee's user key
+        cek: EncryptedKeyData,
     },
 
-    /// Add a CEK to an existing CEKAccount
+    /// Add an encrypted user key to an existing UserDetails account
     ///
     /// Accounts expected by this instruction:
     ///
     /// 0. `[]` Owner DID account - must be owned by the sol-did program
     /// 1. `[signer]` Owner authority - must be a key on the owner DID
-    /// 2. `[writable]` CEK account, must be owned by the owner DID
-    AddCEK {
-        /// A new CEK to add to the account
-        cek: CEKData,
+    /// 2. `[writable]` UserDetails account, must be owned by the owner DID
+    AddEncryptedUserKey {
+        /// A new key to add to the account
+        key_data: EncryptedKeyData,
     },
 
-    /// Remove a CEK from an existing CEKAccount
+    /// Remove a key from an existing UserDetails account
     ///
     /// Accounts expected by this instruction:
     ///
     /// 0. `[]` Owner DID account - must be owned by the sol-did program
     /// 1. `[signer]` Owner authority - must be a key on the owner DID
-    /// 2. `[writable]` CEK account, must be owned by the owner DID
-    RemoveCEK {
-        /// The key id of the CEK to remove
-        kid: String,
+    /// 2. `[writable]` UserDetails account, must be owned by the owner DID
+    RemoveEncryptedUserKey {
+        /// The key id of the encrypted key to remove
+        kid: Kid,
     },
 
     /// Creates a UserDetails account
@@ -139,6 +135,10 @@ pub enum SolariumInstruction {
         alias: String,
         /// The user's encrypted address book
         address_book: String,
+        /// The public part of the user key
+        user_pub_key: UserPubKey,
+        /// The user private key, encrypted for each key in their DID at time of creation
+        encrypted_user_private_key_data: Vec<EncryptedKeyData>,
         /// The size of the userDetails account
         size: u32,
     },
@@ -193,12 +193,12 @@ pub fn initialize_channel(
     name: String,
     creator_did: &Pubkey,
     creator_authority: &Pubkey,
-    ceks: Vec<CEKData>,
+    cek: EncryptedKeyData,
 ) -> Instruction {
     let (creator_cek_account, _) = get_cek_account_address_with_seed(&id(), creator_did, channel);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::InitializeChannel { name, ceks },
+        &SolariumInstruction::InitializeChannel { name, cek },
         vec![
             AccountMeta::new(*funder_account, true),
             AccountMeta::new(*channel, false),
@@ -218,16 +218,16 @@ pub fn initialize_direct_channel(
     creator_did: &Pubkey,
     creator_authority: &Pubkey,
     invitee_did: &Pubkey,
-    creator_ceks: Vec<CEKData>,
-    invitee_ceks: Vec<CEKData>,
+    creator_cek: EncryptedKeyData,
+    invitee_cek: EncryptedKeyData,
 ) -> Instruction {
     let (creator_cek_account, _) = get_cek_account_address_with_seed(&id(), creator_did, channel);
     let (invitee_cek_account, _) = get_cek_account_address_with_seed(&id(), invitee_did, channel);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::InitializeDirectChannel {
-            creator_ceks,
-            invitee_ceks,
+            creator_cek,
+            invitee_cek,
         },
         vec![
             AccountMeta::new(*funder_account, true),
@@ -268,13 +268,13 @@ pub fn add_to_channel(
     invitee_did: &Pubkey,
     inviter_did: &Pubkey,
     inviter_authority: &Pubkey,
-    ceks: Vec<CEKData>,
+    cek: EncryptedKeyData,
 ) -> Instruction {
     let (inviter_cek_account, _) = get_cek_account_address_with_seed(&id(), inviter_did, channel);
     let (invitee_cek_account, _) = get_cek_account_address_with_seed(&id(), invitee_did, channel);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::AddToChannel { ceks },
+        &SolariumInstruction::AddToChannel { cek },
         vec![
             AccountMeta::new(*funder_account, true),
             AccountMeta::new_readonly(*invitee_did, false),
@@ -289,40 +289,38 @@ pub fn add_to_channel(
     )
 }
 
-/// Create a `SolariumInstruction::AddCEK` instruction
-pub fn add_cek(
+/// Create a `SolariumInstruction::AddEncryptedUserKey` instruction
+pub fn add_encrypted_user_key(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
-    channel: &Pubkey,
-    cek: CEKData,
+    key_data: EncryptedKeyData,
 ) -> Instruction {
-    let (owner_cek_account, _) = get_cek_account_address_with_seed(&id(), owner_did, channel);
+    let (owner_user_details_account, _) = get_userdetails_account_address_with_seed(&id(), owner_did);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::AddCEK { cek },
+        &SolariumInstruction::AddEncryptedUserKey { key_data },
         vec![
             AccountMeta::new_readonly(*owner_did, false),
             AccountMeta::new_readonly(*owner_authority, true),
-            AccountMeta::new(owner_cek_account, false),
+            AccountMeta::new(owner_user_details_account, false),
         ],
     )
 }
 
-/// Create a `SolariumInstruction::RemoveCEK` instruction
-pub fn remove_cek(
+/// Create a `SolariumInstruction::RemoveEncryptedUserKey` instruction
+pub fn remove_encrypted_user_key(
     owner_did: &Pubkey,
     owner_authority: &Pubkey,
-    channel: &Pubkey,
-    kid: String,
+    kid: Kid,
 ) -> Instruction {
-    let (owner_cek_account, _) = get_cek_account_address_with_seed(&id(), owner_did, channel);
+    let (owner_user_details_account, _) = get_userdetails_account_address_with_seed(&id(), owner_did);
     Instruction::new_with_borsh(
         id(),
-        &SolariumInstruction::RemoveCEK { kid },
+        &SolariumInstruction::RemoveEncryptedUserKey { kid },
         vec![
             AccountMeta::new_readonly(*owner_did, false),
             AccountMeta::new_readonly(*owner_authority, true),
-            AccountMeta::new(owner_cek_account, false),
+            AccountMeta::new(owner_user_details_account, false),
         ],
     )
 }
@@ -334,6 +332,8 @@ pub fn create_user_details(
     owner_authority: &Pubkey,
     alias: String,
     size: u32,
+    user_pub_key: UserPubKey,
+    encrypted_user_private_key_data: Vec<EncryptedKeyData>,
 ) -> Instruction {
     let (owner_userdetails_account, _) =
         get_userdetails_account_address_with_seed(&id(), owner_did);
@@ -342,6 +342,8 @@ pub fn create_user_details(
         &SolariumInstruction::CreateUserDetails {
             alias,
             address_book: "".to_string(),
+            user_pub_key,
+            encrypted_user_private_key_data,
             size,
         },
         vec![

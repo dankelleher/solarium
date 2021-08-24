@@ -9,7 +9,7 @@ use solana_sdk::{
 };
 use solarium::state::{
     get_channel_address_with_seed, get_notifications_account_address_with_seed,
-    get_userdetails_account_address_with_seed, CEKAccountData, Message, NotificationType,
+    get_userdetails_account_address_with_seed, CEKAccountDataV1, Message, NotificationType,
     Notifications, UserDetails,
 };
 use solarium::{
@@ -235,7 +235,7 @@ impl SolariumContext {
         account_data
     }
 
-    pub async fn get_cek_account(&mut self, address: Pubkey) -> CEKAccountData {
+    pub async fn get_cek_account(&mut self, address: Pubkey) -> CEKAccountDataV1 {
         let account_info = &self
             .context
             .banks_client
@@ -244,7 +244,7 @@ impl SolariumContext {
             .unwrap()
             .unwrap();
         let account_data =
-            program_borsh::try_from_slice_incomplete::<CEKAccountData>(&account_info.data).unwrap();
+            program_borsh::try_from_slice_incomplete::<CEKAccountDataV1>(&account_info.data).unwrap();
 
         account_data
     }

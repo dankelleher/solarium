@@ -11,6 +11,12 @@ use {
     std::collections::VecDeque,
 };
 
+// TODO agree sizes with Martin - these values are temporary so that things compile
+/// A type defining the public component of a user public key
+pub type UserPubKey = [u8;8];
+/// A type defining a key ID
+pub type Kid = [u8;8];
+
 fn push_into_deque<T>(vec: Vec<T>, entry: T, size: usize) -> Vec<T> {
     let mut deque: VecDeque<T> = VecDeque::from(vec);
     deque.push_back(entry);
@@ -70,9 +76,9 @@ impl IsInitialized for ChannelData {
 }
 
 /// A Content Encryption Key for a channel encrypted with a key on the DID of the owner
+/// encoded as base64
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
-pub struct CEKData {
-    // TODO agree with Martin
+pub struct CEKDataV1 {
     /// The header information for the CEK
     pub header: String,
     /// The identifier on the owner DID of the key that this CEK is encrypted with
@@ -81,19 +87,31 @@ pub struct CEKData {
     pub encrypted_key: String,
 }
 
-/// Defines a CEK account structure.
-/// A CEK account is one that stores encrypted CEKs for a particular channel
-/// encrypted for a particular DID.
+/// Represents a key encrypted with a different key
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
-pub struct CEKAccountData {
+pub struct EncryptedKeyData {
+    // TODO agree sizes with Martin - these values are temporary so that things compile
+    /// The header information for the encrypted key
+    pub header: [u8;8],
+    /// The identifier of the key that this key is encrypted with
+    pub kid: Kid,   // TODO needed?
+    /// The encrypted key itself
+    pub encrypted_key: [u8;8],
+}
+
+/// Defines a legacy CEK account structure, in which a 
+/// CEK account stores encrypted CEKs for a channel
+/// encrypted for every key in the DID of the member of the channel
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
+pub struct CEKAccountDataV1 {
     /// The DID that can decrypt the CEKs in this account
     pub owner_did: Pubkey,
     /// The channel that these CEKs decrypt
     pub channel: Pubkey,
     /// The CEKs for the channel, one per key in the owner DID
-    pub ceks: Vec<CEKData>,
+    pub ceks: Vec<CEKDataV1>,
 }
-impl CEKAccountData {
+impl CEKAccountDataV1 {
     /// The maximum number of CEKs that can be added to an individual CEK account
     pub const MAX_CEKS: u8 = 8;
 
@@ -102,17 +120,17 @@ impl CEKAccountData {
         Self {
             owner_did,
             channel,
-            ceks: Vec::with_capacity(usize::from(CEKAccountData::MAX_CEKS)),
+            ceks: Vec::with_capacity(usize::from(CEKAccountDataV1::MAX_CEKS)),
         }
     }
 
     /// Add a number of CEKs to the account at the same time
-    pub fn add_all(&mut self, ceks: Vec<CEKData>) {
+    pub fn add_all(&mut self, ceks: Vec<CEKDataV1>) {
         ceks.iter().for_each(|cek| self.ceks.push(cek.clone()))
     }
 
     /// add a new CEK to the account
-    pub fn add(&mut self, cek: CEKData) {
+    pub fn add(&mut self, cek: CEKDataV1) {
         self.ceks.push(cek);
     }
 
@@ -129,7 +147,36 @@ impl CEKAccountData {
         }
     }
 }
-impl IsInitialized for CEKAccountData {
+impl IsInitialized for CEKAccountDataV1 {
+    /// Checks if a CEK account has been initialized
+    fn is_initialized(&self) -> bool {
+        !self.owner_did.to_bytes().is_empty()
+    }
+}
+
+/// Defines a CEK account structure, in which a 
+/// CEK account stores the CEK for a channel
+/// encrypted by the user's "user key"
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
+pub struct CEKAccountDataV2 {
+    /// The DID that can decrypt the CEK in this account
+    pub owner_did: Pubkey,
+    /// The channel that this CEK decrypts
+    pub channel: Pubkey,
+    /// The CEKs for the channel, one per key in the owner DID
+    pub encrypted_cek: EncryptedKeyData,
+}
+impl CEKAccountDataV2 {
+    /// Create a new CEKAccount
+    pub fn new(owner_did: Pubkey, channel: Pubkey, encrypted_cek: EncryptedKeyData) -> Self {
+        Self {
+            owner_did,
+            channel,
+            encrypted_cek,
+        }
+    }
+}
+impl IsInitialized for CEKAccountDataV2 {
     /// Checks if a CEK account has been initialized
     fn is_initialized(&self) -> bool {
         !self.owner_did.to_bytes().is_empty()
@@ -143,10 +190,37 @@ pub struct UserDetails {
     pub alias: String,
     /// The user's encrypted address book
     pub address_book: String,
+    /// The user private key, encrypted for each key in their DID
+    pub encrypted_user_private_key_data: Vec<EncryptedKeyData>,
+    /// The user public key
+    pub user_public_key: UserPubKey
 }
 impl UserDetails {
     /// The recommended default size of a userDetails account
-    pub const DEFAULT_SIZE_BYTES: u32 = 1536; //1.5kb
+    pub const DEFAULT_SIZE_BYTES: u32 = 3072; //3kb
+
+    /// Add a number of encrypted keys to the account at the same time
+    pub fn add_all(&mut self, encrypted_keys: Vec<EncryptedKeyData>) {
+        encrypted_keys.iter().for_each(|encrypted_key| self.encrypted_user_private_key_data.push(encrypted_key.clone()))
+    }
+
+    /// add a new encrypted key to the account
+    pub fn add_key(&mut self, encrypted_key: EncryptedKeyData) {
+        self.encrypted_user_private_key_data.push(encrypted_key);
+    }
+
+    /// remove an encrypted key from the account by key ID
+    pub fn remove_key(&mut self, kid: Kid) -> Result<(), SolariumError> {
+        let find_result = self.encrypted_user_private_key_data.iter().position(|encrypted_key| encrypted_key.kid == kid);
+
+        match find_result {
+            None => Err(SolariumError::KeyNotFound),
+            Some(index) => {
+                self.encrypted_user_private_key_data.remove(index);
+                Ok(())
+            }
+        }
+    }
 }
 impl IsInitialized for UserDetails {
     /// Checks if a UserDetails account has been initialized

@@ -32,6 +32,10 @@ pub enum SolariumError {
     /// Incorrect account address derivation
     #[error("Incorrect account address derivation")]
     AddressDerivationMismatch,
+
+    /// Missing key
+    #[error("Key not found")]
+    KeyNotFound,
 }
 impl From<SolariumError> for ProgramError {
     fn from(e: SolariumError) -> Self {

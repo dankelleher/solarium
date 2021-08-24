@@ -76,7 +76,7 @@ impl SolariumContext {
         }
     }
 
-    pub async fn create_channel(&mut self) -> () {
+    pub async fn create_channel(&mut self) {
         let channel = Keypair::new();
         let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
 
@@ -122,7 +122,7 @@ impl SolariumContext {
         self.channel = Some(channel.pubkey());
     }
 
-    pub async fn create_direct_channel(&mut self) -> () {
+    pub async fn create_direct_channel(&mut self) {
         let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
         let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
 
@@ -155,7 +155,7 @@ impl SolariumContext {
         self.channel = Some(channel);
     }
 
-    pub async fn add_to_channel(&mut self) -> () {
+    pub async fn add_to_channel(&mut self) {
         let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
 
         let add_to_channel = instruction::add_to_channel(
@@ -179,7 +179,7 @@ impl SolariumContext {
             .unwrap();
     }
 
-    pub async fn post(&mut self, message: &str) -> () {
+    pub async fn post(&mut self, message: &str) {
         let message_obj = Message::new(self.alice_did, message.to_string());
 
         let post = instruction::post(&self.channel.unwrap(), &self.alice.pubkey(), &message_obj);
@@ -196,7 +196,7 @@ impl SolariumContext {
             .unwrap();
     }
 
-    pub async fn post_as_bob(&mut self, message: &str) -> () {
+    pub async fn post_as_bob(&mut self, message: &str) {
         let message_obj = Message::new(self.bob_did, message.to_string());
 
         let post = instruction::post(&self.channel.unwrap(), &self.bob.pubkey(), &message_obj);
@@ -229,10 +229,7 @@ impl SolariumContext {
             .await
             .unwrap()
             .unwrap();
-        let account_data =
-            program_borsh::try_from_slice_incomplete::<ChannelData>(&account_info.data).unwrap();
-
-        account_data
+        program_borsh::try_from_slice_incomplete::<ChannelData>(&account_info.data).unwrap()
     }
 
     pub async fn get_cek_account(&mut self, address: Pubkey) -> CEKAccountData {
@@ -243,13 +240,10 @@ impl SolariumContext {
             .await
             .unwrap()
             .unwrap();
-        let account_data =
-            program_borsh::try_from_slice_incomplete::<CEKAccountData>(&account_info.data).unwrap();
-
-        account_data
+        program_borsh::try_from_slice_incomplete::<CEKAccountData>(&account_info.data).unwrap()
     }
 
-    pub async fn add_cek(&mut self, cek: CEKData) -> () {
+    pub async fn add_cek(&mut self, cek: CEKData) {
         let add_cek = instruction::add_cek(
             &self.alice_did,
             &self.alice.pubkey(),
@@ -269,7 +263,7 @@ impl SolariumContext {
             .unwrap_or_else(|e| println!("{:#?}", e));
     }
 
-    pub async fn remove_cek(&mut self, kid: &str) -> () {
+    pub async fn remove_cek(&mut self, kid: &str) {
         let remove_cek = instruction::remove_cek(
             &self.alice_did,
             &self.alice.pubkey(),
@@ -289,7 +283,7 @@ impl SolariumContext {
             .unwrap();
     }
 
-    pub async fn create_user_details(&mut self) -> () {
+    pub async fn create_user_details(&mut self) {
         let (alice_user_details, _) =
             get_userdetails_account_address_with_seed(&id(), &self.alice_did);
 
@@ -315,7 +309,7 @@ impl SolariumContext {
         self.alice_user_details = Some(alice_user_details);
     }
 
-    pub async fn update_user_details(&mut self, new_alias: &str, new_address_book: &str) -> () {
+    pub async fn update_user_details(&mut self, new_alias: &str, new_address_book: &str) {
         let update_user_details_account = instruction::update_user_details(
             &self.alice_did,
             &self.alice.pubkey(),
@@ -343,13 +337,10 @@ impl SolariumContext {
             .await
             .unwrap()
             .unwrap();
-        let account_data =
-            program_borsh::try_from_slice_incomplete::<UserDetails>(&account_info.data).unwrap();
-
-        account_data
+        program_borsh::try_from_slice_incomplete::<UserDetails>(&account_info.data).unwrap()
     }
 
-    pub async fn create_notifications(&mut self) -> () {
+    pub async fn create_notifications(&mut self) {
         let (alice_notifications, _) =
             get_notifications_account_address_with_seed(&id(), &self.alice_did);
 
@@ -382,17 +373,10 @@ impl SolariumContext {
             .await
             .unwrap()
             .unwrap();
-        let account_data =
-            program_borsh::try_from_slice_incomplete::<Notifications>(&account_info.data).unwrap();
-
-        account_data
+        program_borsh::try_from_slice_incomplete::<Notifications>(&account_info.data).unwrap()
     }
 
-    pub async fn add_notification(
-        &mut self,
-        notification_type: NotificationType,
-        pubkey: &Pubkey,
-    ) -> () {
+    pub async fn add_notification(&mut self, notification_type: NotificationType, pubkey: &Pubkey) {
         let add_notification = instruction::add_notification(
             notification_type,
             pubkey,

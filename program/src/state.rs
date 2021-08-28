@@ -13,7 +13,7 @@ use {
 
 // TODO agree sizes with Martin - these values are temporary so that things compile
 /// A type defining the public component of a user public key
-pub type UserPubKey = [u8;8];
+pub type UserPubKey = [u8;32];
 /// A type defining a key ID
 pub type Kid = [u8;8];
 
@@ -96,7 +96,7 @@ pub struct EncryptedKeyData {
     /// The identifier of the key that this key is encrypted with
     pub kid: Kid,   // TODO needed?
     /// The encrypted key itself
-    pub encrypted_key: [u8;8],
+    pub encrypted_key: [u8;104],
 }
 
 /// Defines a legacy CEK account structure, in which a 

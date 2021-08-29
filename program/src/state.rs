@@ -302,8 +302,7 @@ pub const CEK_ACCOUNT_ADDRESS_SEED: &[u8; 20] = br"solarium_cek_account";
 pub const USERDETAILS_ACCOUNT_ADDRESS_SEED: &[u8; 28] = br"solarium_userdetails_account";
 
 /// The seed string used to derive a program address for a Solarium notifications account
-pub const NOTIFICATIONS_ACCOUNT_ADDRESS_SEED: &[u8; 30] =
-    br"solarium_notifications_account";
+pub const NOTIFICATIONS_ACCOUNT_ADDRESS_SEED: &[u8; 30] = br"solarium_notifications_account";
 
 /// Get program-derived cek account address for the did and channel
 pub fn get_cek_account_address_with_seed(

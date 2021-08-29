@@ -16,11 +16,11 @@ import {
   getUserDetails,
   getDID,
   createDID,
-} from '../src';
-import { SolanaUtil } from '../src/lib/solana/solanaUtil';
+} from '../../src';
+import { SolanaUtil } from '../../src/lib/solana/solanaUtil';
 import { Keypair } from '@solana/web3.js';
 import { repeat } from 'ramda';
-import { DEFAULT_MAX_MESSAGE_COUNT } from '../src/lib/constants';
+import { DEFAULT_MAX_MESSAGE_COUNT } from '../../src/lib/constants';
 import {
   ClusterType,
   keyToIdentifier,

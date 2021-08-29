@@ -12,7 +12,9 @@
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
-    "test": "tsdx test --runInBand",
+    "test": "tsdx test --testPathIgnorePatterns=e2e",
+    "test-e2e": "start-server-and-test start-validator http://localhost:8899/health test-e2e-pattern",
+    "test-e2e-pattern": "tsdx test --runInBand --testPathPattern=e2e",
     "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",
@@ -51,6 +53,7 @@
     "husky": "^6.0.0",
     "jest-when": "^3.3.1",
     "size-limit": "^4.10.2",
+    "start-server-and-test": "^1.13.1",
     "ts-jest": "^26.5.5",
     "ts-node": "^9.1.1",
     "tsdx": "^0.14.1",

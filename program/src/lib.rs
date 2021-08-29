@@ -1,5 +1,6 @@
 //! SOL program
 #![deny(missing_docs)]
+#![allow(clippy::upper_case_acronyms)]
 
 pub mod borsh;
 mod entrypoint;

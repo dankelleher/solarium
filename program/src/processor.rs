@@ -1,14 +1,18 @@
 //! Program state processor
 
-use crate::state::{direct_channel_address_order, get_notifications_account_address_with_seed, get_userdetails_account_address_with_seed, Notification, NotificationType, Notifications, UserDetails, CHANNEL_ADDRESS_SEED, NOTIFICATIONS_ACCOUNT_ADDRESS_SEED, USERDETAILS_ACCOUNT_ADDRESS_SEED, EncryptedKeyData, CEKAccountDataV2, UserPubKey, Kid};
+use core::mem;
 use {
     crate::{
         borsh as program_borsh,
         error::SolariumError,
         instruction::SolariumInstruction,
         state::{
-            get_cek_account_address_with_seed, get_channel_address_with_seed, CEKAccountDataV1,
-            ChannelData, Message, CEK_ACCOUNT_ADDRESS_SEED,
+            direct_channel_address_order, get_cek_account_address_with_seed,
+            get_channel_address_with_seed, get_notifications_account_address_with_seed,
+            get_userdetails_account_address_with_seed, CEKAccountDataV2, ChannelData,
+            EncryptedKeyData, Kid, Message, Notification, NotificationType, Notifications,
+            UserDetails, UserPubKey, CEK_ACCOUNT_ADDRESS_SEED, CHANNEL_ADDRESS_SEED,
+            NOTIFICATIONS_ACCOUNT_ADDRESS_SEED, USERDETAILS_ACCOUNT_ADDRESS_SEED,
         },
     },
     borsh::{BorshDeserialize, BorshSerialize},
@@ -26,7 +30,6 @@ use {
         sysvar::Sysvar,
     },
 };
-use core::mem;
 
 /// Checks that the authority_info account is an authority for the DID,
 /// And that the CEK Account is owned by that DID
@@ -38,7 +41,7 @@ fn check_authority_of_cek(
 ) -> ProgramResult {
     check_authority_of_did(authority_info, did).unwrap();
 
-    let cek_account = program_borsh::try_from_slice_incomplete::<CEKAccountDataV1>(
+    let cek_account = program_borsh::try_from_slice_incomplete::<CEKAccountDataV2>(
         *cek_account_info.data.borrow(),
     )?;
     if !(cek_account.owner_did.eq(did.key)) {
@@ -70,8 +73,7 @@ fn check_authority_of_user_details(
     }
 
     // check that the user details account belongs to the DID
-    let (user_details_address, _) =
-        get_userdetails_account_address_with_seed(program_id, did.key);
+    let (user_details_address, _) = get_userdetails_account_address_with_seed(program_id, did.key);
     if user_details_address != *user_details_account_info.key {
         msg!("Error: Attempt to update a userdetails account with an address not derived from the DID");
         return Err(SolariumError::AddressDerivationMismatch.into());
@@ -101,7 +103,7 @@ fn check_cek_account(
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    let cek_account = program_borsh::try_from_slice_incomplete::<CEKAccountDataV1>(
+    let cek_account = program_borsh::try_from_slice_incomplete::<CEKAccountDataV2>(
         *cek_account_info.data.borrow(),
     )?;
     if cek_account.channel != *channel_info.key {
@@ -255,7 +257,7 @@ fn initialize_direct_channel(
             channel_info.clone(),
             system_program_info.clone(),
         ],
-        &[&channel_signer_seeds],
+        &[channel_signer_seeds],
     )?;
 
     msg!("Serializing");
@@ -294,7 +296,7 @@ fn post(program_id: &Pubkey, accounts: &[AccountInfo], message: String) -> Progr
         program_id,
         sender_authority_info,
         sender_did_info,
-        &sender_cek_account_info,
+        sender_cek_account_info,
     )
     .unwrap();
 
@@ -403,7 +405,7 @@ fn create_cek_account<'a>(
             invitee_cek_account_info.clone(),
             system_program_info.clone(),
         ],
-        &[&cek_account_signer_seeds],
+        &[cek_account_signer_seeds],
     )?;
 
     cek_account
@@ -430,8 +432,9 @@ fn update_user_details(
         authority_info,
         did_info,
         user_details_account_info,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     let mut user_details = program_borsh::try_from_slice_incomplete::<UserDetails>(
         *user_details_account_info.data.borrow(),
     )?;
@@ -450,7 +453,11 @@ fn update_user_details(
         .map_err(|e| e.into())
 }
 
-fn add_encrypted_user_key(program_id: &Pubkey, accounts: &[AccountInfo], key_data: EncryptedKeyData) -> ProgramResult {
+fn add_encrypted_user_key(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    key_data: EncryptedKeyData,
+) -> ProgramResult {
     msg!("SolariumInstruction::AddEncryptedUserKey");
     let account_info_iter = &mut accounts.iter();
     let did_info = next_account_info(account_info_iter)?;
@@ -464,8 +471,9 @@ fn add_encrypted_user_key(program_id: &Pubkey, accounts: &[AccountInfo], key_dat
         authority_info,
         did_info,
         user_details_account_info,
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     let mut user_details_account = program_borsh::try_from_slice_incomplete::<UserDetails>(
         *user_details_account_info.data.borrow(),
     )?;
@@ -478,8 +486,12 @@ fn add_encrypted_user_key(program_id: &Pubkey, accounts: &[AccountInfo], key_dat
         .map_err(|e| e.into())
 }
 
-fn remove_encrypted_user_key(program_id: &Pubkey, accounts: &[AccountInfo], kid: Kid) -> ProgramResult {
-    msg!("SolariumInstruction::Removeuser_details");
+fn remove_encrypted_user_key(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    kid: Kid,
+) -> ProgramResult {
+    msg!("SolariumInstruction::RemoveUserDetails");
     let account_info_iter = &mut accounts.iter();
     let did_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
@@ -492,7 +504,8 @@ fn remove_encrypted_user_key(program_id: &Pubkey, accounts: &[AccountInfo], kid:
         authority_info,
         did_info,
         user_details_account_info,
-    ).unwrap();
+    )
+    .unwrap();
 
     let mut user_details_account = program_borsh::try_from_slice_incomplete::<UserDetails>(
         *user_details_account_info.data.borrow(),
@@ -548,7 +561,7 @@ fn create_user_details(
         alias,
         address_book,
         user_public_key,
-        encrypted_user_private_key_data
+        encrypted_user_private_key_data,
     };
 
     let user_details_account_signer_seeds: &[&[_]] = &[
@@ -570,7 +583,7 @@ fn create_user_details(
             user_details_account_info.clone(),
             system_program_info.clone(),
         ],
-        &[&user_details_account_signer_seeds],
+        &[user_details_account_signer_seeds],
     )?;
 
     new_user_details
@@ -629,7 +642,7 @@ fn create_notifications(program_id: &Pubkey, accounts: &[AccountInfo], size: u8)
             notifications_account_info.clone(),
             system_program_info.clone(),
         ],
-        &[&notifications_account_signer_seeds],
+        &[notifications_account_signer_seeds],
     )?;
 
     new_notifications
@@ -695,15 +708,27 @@ pub fn process_instruction(
         } => initialize_direct_channel(program_id, accounts, creator_cek, invitee_cek),
         SolariumInstruction::Post { message } => post(program_id, accounts, message),
         SolariumInstruction::AddToChannel { cek } => add_to_channel(program_id, accounts, cek),
-        SolariumInstruction::AddEncryptedUserKey { key_data } => add_encrypted_user_key(program_id, accounts, key_data),
-        SolariumInstruction::RemoveEncryptedUserKey { kid } => remove_encrypted_user_key(program_id, accounts, kid),
+        SolariumInstruction::AddEncryptedUserKey { key_data } => {
+            add_encrypted_user_key(program_id, accounts, key_data)
+        }
+        SolariumInstruction::RemoveEncryptedUserKey { kid } => {
+            remove_encrypted_user_key(program_id, accounts, kid)
+        }
         SolariumInstruction::CreateUserDetails {
             alias,
             address_book,
             user_pub_key,
             encrypted_user_private_key_data,
             size,
-        } => create_user_details(program_id, accounts, alias, address_book, user_pub_key, encrypted_user_private_key_data, size),
+        } => create_user_details(
+            program_id,
+            accounts,
+            alias,
+            address_book,
+            user_pub_key,
+            encrypted_user_private_key_data,
+            size,
+        ),
         SolariumInstruction::UpdateUserDetails {
             alias,
             address_book,

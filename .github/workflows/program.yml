@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['nightly-2021-02-18']
+        rust: ['1.54']
         os: [ubuntu-latest]
 
     steps:
@@ -22,8 +22,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.rust }}
-          override: true
-          profile: minimal
           components: rustfmt, clippy
 
       - name: Run fmt
@@ -45,7 +43,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --manifest-path program/Cargo.toml -Zunstable-options --workspace --all-targets -- --deny=warnings
+          args: --manifest-path program/Cargo.toml --workspace --all-targets -- --deny=warnings
 
   program-unit-test:
     name: Unit test program on Rust ${{ matrix.rust }} and ${{ matrix.os }}
@@ -53,7 +51,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['1.50']
+        rust: ['1.54']
         os: [ubuntu-latest]
 
     steps:
@@ -64,8 +62,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.rust }}
-          override: true
-          profile: minimal
 
       - name: Cache build dependencies
         uses: actions/cache@v2
@@ -88,8 +84,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rust: ['1.50']
-        solana: ['v1.7.6']
+        rust: ['1.54']
+        solana: ['v1.7.11']
         os: [ubuntu-latest]
 
     steps:
@@ -100,8 +96,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.rust }}
-          override: true
-          profile: minimal
 
       - name: Cache build dependencies
         uses: actions/cache@v2

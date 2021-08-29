@@ -9,15 +9,16 @@ use solana_sdk::{
 };
 use solarium::state::{
     get_channel_address_with_seed, get_notifications_account_address_with_seed,
-    get_userdetails_account_address_with_seed, CEKAccountData, Message, NotificationType,
+    get_userdetails_account_address_with_seed, CEKAccountDataV2, Kid, Message, NotificationType,
     Notifications, UserDetails,
 };
 use solarium::{
     borsh as program_borsh, id, instruction,
     processor::process_instruction,
     state::get_cek_account_address_with_seed,
-    state::{CEKData, ChannelData},
+    state::{ChannelData, EncryptedKeyData, UserPubKey},
 };
+use std::convert::TryInto;
 
 pub struct SolariumContext {
     pub context: ProgramTestContext,
@@ -78,7 +79,7 @@ impl SolariumContext {
 
     pub async fn create_channel(&mut self) {
         let channel = Keypair::new();
-        let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
+        let alice_cek = SolariumContext::make_dummy_keydata("key1");
 
         let channel_size = ChannelData::size_bytes();
         let lamports = self
@@ -102,7 +103,7 @@ impl SolariumContext {
             "test channel".to_string(),
             &self.alice_did,
             &self.alice.pubkey(),
-            alice_ceks,
+            alice_cek,
         );
         let transaction = Transaction::new_signed_with_payer(
             &[create_channel, initialize_channel],
@@ -123,8 +124,8 @@ impl SolariumContext {
     }
 
     pub async fn create_direct_channel(&mut self) {
-        let alice_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
-        let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
+        let alice_cek = SolariumContext::make_dummy_keydata("key1");
+        let bob_cek = SolariumContext::make_dummy_keydata("key1");
 
         let (channel, _) = get_channel_address_with_seed(&id(), &self.alice_did, &self.bob_did);
         let initialize_direct_channel = instruction::initialize_direct_channel(
@@ -133,8 +134,8 @@ impl SolariumContext {
             &self.alice_did,
             &self.alice.pubkey(),
             &self.bob_did,
-            alice_ceks,
-            bob_ceks,
+            alice_cek,
+            bob_cek,
         );
 
         let transaction = Transaction::new_signed_with_payer(
@@ -156,7 +157,7 @@ impl SolariumContext {
     }
 
     pub async fn add_to_channel(&mut self) {
-        let bob_ceks = vec![SolariumContext::make_dummy_cekdata("key1")];
+        let bob_cek = SolariumContext::make_dummy_keydata("key1");
 
         let add_to_channel = instruction::add_to_channel(
             &self.context.payer.pubkey(),
@@ -164,7 +165,7 @@ impl SolariumContext {
             &self.bob_did,
             &self.alice_did,
             &self.alice.pubkey(),
-            bob_ceks,
+            bob_cek,
         );
         let transaction = Transaction::new_signed_with_payer(
             &[add_to_channel],
@@ -213,11 +214,18 @@ impl SolariumContext {
             .unwrap();
     }
 
-    pub fn make_dummy_cekdata(kid: &str) -> CEKData {
-        CEKData {
-            header: "".to_string(),
-            kid: kid.to_string(),
-            encrypted_key: "".to_string(),
+    pub fn kid_to_bytes(kid: &str) -> Kid {
+        let padded = format!("{:width$}", kid, width = 8);
+        (padded.as_bytes()[0..8]).try_into().unwrap()
+    }
+
+    pub fn make_dummy_keydata(kid: &str) -> EncryptedKeyData {
+        EncryptedKeyData {
+            kid: SolariumContext::kid_to_bytes(kid),
+            kiv: [0; 24],
+            key_tag: [0; 16],
+            ephemeral_pubkey: [0; 32],
+            key_ciphertext: [0; 32],
         }
     }
 
@@ -232,7 +240,7 @@ impl SolariumContext {
         program_borsh::try_from_slice_incomplete::<ChannelData>(&account_info.data).unwrap()
     }
 
-    pub async fn get_cek_account(&mut self, address: Pubkey) -> CEKAccountData {
+    pub async fn get_cek_account(&mut self, address: Pubkey) -> CEKAccountDataV2 {
         let account_info = &self
             .context
             .banks_client
@@ -240,18 +248,14 @@ impl SolariumContext {
             .await
             .unwrap()
             .unwrap();
-        program_borsh::try_from_slice_incomplete::<CEKAccountData>(&account_info.data).unwrap()
+        program_borsh::try_from_slice_incomplete::<CEKAccountDataV2>(&account_info.data).unwrap()
     }
 
-    pub async fn add_cek(&mut self, cek: CEKData) {
-        let add_cek = instruction::add_cek(
-            &self.alice_did,
-            &self.alice.pubkey(),
-            &self.channel.unwrap(),
-            cek,
-        );
+    pub async fn add_key(&mut self, key_data: EncryptedKeyData) {
+        let add_key_instruction =
+            instruction::add_encrypted_user_key(&self.alice_did, &self.alice.pubkey(), key_data);
         let transaction = Transaction::new_signed_with_payer(
-            &[add_cek],
+            &[add_key_instruction],
             Some(&self.context.payer.pubkey()),
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
@@ -263,15 +267,14 @@ impl SolariumContext {
             .unwrap_or_else(|e| println!("{:#?}", e));
     }
 
-    pub async fn remove_cek(&mut self, kid: &str) {
-        let remove_cek = instruction::remove_cek(
+    pub async fn remove_key(&mut self, kid: &str) {
+        let remove_key_instruction = instruction::remove_encrypted_user_key(
             &self.alice_did,
             &self.alice.pubkey(),
-            &self.channel.unwrap(),
-            kid.to_string(),
+            SolariumContext::kid_to_bytes(kid),
         );
         let transaction = Transaction::new_signed_with_payer(
-            &[remove_cek],
+            &[remove_key_instruction],
             Some(&self.context.payer.pubkey()),
             &[&self.context.payer, &self.alice],
             self.context.last_blockhash,
@@ -293,6 +296,8 @@ impl SolariumContext {
             &self.alice.pubkey(),
             "Alice".to_string(),
             UserDetails::DEFAULT_SIZE_BYTES,
+            UserPubKey::default(),
+            vec![SolariumContext::make_dummy_keydata("key1")],
         );
         let transaction = Transaction::new_signed_with_payer(
             &[create_user_details_account],

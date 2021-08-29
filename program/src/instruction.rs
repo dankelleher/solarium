@@ -1,12 +1,14 @@
 //! Program instructions
 
-use crate::state::{get_notifications_account_address_with_seed, NotificationType, EncryptedKeyData, UserPubKey, Kid};
+use crate::state::{
+    get_notifications_account_address_with_seed, EncryptedKeyData, Kid, NotificationType,
+    UserPubKey,
+};
 use {
     crate::{
         id,
         state::{
-            get_cek_account_address_with_seed, get_userdetails_account_address_with_seed,
-            Message,
+            get_cek_account_address_with_seed, get_userdetails_account_address_with_seed, Message,
         },
     },
     borsh::{BorshDeserialize, BorshSerialize},
@@ -295,7 +297,8 @@ pub fn add_encrypted_user_key(
     owner_authority: &Pubkey,
     key_data: EncryptedKeyData,
 ) -> Instruction {
-    let (owner_user_details_account, _) = get_userdetails_account_address_with_seed(&id(), owner_did);
+    let (owner_user_details_account, _) =
+        get_userdetails_account_address_with_seed(&id(), owner_did);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::AddEncryptedUserKey { key_data },
@@ -313,7 +316,8 @@ pub fn remove_encrypted_user_key(
     owner_authority: &Pubkey,
     kid: Kid,
 ) -> Instruction {
-    let (owner_user_details_account, _) = get_userdetails_account_address_with_seed(&id(), owner_did);
+    let (owner_user_details_account, _) =
+        get_userdetails_account_address_with_seed(&id(), owner_did);
     Instruction::new_with_borsh(
         id(),
         &SolariumInstruction::RemoveEncryptedUserKey { kid },

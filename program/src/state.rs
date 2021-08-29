@@ -11,11 +11,18 @@ use {
     std::collections::VecDeque,
 };
 
-// TODO agree sizes with Martin - these values are temporary so that things compile
 /// A type defining the public component of a user public key
-pub type UserPubKey = [u8;32];
-/// A type defining a key ID
-pub type Kid = [u8;8];
+pub type UserPubKey = [u8; 32];
+/// A type defining a key ID // TODO agree size with Martin
+pub type Kid = [u8; 8];
+/// A type defining a key Initiation Vector
+pub type KeyIV = [u8; 24];
+/// A type defining a key tag used by Poly1305 for message authentication
+pub type KeyTag = [u8; 16];
+/// A type defining an ephemeral public key used for KDF Key Determination with Wrapped Private UserKey
+pub type EphemeralPubkey = [u8; 32];
+/// A type defining the wrapped encrypted key
+pub type KeyCiphertext = [u8; 32];
 
 fn push_into_deque<T>(vec: Vec<T>, entry: T, size: usize) -> Vec<T> {
     let mut deque: VecDeque<T> = VecDeque::from(vec);
@@ -90,16 +97,19 @@ pub struct CEKDataV1 {
 /// Represents a key encrypted with a different key
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
 pub struct EncryptedKeyData {
-    // TODO agree sizes with Martin - these values are temporary so that things compile
-    /// The header information for the encrypted key
-    pub header: [u8;8],
     /// The identifier of the key that this key is encrypted with
-    pub kid: Kid,   // TODO needed?
-    /// The encrypted key itself
-    pub encrypted_key: [u8;104],
+    pub kid: Kid, // TODO needed?
+    /// The key Initiation Vector
+    pub kiv: KeyIV,
+    /// The key tag used by Poly1305 for message authentication
+    pub key_tag: KeyTag,
+    /// The ephemeral public key used for KDF Key Determination with Wrapped Private UserKey
+    pub ephemeral_pubkey: EphemeralPubkey,
+    /// The wrapped encrypted key
+    pub key_ciphertext: KeyCiphertext,
 }
 
-/// Defines a legacy CEK account structure, in which a 
+/// Defines a legacy CEK account structure, in which a
 /// CEK account stores encrypted CEKs for a channel
 /// encrypted for every key in the DID of the member of the channel
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
@@ -154,7 +164,7 @@ impl IsInitialized for CEKAccountDataV1 {
     }
 }
 
-/// Defines a CEK account structure, in which a 
+/// Defines a CEK account structure, in which a
 /// CEK account stores the CEK for a channel
 /// encrypted by the user's "user key"
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
@@ -193,7 +203,7 @@ pub struct UserDetails {
     /// The user private key, encrypted for each key in their DID
     pub encrypted_user_private_key_data: Vec<EncryptedKeyData>,
     /// The user public key
-    pub user_public_key: UserPubKey
+    pub user_public_key: UserPubKey,
 }
 impl UserDetails {
     /// The recommended default size of a userDetails account
@@ -201,7 +211,10 @@ impl UserDetails {
 
     /// Add a number of encrypted keys to the account at the same time
     pub fn add_all(&mut self, encrypted_keys: Vec<EncryptedKeyData>) {
-        encrypted_keys.iter().for_each(|encrypted_key| self.encrypted_user_private_key_data.push(encrypted_key.clone()))
+        encrypted_keys.iter().for_each(|encrypted_key| {
+            self.encrypted_user_private_key_data
+                .push(encrypted_key.clone())
+        })
     }
 
     /// add a new encrypted key to the account
@@ -211,7 +224,10 @@ impl UserDetails {
 
     /// remove an encrypted key from the account by key ID
     pub fn remove_key(&mut self, kid: Kid) -> Result<(), SolariumError> {
-        let find_result = self.encrypted_user_private_key_data.iter().position(|encrypted_key| encrypted_key.kid == kid);
+        let find_result = self
+            .encrypted_user_private_key_data
+            .iter()
+            .position(|encrypted_key| encrypted_key.kid == kid);
 
         match find_result {
             None => Err(SolariumError::KeyNotFound),

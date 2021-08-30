@@ -1,6 +1,5 @@
 import { VerificationMethod } from 'did-resolver/src/resolver';
 import { DIDDocument } from 'did-resolver';
-import { CEKData } from '../solana/models/CEKData';
 import { isPublicKey, makeKeypair, PrivateKey } from '../util';
 import { randomBytes } from '@stablelib/random';
 import {
@@ -25,6 +24,7 @@ import {
   bytesToBase58,
 } from './utils';
 import { getDocument } from '../did/get';
+import {EncryptedKey} from "../UserDetails";
 
 export type CEK = Uint8Array;
 
@@ -56,7 +56,7 @@ const getVerificationMethod = (
 export const encryptCEKForDID = async (
   cek: CEK,
   did: string
-): Promise<CEKData[]> => {
+): Promise<EncryptedKey[]> => {
   const didDocument = await getDocument(did);
   const augmentedDIDDocument = augmentDIDDocument(didDocument);
 
@@ -66,7 +66,7 @@ export const encryptCEKForDID = async (
 export const encryptCEKForVerificationMethod = async (
   cek: CEK,
   key: VerificationMethod
-): Promise<CEKData> => {
+): Promise<EncryptedKey> => {
   if (!key.publicKeyBase58) {
     throw Error(
       'Currently we expect the recipient key to be encoded as base58'
@@ -79,7 +79,7 @@ export const encryptCEKForVerificationMethod = async (
   const concatByteArray = u8a.concat([res.iv, res.tag, res.epPubKey]);
   const header = bytesToBase64(concatByteArray);
 
-  return new CEKData({
+  return new EncryptedKey({
     kid: shortenKID(key.id),
     header,
     encryptedKey: bytesToBase64(res.encryptedKey),
@@ -90,9 +90,9 @@ export const encryptCEKForVerificationMethod = async (
 export const encryptCEKForDIDDocument = async (
   cek: CEK,
   didDocument: DIDDocument
-): Promise<CEKData[]> => {
+): Promise<EncryptedKey[]> => {
   const encryptedCEKPromises = (didDocument.keyAgreement || []).map(
-    async (keyOrRef): Promise<CEKData> => {
+    async (keyOrRef): Promise<EncryptedKey> => {
       const verificationMethod = getVerificationMethod(keyOrRef, didDocument);
       return encryptCEKForVerificationMethod(cek, verificationMethod);
     }
@@ -102,14 +102,14 @@ export const encryptCEKForDIDDocument = async (
 };
 
 // Create a new CEK and encrypt it for the DID
-export const createEncryptedCEK = async (did: string): Promise<CEKData[]> => {
+export const createEncryptedCEK = async (did: string): Promise<EncryptedKey[]> => {
   const cek = await generateCEK();
   return encryptCEKForDID(cek, did);
 };
 
 // Decrypt an encrypted CEK for the with the key that was used to encrypt it
 export const decryptCEK = async (
-  encryptedCEK: CEKData,
+  encryptedCEK: EncryptedKey,
   key: PrivateKey
 ): Promise<CEK> => {
   // decode information from CEKData
@@ -150,10 +150,10 @@ export const decryptCEK = async (
 
 // Find the CEK encrypted with a particular key, and decrypt it
 export const decryptCEKs = async (
-  encryptedCEKs: CEKData[],
+  encryptedCEKs: EncryptedKey[],
   kid: string,
   key: PrivateKey
-): Promise<CEK> => {
+): Promise<EncryptedKey> => {
   // find the encrypted CEK for the key
   const encryptedCEK = encryptedCEKs.find(
     k => k.kid === shortenKID(kid) || k.kid === kid
@@ -167,7 +167,7 @@ export const decryptCEKs = async (
 // Encrypt a message with a CEK
 export const encryptMessage = async (
   message: string,
-  cek: CEK
+  cek: EncryptedKey
 ): Promise<string> => {
   const encryptMessage = await xc20pEncrypter(cek)(stringToBytes(message));
   // iv (24), ciphertext (var), tag (16)
@@ -228,11 +228,11 @@ export const findVerificationMethodForKey = (
 // Given a cek encrypted for fromDID, and a private key for fromDID
 // decrypt and reencrypt for toDID
 export const reencryptCEKForDID = async (
-  encryptedCEK: CEKData[],
+  encryptedCEK: EncryptedKey[],
   fromDID: string,
   fromPrivateKey: PrivateKey,
   toDID: string
-): Promise<CEKData[]> => {
+): Promise<EncryptedKey[]> => {
   const fromDIDDocument = await getDocument(fromDID);
   const fromVerificationMethod = findVerificationMethodForKey(
     fromDIDDocument,

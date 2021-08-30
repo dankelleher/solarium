@@ -1,6 +1,6 @@
 import { Enum, Assignable, SCHEMA } from './solanaBorsh';
 import {
-  CEK_ACCOUNT_NONCE_SEED_STRING,
+  CEK_ACCOUNT_V2_NONCE_SEED_STRING,
   CHANNEL_NONCE_SEED_STRING,
   DEFAULT_USER_DETAILS_SIZE,
   PROGRAM_ID,
@@ -13,17 +13,18 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
-import { CEKData } from './models/CEKData';
+import {EncryptedKeyData, Kid} from './models/EncryptedKeyData';
 import { MessageData } from './models/MessageData';
+import {UserPubKey} from "./models/UserDetailsData";
 
 export class InitializeChannel extends Assignable {
   name: string;
-  CEKs: CEKData[];
+  cek: EncryptedKeyData;
 }
 
 export class InitializeDirectChannel extends Assignable {
-  creatorCEKs: CEKData[];
-  inviteeCEKs: CEKData[];
+  creatorCEK: EncryptedKeyData;
+  inviteeCEK: EncryptedKeyData;
 }
 
 export class Post extends Assignable {
@@ -31,21 +32,23 @@ export class Post extends Assignable {
 }
 
 export class AddToChannel extends Assignable {
-  CEKs: CEKData[];
+  cek: EncryptedKeyData;
 }
 
-export class AddCEK extends Assignable {
-  cek: CEKData;
+export class AddEncryptedUserKey extends Assignable {
+  keyData: EncryptedKeyData;
 }
 
-export class RemoveCEK extends Assignable {
-  kid: string;
+export class RemoveEncryptedUserKey extends Assignable {
+  kid: Kid;
 }
 
 export class CreateUserDetails extends Assignable {
   alias: string;
   addressBook: string;
   size: number;
+  encryptedUserPrivateKeyData: EncryptedKeyData[];
+  userPubKey: UserPubKey;
 }
 
 export class UpdateUserDetails extends Assignable {
@@ -58,25 +61,25 @@ export class SolariumInstruction extends Enum {
   initializeDirectChannel: InitializeDirectChannel;
   post: Post;
   addToChannel: AddToChannel;
-  addCEK: AddCEK;
-  removeCEK: RemoveCEK;
+  addEncryptedUserKey: AddEncryptedUserKey;
+  removeEncryptedUserKey: RemoveEncryptedUserKey;
   createUserDetails: CreateUserDetails;
   updateUserDetails: UpdateUserDetails;
 
-  static initializeChannel(name: string, CEKs: CEKData[]): SolariumInstruction {
+  static initializeChannel(name: string, cek: EncryptedKeyData): SolariumInstruction {
     return new SolariumInstruction({
-      initializeChannel: new InitializeChannel({ name, CEKs }),
+      initializeChannel: new InitializeChannel({ name, cek }),
     });
   }
 
   static initializeDirectChannel(
-    creatorCEKs: CEKData[],
-    inviteeCEKs: CEKData[]
+    creatorCEK: EncryptedKeyData,
+    inviteeCEK: EncryptedKeyData
   ): SolariumInstruction {
     return new SolariumInstruction({
       initializeDirectChannel: new InitializeDirectChannel({
-        creatorCEKs,
-        inviteeCEKs,
+        creatorCEK,
+        inviteeCEK,
       }),
     });
   }
@@ -85,31 +88,33 @@ export class SolariumInstruction extends Enum {
     return new SolariumInstruction({ post: new Post({ message }) });
   }
 
-  static addToChannel(CEKs: CEKData[]): SolariumInstruction {
+  static addToChannel(cek: EncryptedKeyData): SolariumInstruction {
     return new SolariumInstruction({
-      addToChannel: new AddToChannel({ CEKs }),
+      addToChannel: new AddToChannel({ cek }),
     });
   }
 
-  static addCEK(cek: CEKData): SolariumInstruction {
+  static addEncryptedUserKey(keyData: EncryptedKeyData): SolariumInstruction {
     return new SolariumInstruction({
-      addCEK: new AddCEK({ cek }),
+      addEncryptedUerKey: new AddEncryptedUserKey({ keyData }),
     });
   }
 
-  static removeCEK(kid: string): SolariumInstruction {
+  static removeEncryptedUserKey(kid: Kid): SolariumInstruction {
     return new SolariumInstruction({
-      removeCEK: new RemoveCEK({ kid }),
+      removeEncryptedUserKey: new RemoveEncryptedUserKey({ kid }),
     });
   }
 
   static createUserDetails(
     alias: string,
+    encryptedUserPrivateKeyData: EncryptedKeyData[],
+    userPubKey: UserPubKey,
     addressBook = '',
-    size: number = DEFAULT_USER_DETAILS_SIZE
+    size: number = DEFAULT_USER_DETAILS_SIZE,
   ): SolariumInstruction {
     return new SolariumInstruction({
-      createUserDetails: new CreateUserDetails({ alias, addressBook, size }),
+      createUserDetails: new CreateUserDetails({ alias, addressBook, size, encryptedUserPrivateKeyData, userPubKey }),
     });
   }
 
@@ -123,7 +128,7 @@ export class SolariumInstruction extends Enum {
   }
 }
 
-export async function getCekAccountKey(
+export async function getCekAccountAddress(
   ownerDID: PublicKey,
   channel: PublicKey
 ): Promise<PublicKey> {
@@ -131,14 +136,14 @@ export async function getCekAccountKey(
     [
       ownerDID.toBuffer(),
       channel.toBuffer(),
-      Buffer.from(CEK_ACCOUNT_NONCE_SEED_STRING, 'utf8'),
+      Buffer.from(CEK_ACCOUNT_V2_NONCE_SEED_STRING, 'utf8'),
     ],
     PROGRAM_ID
   );
   return publicKeyNonce[0];
 }
 
-export async function getUserDetailsKey(did: PublicKey): Promise<PublicKey> {
+export async function getUserDetailsAddress(did: PublicKey): Promise<PublicKey> {
   const publicKeyNonce = await PublicKey.findProgramAddress(
     [
       did.toBuffer(),
@@ -149,7 +154,7 @@ export async function getUserDetailsKey(did: PublicKey): Promise<PublicKey> {
   return publicKeyNonce[0];
 }
 
-export async function getDirectChannelAccountKey(
+export async function getDirectChannelAccountAddress(
   did1: PublicKey,
   did2: PublicKey
 ): Promise<PublicKey> {
@@ -171,9 +176,9 @@ export async function initializeChannel(
   name: string,
   creatorDID: PublicKey,
   creatorAuthority: PublicKey,
-  CEKs: CEKData[]
+  cek: EncryptedKeyData
 ): Promise<TransactionInstruction> {
-  const creatorCEKAccount = await getCekAccountKey(creatorDID, channel);
+  const creatorCEKAccount = await getCekAccountAddress(creatorDID, channel);
   const keys: AccountMeta[] = [
     { pubkey: payer, isSigner: true, isWritable: true },
     { pubkey: channel, isSigner: false, isWritable: true },
@@ -183,7 +188,7 @@ export async function initializeChannel(
     { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ];
-  const data = SolariumInstruction.initializeChannel(name, CEKs).encode();
+  const data = SolariumInstruction.initializeChannel(name, cek).encode();
   return new TransactionInstruction({
     keys,
     programId: PROGRAM_ID,
@@ -197,11 +202,11 @@ export async function initializeDirectChannel(
   creatorDID: PublicKey,
   creatorAuthority: PublicKey,
   inviteeDID: PublicKey,
-  creatorCEKs: CEKData[],
-  inviteeCEKs: CEKData[]
+  creatorCEK: EncryptedKeyData,
+  inviteeCEK: EncryptedKeyData
 ): Promise<TransactionInstruction> {
-  const creatorCEKAccount = await getCekAccountKey(creatorDID, channel);
-  const inviteeCEKAccount = await getCekAccountKey(inviteeDID, channel);
+  const creatorCEKAccount = await getCekAccountAddress(creatorDID, channel);
+  const inviteeCEKAccount = await getCekAccountAddress(inviteeDID, channel);
   const keys: AccountMeta[] = [
     { pubkey: payer, isSigner: true, isWritable: true },
     { pubkey: channel, isSigner: false, isWritable: true },
@@ -214,8 +219,8 @@ export async function initializeDirectChannel(
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ];
   const data = SolariumInstruction.initializeDirectChannel(
-    creatorCEKs,
-    inviteeCEKs
+    creatorCEK,
+    inviteeCEK
   ).encode();
   return new TransactionInstruction({
     keys,
@@ -229,7 +234,7 @@ export async function post(
   senderAuthority: PublicKey,
   message: MessageData
 ): Promise<TransactionInstruction> {
-  const senderCEKAccount = await getCekAccountKey(
+  const senderCEKAccount = await getCekAccountAddress(
     message.sender.toPublicKey(),
     channel
   );
@@ -257,10 +262,10 @@ export async function addToChannel(
   inviteeDID: PublicKey,
   inviterDID: PublicKey,
   inviterAuthority: PublicKey,
-  CEKs: CEKData[]
+  cek: EncryptedKeyData
 ): Promise<TransactionInstruction> {
-  const inviterCEKAccount = await getCekAccountKey(inviterDID, channel);
-  const inviteeCEKAccount = await getCekAccountKey(inviteeDID, channel);
+  const inviterCEKAccount = await getCekAccountAddress(inviterDID, channel);
+  const inviteeCEKAccount = await getCekAccountAddress(inviteeDID, channel);
   const keys: AccountMeta[] = [
     { pubkey: payer, isSigner: true, isWritable: true },
     { pubkey: inviteeDID, isSigner: false, isWritable: false },
@@ -272,7 +277,7 @@ export async function addToChannel(
     { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ];
-  const data = SolariumInstruction.addToChannel(CEKs).encode();
+  const data = SolariumInstruction.addToChannel(cek).encode();
   return new TransactionInstruction({
     keys,
     programId: PROGRAM_ID,
@@ -280,19 +285,18 @@ export async function addToChannel(
   });
 }
 
-export async function addCEK(
-  channel: PublicKey,
+export async function addEncryptedUserKey(
   ownerDID: PublicKey,
   ownerAuthority: PublicKey,
-  cek: CEKData
+  cek: EncryptedKeyData
 ): Promise<TransactionInstruction> {
-  const ownerCEKAccount = await getCekAccountKey(ownerDID, channel);
+  const ownerCEKAccount = await getUserDetailsAddress(ownerDID);
   const keys: AccountMeta[] = [
     { pubkey: ownerDID, isSigner: false, isWritable: false },
     { pubkey: ownerAuthority, isSigner: true, isWritable: false },
     { pubkey: ownerCEKAccount, isSigner: false, isWritable: true },
   ];
-  const data = SolariumInstruction.addCEK(cek).encode();
+  const data = SolariumInstruction.addEncryptedUserKey(cek).encode();
   return new TransactionInstruction({
     keys,
     programId: PROGRAM_ID,
@@ -300,19 +304,18 @@ export async function addCEK(
   });
 }
 
-export async function removeCEK(
-  channel: PublicKey,
+export async function removeEncryptedUserKey(
   ownerDID: PublicKey,
   ownerAuthority: PublicKey,
-  kid: string
+  kid: Kid
 ): Promise<TransactionInstruction> {
-  const ownerCEKAccount = await getCekAccountKey(ownerDID, channel);
+  const ownerCEKAccount = await getUserDetailsAddress(ownerDID);
   const keys: AccountMeta[] = [
     { pubkey: ownerDID, isSigner: false, isWritable: false },
     { pubkey: ownerAuthority, isSigner: true, isWritable: false },
     { pubkey: ownerCEKAccount, isSigner: false, isWritable: true },
   ];
-  const data = SolariumInstruction.removeCEK(kid).encode();
+  const data = SolariumInstruction.removeEncryptedUserKey(kid).encode();
   return new TransactionInstruction({
     keys,
     programId: PROGRAM_ID,
@@ -325,9 +328,11 @@ export async function createUserDetails(
   did: PublicKey,
   authority: PublicKey,
   alias: string,
-  size?: number
+  encryptedUserPrivateKeyData: EncryptedKeyData[],
+  userPubKey: UserPubKey,
+  size?: number,
 ): Promise<TransactionInstruction> {
-  const userDetailsAccount = await getUserDetailsKey(did);
+  const userDetailsAccount = await getUserDetailsAddress(did);
   const keys: AccountMeta[] = [
     { pubkey: payer, isSigner: true, isWritable: true },
     { pubkey: did, isSigner: false, isWritable: false },
@@ -338,6 +343,8 @@ export async function createUserDetails(
   ];
   const data = SolariumInstruction.createUserDetails(
     alias,
+    encryptedUserPrivateKeyData,
+    userPubKey,
     undefined,
     size
   ).encode();
@@ -354,7 +361,7 @@ export async function updateUserDetails(
   alias: string,
   addressBook: string
 ): Promise<TransactionInstruction> {
-  const userDetailsAccount = await getUserDetailsKey(did);
+  const userDetailsAccount = await getUserDetailsAddress(did);
   const keys: AccountMeta[] = [
     { pubkey: did, isSigner: false, isWritable: false },
     { pubkey: authority, isSigner: true, isWritable: false },
@@ -379,8 +386,8 @@ SCHEMA.set(SolariumInstruction, {
     ['initializeDirectChannel', InitializeDirectChannel],
     ['post', Post],
     ['addToChannel', AddToChannel],
-    ['addCEK', AddCEK],
-    ['removeCEK', RemoveCEK],
+    ['addCEK', AddEncryptedUserKey],
+    ['removeEncryptedUserKey', RemoveEncryptedUserKey],
     ['createUserDetails', CreateUserDetails],
     ['updateUserDetails', updateUserDetails],
   ],
@@ -389,14 +396,14 @@ SCHEMA.set(InitializeChannel, {
   kind: 'struct',
   fields: [
     ['name', 'string'],
-    ['CEKs', [CEKData]],
+    ['cek', EncryptedKeyData],
   ],
 });
 SCHEMA.set(InitializeDirectChannel, {
   kind: 'struct',
   fields: [
-    ['creatorCEKs', [CEKData]],
-    ['inviteeCEKs', [CEKData]],
+    ['creatorCEK', EncryptedKeyData],
+    ['inviteeCEK', EncryptedKeyData],
   ],
 });
 SCHEMA.set(Post, {
@@ -405,13 +412,13 @@ SCHEMA.set(Post, {
 });
 SCHEMA.set(AddToChannel, {
   kind: 'struct',
-  fields: [['CEKs', [CEKData]]],
+  fields: [['cek', EncryptedKeyData]],
 });
-SCHEMA.set(AddCEK, {
+SCHEMA.set(AddEncryptedUserKey, {
   kind: 'struct',
-  fields: [['cek', CEKData]],
+  fields: [['keyData', EncryptedKeyData]],
 });
-SCHEMA.set(RemoveCEK, {
+SCHEMA.set(RemoveEncryptedUserKey, {
   kind: 'struct',
   fields: [['kid', 'string']],
 });
@@ -421,6 +428,8 @@ SCHEMA.set(CreateUserDetails, {
     ['alias', 'string'],
     ['addressBook', 'string'],
     ['size', 'u32'],
+    ['encryptedUserPrivateKeyData', [EncryptedKeyData]],
+    ['userPubKey', [32]],
   ],
 });
 SCHEMA.set(UpdateUserDetails, {

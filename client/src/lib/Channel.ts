@@ -1,7 +1,7 @@
 import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
 import { currentCluster, ExtendedCluster, PrivateKey } from './util';
 import { ChannelData } from './solana/models/ChannelData';
-import { CEKAccountData } from './solana/models/CEKAccountData';
+import { CEKAccountDataV2 } from './solana/models/CEKAccountDataV2';
 import {
   CEK,
   decryptCEKs,
@@ -13,11 +13,12 @@ import {
 } from './crypto/ChannelCrypto';
 import { PublicKey } from '@solana/web3.js';
 import { VerificationMethod } from 'did-resolver';
-import { CEKData } from './solana/models/CEKData';
-import { getCekAccountKey } from './solana/instruction';
+import { EncryptedKeyData } from './solana/models/EncryptedKeyData';
+import { getCekAccountAddress } from './solana/instruction';
 import { SolanaUtil } from './solana/solanaUtil';
 import { getUserDetails } from '../service/userDetails';
 import { getDocument } from './did/get';
+import {EncryptedKey} from "./UserDetails";
 
 export type MessageSender = {
   did: string;
@@ -65,7 +66,7 @@ export class Channel {
     readonly name: string,
     readonly messages: Message[],
     readonly address: PublicKey,
-    private cek?: CEK,
+    private cek?: EncryptedKey,
     private cluster?: ExtendedCluster
   ) {}
 
@@ -78,7 +79,7 @@ export class Channel {
     return encryptMessage(message, this.cek);
   }
 
-  async encryptCEKForDID(did: string): Promise<CEKData[]> {
+  async encryptCEKForDID(did: string): Promise<EncryptedKeyData[]> {
     if (!this.cek) {
       throw new Error(
         'Cannot encrypt, this channel was loaded without a private key, so no CEK was available'
@@ -87,7 +88,7 @@ export class Channel {
     return encryptCEKForDID(this.cek, did);
   }
 
-  async encryptCEK(verificationMethod: VerificationMethod): Promise<CEKData> {
+  async encryptCEK(verificationMethod: VerificationMethod): Promise<EncryptedKeyData> {
     if (!this.cek) {
       throw new Error(
         'Cannot encrypt, this channel was loaded without a private key, so no CEK was available'
@@ -97,7 +98,7 @@ export class Channel {
   }
 
   async hasMember(did: PublicKey): Promise<boolean> {
-    const cekAccount = await getCekAccountKey(did, this.address);
+    const cekAccount = await getCekAccountAddress(did, this.address);
 
     const connection = SolanaUtil.getConnection(this.cluster);
 
@@ -109,7 +110,7 @@ export class Channel {
   static async fromChainData(
     address: PublicKey,
     channelData: ChannelData,
-    cekAccountData: CEKAccountData,
+    cekAccountData: CEKAccountDataV2,
     memberDID: string,
     memberKey?: PrivateKey,
     cluster?: ExtendedCluster

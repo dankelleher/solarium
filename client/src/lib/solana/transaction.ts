@@ -9,23 +9,23 @@ import {
 import { SignCallback } from '../wallet';
 import { debug, ExtendedCluster } from '../util';
 import {
-  addCEK,
+  addEncryptedUserKey,
   addToChannel,
   createUserDetails,
   updateUserDetails,
-  getCekAccountKey,
-  getDirectChannelAccountKey,
-  getUserDetailsKey,
+  getCekAccountAddress,
+  getDirectChannelAccountAddress,
+  getUserDetailsAddress,
   initializeChannel,
   initializeDirectChannel,
   post,
 } from './instruction';
-import { CEKData } from './models/CEKData';
+import { EncryptedKeyData } from './models/EncryptedKeyData';
 import { ChannelData } from './models/ChannelData';
 import { PROGRAM_ID } from '../constants';
-import { CEKAccountData } from './models/CEKAccountData';
+import { CEKAccountDataV2 } from './models/CEKAccountDataV2';
 import { MessageData } from './models/MessageData';
-import { UserDetailsData } from './models/UserDetailsData';
+import {UserDetailsData, UserPubKey} from './models/UserDetailsData';
 
 export class SolariumTransaction {
   static async createGroupChannel(
@@ -34,7 +34,7 @@ export class SolariumTransaction {
     creatorDID: PublicKey,
     creatorAuthority: PublicKey,
     name: string,
-    initialCEKs: CEKData[],
+    initialCEK: EncryptedKeyData,
     signCallback: SignCallback,
     cluster?: ExtendedCluster
   ): Promise<PublicKey> {
@@ -59,7 +59,7 @@ export class SolariumTransaction {
       name,
       creatorDID,
       creatorAuthority,
-      initialCEKs
+      initialCEK
     );
 
     await SolariumTransaction.signAndSendTransaction(
@@ -77,12 +77,12 @@ export class SolariumTransaction {
     creatorDID: PublicKey,
     creatorAuthority: PublicKey,
     inviteeDID: PublicKey,
-    creatorCEKs: CEKData[],
-    inviteeCEKs: CEKData[],
+    creatorCEK: EncryptedKeyData,
+    inviteeCEK: EncryptedKeyData,
     signCallback: SignCallback,
     cluster?: ExtendedCluster
   ): Promise<PublicKey> {
-    const channel = await getDirectChannelAccountKey(creatorDID, inviteeDID);
+    const channel = await getDirectChannelAccountAddress(creatorDID, inviteeDID);
     debug(`Channel address: ${channel.toBase58()}`);
 
     const initializeDirectChannelInstruction = await initializeDirectChannel(
@@ -91,8 +91,8 @@ export class SolariumTransaction {
       creatorDID,
       creatorAuthority,
       inviteeDID,
-      creatorCEKs,
-      inviteeCEKs
+      creatorCEK,
+      inviteeCEK
     );
 
     await SolariumTransaction.signAndSendTransaction(
@@ -111,7 +111,7 @@ export class SolariumTransaction {
     inviterDID: PublicKey,
     inviterAuthority: PublicKey,
     inviteeDID: PublicKey,
-    ceks: CEKData[],
+    cek: EncryptedKeyData,
     signCallback: SignCallback,
     cluster?: ExtendedCluster
   ): Promise<void> {
@@ -121,7 +121,7 @@ export class SolariumTransaction {
       inviteeDID,
       inviterDID,
       inviterAuthority,
-      ceks
+      cek
     );
 
     await SolariumTransaction.signAndSendTransaction(
@@ -147,13 +147,13 @@ export class SolariumTransaction {
     connection: Connection,
     ownerDID: PublicKey,
     channel: PublicKey
-  ): Promise<CEKAccountData | null> {
-    const cekAccount = await getCekAccountKey(ownerDID, channel);
+  ): Promise<CEKAccountDataV2 | null> {
+    const cekAccount = await getCekAccountAddress(ownerDID, channel);
     const accountInfo = await connection.getAccountInfo(cekAccount);
 
     if (!accountInfo) return null;
 
-    return CEKAccountData.fromAccount(accountInfo.data);
+    return CEKAccountDataV2.fromAccount(accountInfo.data);
   }
 
   static async postMessage(
@@ -175,23 +175,21 @@ export class SolariumTransaction {
     );
   }
 
-  static async addCEKToAccount(
-    channel: PublicKey,
+  static async addKeyToUser(
     memberDID: PublicKey,
     memberAuthority: PublicKey,
-    cek: CEKData,
+    keyData: EncryptedKeyData,
     signCallback: SignCallback,
     cluster?: ExtendedCluster
   ): Promise<void> {
-    const addToChannelInstruction = await addCEK(
-      channel,
+    const addEncryptedUserKeyInstruction = await addEncryptedUserKey(
       memberDID,
       memberAuthority,
-      cek
+      keyData
     );
 
     await SolariumTransaction.signAndSendTransaction(
-      [addToChannelInstruction],
+      [addEncryptedUserKeyInstruction],
       signCallback,
       [],
       cluster
@@ -202,12 +200,14 @@ export class SolariumTransaction {
     payer: PublicKey,
     did: PublicKey,
     authority: PublicKey,
+    encryptedUserPrivateKeyData: EncryptedKeyData[],
+    userPubKey: UserPubKey,
     signCallback: SignCallback,
     alias: string,
     size?: number,
     cluster?: ExtendedCluster
   ): Promise<PublicKey> {
-    const userDetails = await getUserDetailsKey(did);
+    const userDetails = await getUserDetailsAddress(did);
     debug(`userDetails address: ${userDetails.toBase58()}`);
 
     const createUserDetailsInstruction = await createUserDetails(
@@ -215,6 +215,8 @@ export class SolariumTransaction {
       did,
       authority,
       alias,
+      encryptedUserPrivateKeyData,
+      userPubKey,
       size
     );
 
@@ -236,7 +238,7 @@ export class SolariumTransaction {
     addressBook: string,
     cluster?: ExtendedCluster
   ): Promise<PublicKey> {
-    const userDetails = await getUserDetailsKey(did);
+    const userDetails = await getUserDetailsAddress(did);
     debug(`userDetails address: ${userDetails.toBase58()}`);
 
     const updateUserDetailsInstruction = await updateUserDetails(
@@ -260,7 +262,7 @@ export class SolariumTransaction {
     connection: Connection,
     did: PublicKey
   ): Promise<UserDetailsData | null> {
-    const userDetails = await getUserDetailsKey(did);
+    const userDetails = await getUserDetailsAddress(did);
     const accountInfo = await connection.getAccountInfo(userDetails);
 
     if (!accountInfo) return null;

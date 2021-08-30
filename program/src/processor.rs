@@ -11,7 +11,7 @@ use {
             get_channel_address_with_seed, get_notifications_account_address_with_seed,
             get_userdetails_account_address_with_seed, CEKAccountDataV2, ChannelData,
             EncryptedKeyData, Kid, Message, Notification, NotificationType, Notifications,
-            UserDetails, UserPubKey, CEK_ACCOUNT_ADDRESS_SEED, CHANNEL_ADDRESS_SEED,
+            UserDetails, UserPubKey, CEK_ACCOUNT_V2_ADDRESS_SEED, CHANNEL_ADDRESS_SEED,
             NOTIFICATIONS_ACCOUNT_ADDRESS_SEED, USERDETAILS_ACCOUNT_ADDRESS_SEED,
         },
     },
@@ -388,7 +388,7 @@ fn create_cek_account<'a>(
     let cek_account_signer_seeds: &[&[_]] = &[
         &invitee_did_info.key.to_bytes(),
         &channel_info.key.to_bytes(),
-        CEK_ACCOUNT_ADDRESS_SEED,
+        CEK_ACCOUNT_V2_ADDRESS_SEED,
         &[cek_account_bump_seed],
     ];
 

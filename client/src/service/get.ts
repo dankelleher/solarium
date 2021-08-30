@@ -5,7 +5,7 @@ import { Channel } from '../lib/Channel';
 import { from, Observable } from 'rxjs';
 import { ChannelData } from '../lib/solana/models/ChannelData';
 import { switchMap } from 'rxjs/operators';
-import { CEKAccountData } from '../lib/solana/models/CEKAccountData';
+import { CEKAccountDataV2 } from '../lib/solana/models/CEKAccountDataV2';
 
 /**
  * Gets a channel
@@ -72,7 +72,7 @@ export const getStream = (
   );
 
   return cekAccountData$.pipe(
-    switchMap((cekAccountData: CEKAccountData | null) => {
+    switchMap((cekAccountData: CEKAccountDataV2 | null) => {
       if (!cekAccountData)
         throw new Error(
           `No CEK account found for DID ${memberDID}. Are they a member of the channel?`

@@ -312,7 +312,7 @@ impl IsInitialized for Notifications {
 pub const CHANNEL_ADDRESS_SEED: &[u8; 16] = br"solarium_channel";
 
 /// The seed string used to derive a program address for a Solarium cek account
-pub const CEK_ACCOUNT_ADDRESS_SEED: &[u8; 20] = br"solarium_cek_account";
+pub const CEK_ACCOUNT_V2_ADDRESS_SEED: &[u8; 23] = br"solarium_cek_account_v2";
 
 /// The seed string used to derive a program address for a Solarium cek account
 pub const USERDETAILS_ACCOUNT_ADDRESS_SEED: &[u8; 28] = br"solarium_userdetails_account";
@@ -330,7 +330,7 @@ pub fn get_cek_account_address_with_seed(
         &[
             &did.to_bytes(),
             &channel.to_bytes(),
-            CEK_ACCOUNT_ADDRESS_SEED,
+            CEK_ACCOUNT_V2_ADDRESS_SEED,
         ],
         program_id,
     )

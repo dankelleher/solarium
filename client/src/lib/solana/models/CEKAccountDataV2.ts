@@ -1,20 +1,20 @@
 import { Assignable, AssignablePublicKey, SCHEMA } from '../solanaBorsh';
-import { CEKData } from './CEKData';
+import { EncryptedKeyData } from './EncryptedKeyData';
 
-export class CEKAccountData extends Assignable {
+export class CEKAccountDataV2 extends Assignable {
   ownerDID: AssignablePublicKey;
   channel: AssignablePublicKey;
-  ceks: CEKData[];
+  cek: EncryptedKeyData;
 
-  static fromAccount(accountData: Buffer): CEKAccountData {
-    return CEKAccountData.decode<CEKAccountData>(accountData);
+  static fromAccount(accountData: Buffer): CEKAccountDataV2 {
+    return CEKAccountDataV2.decode<CEKAccountDataV2>(accountData);
   }
 
   static empty(
     ownerDID: AssignablePublicKey,
     channel: AssignablePublicKey
-  ): CEKAccountData {
-    return new CEKAccountData({
+  ): CEKAccountDataV2 {
+    return new CEKAccountDataV2({
       ownerDID,
       channel,
       ceks: [],
@@ -22,11 +22,11 @@ export class CEKAccountData extends Assignable {
   }
 }
 
-SCHEMA.set(CEKAccountData, {
+SCHEMA.set(CEKAccountDataV2, {
   kind: 'struct',
   fields: [
     ['ownerDID', AssignablePublicKey],
     ['channel', AssignablePublicKey],
-    ['ceks', [CEKData]],
+    ['cek', EncryptedKeyData],
   ],
 });

@@ -367,6 +367,8 @@ pub fn update_user_details(
     owner_authority: &Pubkey,
     alias: String,
     address_book: String,
+    user_pub_key: UserPubKey,
+    encrypted_user_private_key_data: Vec<EncryptedKeyData>,
 ) -> Instruction {
     let (owner_userdetails_account, _) =
         get_userdetails_account_address_with_seed(&id(), owner_did);
@@ -375,6 +377,8 @@ pub fn update_user_details(
         &SolariumInstruction::UpdateUserDetails {
             alias,
             address_book,
+            user_pub_key,
+            encrypted_user_private_key_data,
         },
         vec![
             AccountMeta::new_readonly(*owner_did, false),

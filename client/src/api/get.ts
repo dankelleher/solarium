@@ -60,7 +60,10 @@ export const getDirect = async (
 
   const ownerDIDKey = didToPublicKey(ownerDID);
   const partnerDIDKey = didToPublicKey(request.partnerDID);
-  const channel = await getDirectChannelAccountAddress(ownerDIDKey, partnerDIDKey);
+  const channel = await getDirectChannelAccountAddress(
+    ownerDIDKey,
+    partnerDIDKey
+  );
 
   return service.get(
     channel,

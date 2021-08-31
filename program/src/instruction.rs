@@ -377,8 +377,6 @@ pub fn update_user_details(
         &SolariumInstruction::UpdateUserDetails {
             alias,
             address_book,
-            user_pub_key,
-            encrypted_user_private_key_data,
         },
         vec![
             AccountMeta::new_readonly(*owner_did, false),

@@ -1,6 +1,6 @@
 import { UserDetailsData } from './solana/models/UserDetailsData';
 import { ChainStorage } from './solana/solanaBorsh';
-import {EncryptedKeyData} from "./solana/models/EncryptedKeyData";
+import { EncryptedKeyData } from './solana/models/EncryptedKeyData';
 
 // TODO
 export class AddressBook implements ChainStorage<string> {
@@ -38,15 +38,19 @@ export class UserDetails implements ChainStorage<UserDetailsData> {
 }
 
 // A type defining a key ID
-export type Kid = Uint8Array;  // 8 bytes
+export type Kid = Uint8Array; // 8 bytes
 // A type defining a key Initiation Vector
 export type KeyIV = Uint8Array; // 24 bytes
 // A type defining a key tag used by Poly1305 for message authentication
 export type KeyTag = Uint8Array; // 16 bytes
 // A type defining an ephemeral public key used for KDF Key Determination with Wrapped Private UserKey
-export type EphemeralPubkey = Uint8Array; // 32 byte
+export type EphemeralPubkey = Uint8Array; // 32 bytes
 // A type defining the wrapped encrypted key
 export type KeyCiphertext = Uint8Array; // 32 bytes
+// TODO @martin there is lots of overlap between these types
+// and the PrivateKey and PublicKeyBase58 types in client/src/lib/util.ts
+// I suggest the EncryptedKey object uses the ones in client/src/lib/util.ts
+// where appropriate
 
 export class EncryptedKey implements ChainStorage<EncryptedKeyData> {
   constructor(
@@ -63,7 +67,7 @@ export class EncryptedKey implements ChainStorage<EncryptedKeyData> {
       kiv: this.kiv,
       keyTag: this.keyTag,
       ephemeralPubkey: this.ephemeralPubkey,
-      keyCiphertext: this.keyCiphertext
+      keyCiphertext: this.keyCiphertext,
     });
   }
 }

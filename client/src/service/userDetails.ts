@@ -9,6 +9,8 @@ import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolariumTransaction } from '../lib/solana/transaction';
 import { AddressBook, UserDetails } from '../lib/UserDetails';
 import { SolariumCache } from '../lib/cache';
+import { makeUserKeyPair } from '../lib/crypto/UserAccountCrypto';
+import { getDocument } from '../lib/did/get';
 
 const getUserDetailsDirect = async (
   did: string,
@@ -56,11 +58,20 @@ export const createUserDetails = async (
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
   const ownerDIDKey = didToPublicKey(did);
+  const ownerDIDDocument = await getDocument(did);
+
+  const userKeyPair = await makeUserKeyPair(ownerDIDDocument);
+
+  const encryptedUserPrivateKeyData = userKeyPair.encryptedPrivateKeys.map(
+    key => key.toChainData()
+  );
 
   await SolariumTransaction.createUserDetails(
     pubkeyOf(payer),
     ownerDIDKey,
     pubkeyOf(owner),
+    encryptedUserPrivateKeyData,
+    userKeyPair.userPubKey,
     createSignedTx,
     alias,
     size,

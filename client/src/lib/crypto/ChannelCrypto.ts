@@ -24,7 +24,7 @@ import {
   bytesToBase58,
 } from './utils';
 import { getDocument } from '../did/get';
-import {EncryptedKey} from "../UserDetails";
+import { EncryptedKey } from '../UserDetails';
 
 export type CEK = Uint8Array;
 
@@ -56,7 +56,7 @@ const getVerificationMethod = (
 export const encryptCEKForDID = async (
   cek: CEK,
   did: string
-): Promise<EncryptedKey[]> => {
+): Promise<EncryptedKey> => {
   const didDocument = await getDocument(did);
   const augmentedDIDDocument = augmentDIDDocument(didDocument);
 
@@ -90,7 +90,7 @@ export const encryptCEKForVerificationMethod = async (
 export const encryptCEKForDIDDocument = async (
   cek: CEK,
   didDocument: DIDDocument
-): Promise<EncryptedKey[]> => {
+): Promise<EncryptedKey> => {
   const encryptedCEKPromises = (didDocument.keyAgreement || []).map(
     async (keyOrRef): Promise<EncryptedKey> => {
       const verificationMethod = getVerificationMethod(keyOrRef, didDocument);
@@ -102,7 +102,9 @@ export const encryptCEKForDIDDocument = async (
 };
 
 // Create a new CEK and encrypt it for the DID
-export const createEncryptedCEK = async (did: string): Promise<EncryptedKey[]> => {
+export const createEncryptedCEK = async (
+  did: string
+): Promise<EncryptedKey> => {
   const cek = await generateCEK();
   return encryptCEKForDID(cek, did);
 };
@@ -113,15 +115,10 @@ export const decryptCEK = async (
   key: PrivateKey
 ): Promise<CEK> => {
   // decode information from CEKData
-  const encodedHeader = base64ToBytes(encryptedCEK.header);
   // iv (24), tag (16), epk PubKey (rest)
-  const iv = encodedHeader.subarray(0, XC20P_IV_LENGTH);
-  const tag = encodedHeader.subarray(
-    XC20P_IV_LENGTH,
-    XC20P_IV_LENGTH + XC20P_TAG_LENGTH
-  );
-  const epkPub = encodedHeader.subarray(XC20P_IV_LENGTH + XC20P_TAG_LENGTH);
-  const encryptedKey = base64ToBytes(encryptedCEK.encryptedKey);
+  // TODO @martin just hacked together to get things compiling - please check
+  const { kiv: iv, keyTag: tag, ephemeralPubkey: epkPub } = encryptedCEK;
+  const encryptedKey = encryptedCEK.keyCiphertext;
 
   // normalise the key into an uint array
   const ed25519Key = makeKeypair(key).secretKey;
@@ -149,14 +146,14 @@ export const decryptCEK = async (
 };
 
 // Find the CEK encrypted with a particular key, and decrypt it
-export const decryptCEKs = async (
+export const decryptCEKWithUserKey = async (
   encryptedCEKs: EncryptedKey[],
   kid: string,
   key: PrivateKey
 ): Promise<EncryptedKey> => {
   // find the encrypted CEK for the key
   const encryptedCEK = encryptedCEKs.find(
-    k => k.kid === shortenKID(kid) || k.kid === kid
+    k => k.kid.toString() === shortenKID(kid) || k.kid.toString() === kid
   );
 
   if (!encryptedCEK) throw new Error(`No encrypted CEK found for key ${kid}`);
@@ -167,7 +164,7 @@ export const decryptCEKs = async (
 // Encrypt a message with a CEK
 export const encryptMessage = async (
   message: string,
-  cek: EncryptedKey
+  cek: CEK
 ): Promise<string> => {
   const encryptMessage = await xc20pEncrypter(cek)(stringToBytes(message));
   // iv (24), ciphertext (var), tag (16)

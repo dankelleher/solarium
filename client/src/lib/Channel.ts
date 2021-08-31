@@ -4,7 +4,7 @@ import { ChannelData } from './solana/models/ChannelData';
 import { CEKAccountDataV2 } from './solana/models/CEKAccountDataV2';
 import {
   CEK,
-  decryptCEKs,
+  decryptCEK,
   decryptMessage,
   encryptCEKForDID,
   encryptCEKForVerificationMethod,
@@ -13,12 +13,11 @@ import {
 } from './crypto/ChannelCrypto';
 import { PublicKey } from '@solana/web3.js';
 import { VerificationMethod } from 'did-resolver';
-import { EncryptedKeyData } from './solana/models/EncryptedKeyData';
 import { getCekAccountAddress } from './solana/instruction';
 import { SolanaUtil } from './solana/solanaUtil';
 import { getUserDetails } from '../service/userDetails';
 import { getDocument } from './did/get';
-import {EncryptedKey} from "./UserDetails";
+import { EncryptedKey } from './UserDetails';
 
 export type MessageSender = {
   did: string;
@@ -66,7 +65,7 @@ export class Channel {
     readonly name: string,
     readonly messages: Message[],
     readonly address: PublicKey,
-    private cek?: EncryptedKey,
+    private cek?: CEK,
     private cluster?: ExtendedCluster
   ) {}
 
@@ -79,7 +78,7 @@ export class Channel {
     return encryptMessage(message, this.cek);
   }
 
-  async encryptCEKForDID(did: string): Promise<EncryptedKeyData[]> {
+  async encryptCEKForDID(did: string): Promise<EncryptedKey> {
     if (!this.cek) {
       throw new Error(
         'Cannot encrypt, this channel was loaded without a private key, so no CEK was available'
@@ -88,7 +87,9 @@ export class Channel {
     return encryptCEKForDID(this.cek, did);
   }
 
-  async encryptCEK(verificationMethod: VerificationMethod): Promise<EncryptedKeyData> {
+  async encryptCEK(
+    verificationMethod: VerificationMethod
+  ): Promise<EncryptedKey> {
     if (!this.cek) {
       throw new Error(
         'Cannot encrypt, this channel was loaded without a private key, so no CEK was available'
@@ -122,7 +123,9 @@ export class Channel {
       );
       if (!verificationMethod)
         throw new Error(`Invalid private key for DID ${memberDIDDocument.id}`);
-      return decryptCEKs(cekAccountData.ceks, verificationMethod.id, key);
+      // @ts-ignore // TODO @martin - I didn't make all the changes for this file yet.
+      // added ts-ignore just so it compiles
+      return decryptCEK(cekAccountData.cek, verificationMethod.id, key);
     };
 
     const decrypt = async (message: Message): Promise<Message> => {

@@ -1,5 +1,5 @@
 import { Assignable, SCHEMA } from '../solanaBorsh';
-import {EncryptedKeyData} from "./EncryptedKeyData";
+import { EncryptedKeyData } from './EncryptedKeyData';
 
 // A type defining the public component of a user public key
 export type UserPubKey = Uint8Array; // 32 bytes

@@ -1,5 +1,11 @@
 import { Assignable, SCHEMA } from '../solanaBorsh';
-import { EphemeralPubkey, KeyCiphertext, KeyIV, KeyTag, Kid } from "../../UserDetails";
+import {
+  EphemeralPubkey,
+  KeyCiphertext,
+  KeyIV,
+  KeyTag,
+  Kid,
+} from '../../UserDetails';
 
 export class EncryptedKeyData extends Assignable {
   kid: Kid;
@@ -17,6 +23,5 @@ SCHEMA.set(EncryptedKeyData, {
     ['keyTag', [16]],
     ['ephemeralPubkey', [32]],
     ['keyCiphertext', [32]],
-    
   ],
 });

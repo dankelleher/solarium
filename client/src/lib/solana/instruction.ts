@@ -13,9 +13,9 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
-import {EncryptedKeyData, Kid} from './models/EncryptedKeyData';
+import { EncryptedKeyData, Kid } from './models/EncryptedKeyData';
 import { MessageData } from './models/MessageData';
-import {UserPubKey} from "./models/UserDetailsData";
+import { UserPubKey } from './models/UserDetailsData';
 
 export class InitializeChannel extends Assignable {
   name: string;
@@ -66,7 +66,10 @@ export class SolariumInstruction extends Enum {
   createUserDetails: CreateUserDetails;
   updateUserDetails: UpdateUserDetails;
 
-  static initializeChannel(name: string, cek: EncryptedKeyData): SolariumInstruction {
+  static initializeChannel(
+    name: string,
+    cek: EncryptedKeyData
+  ): SolariumInstruction {
     return new SolariumInstruction({
       initializeChannel: new InitializeChannel({ name, cek }),
     });
@@ -111,10 +114,16 @@ export class SolariumInstruction extends Enum {
     encryptedUserPrivateKeyData: EncryptedKeyData[],
     userPubKey: UserPubKey,
     addressBook = '',
-    size: number = DEFAULT_USER_DETAILS_SIZE,
+    size: number = DEFAULT_USER_DETAILS_SIZE
   ): SolariumInstruction {
     return new SolariumInstruction({
-      createUserDetails: new CreateUserDetails({ alias, addressBook, size, encryptedUserPrivateKeyData, userPubKey }),
+      createUserDetails: new CreateUserDetails({
+        alias,
+        addressBook,
+        size,
+        encryptedUserPrivateKeyData,
+        userPubKey,
+      }),
     });
   }
 
@@ -143,7 +152,9 @@ export async function getCekAccountAddress(
   return publicKeyNonce[0];
 }
 
-export async function getUserDetailsAddress(did: PublicKey): Promise<PublicKey> {
+export async function getUserDetailsAddress(
+  did: PublicKey
+): Promise<PublicKey> {
   const publicKeyNonce = await PublicKey.findProgramAddress(
     [
       did.toBuffer(),
@@ -330,7 +341,7 @@ export async function createUserDetails(
   alias: string,
   encryptedUserPrivateKeyData: EncryptedKeyData[],
   userPubKey: UserPubKey,
-  size?: number,
+  size?: number
 ): Promise<TransactionInstruction> {
   const userDetailsAccount = await getUserDetailsAddress(did);
   const keys: AccountMeta[] = [

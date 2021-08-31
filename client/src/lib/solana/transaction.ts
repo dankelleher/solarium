@@ -25,7 +25,7 @@ import { ChannelData } from './models/ChannelData';
 import { PROGRAM_ID } from '../constants';
 import { CEKAccountDataV2 } from './models/CEKAccountDataV2';
 import { MessageData } from './models/MessageData';
-import {UserDetailsData, UserPubKey} from './models/UserDetailsData';
+import { UserDetailsData, UserPubKey } from './models/UserDetailsData';
 
 export class SolariumTransaction {
   static async createGroupChannel(
@@ -82,7 +82,10 @@ export class SolariumTransaction {
     signCallback: SignCallback,
     cluster?: ExtendedCluster
   ): Promise<PublicKey> {
-    const channel = await getDirectChannelAccountAddress(creatorDID, inviteeDID);
+    const channel = await getDirectChannelAccountAddress(
+      creatorDID,
+      inviteeDID
+    );
     debug(`Channel address: ${channel.toBase58()}`);
 
     const initializeDirectChannelInstruction = await initializeDirectChannel(

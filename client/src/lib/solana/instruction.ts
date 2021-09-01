@@ -15,8 +15,6 @@ import {
 } from '@solana/web3.js';
 import { EncryptedKeyData } from './models/EncryptedKeyData';
 import { MessageData } from './models/MessageData';
-import { UserPubKey } from './models/UserDetailsData';
-import { Kid } from '../UserDetails';
 
 export class InitializeChannel extends Assignable {
   name: string;
@@ -41,15 +39,15 @@ export class AddEncryptedUserKey extends Assignable {
 }
 
 export class RemoveEncryptedUserKey extends Assignable {
-  kid: Kid;
+  kid: Array<number>;
 }
 
 export class CreateUserDetails extends Assignable {
   alias: string;
   addressBook: string;
-  size: number;
+  userPubKey: Array<number>;
   encryptedUserPrivateKeyData: EncryptedKeyData[];
-  userPubKey: UserPubKey;
+  size: number;
 }
 
 export class UpdateUserDetails extends Assignable {
@@ -104,7 +102,7 @@ export class SolariumInstruction extends Enum {
     });
   }
 
-  static removeEncryptedUserKey(kid: Kid): SolariumInstruction {
+  static removeEncryptedUserKey(kid: Array<number>): SolariumInstruction {
     return new SolariumInstruction({
       removeEncryptedUserKey: new RemoveEncryptedUserKey({ kid }),
     });
@@ -113,7 +111,7 @@ export class SolariumInstruction extends Enum {
   static createUserDetails(
     alias: string,
     encryptedUserPrivateKeyData: EncryptedKeyData[],
-    userPubKey: UserPubKey,
+    userPubKey: Array<number>,
     addressBook = '',
     size: number = DEFAULT_USER_DETAILS_SIZE
   ): SolariumInstruction {
@@ -319,7 +317,7 @@ export async function addEncryptedUserKey(
 export async function removeEncryptedUserKey(
   ownerDID: PublicKey,
   ownerAuthority: PublicKey,
-  kid: Kid
+  kid: Array<number>
 ): Promise<TransactionInstruction> {
   const ownerCEKAccount = await getUserDetailsAddress(ownerDID);
   const keys: AccountMeta[] = [
@@ -341,7 +339,7 @@ export async function createUserDetails(
   authority: PublicKey,
   alias: string,
   encryptedUserPrivateKeyData: EncryptedKeyData[],
-  userPubKey: UserPubKey,
+  userPubKey: Array<number>,
   size?: number
 ): Promise<TransactionInstruction> {
   const userDetailsAccount = await getUserDetailsAddress(did);
@@ -439,9 +437,9 @@ SCHEMA.set(CreateUserDetails, {
   fields: [
     ['alias', 'string'],
     ['addressBook', 'string'],
-    ['size', 'u32'],
-    ['encryptedUserPrivateKeyData', [EncryptedKeyData]],
     ['userPubKey', [32]],
+    ['encryptedUserPrivateKeyData', [EncryptedKeyData]],
+    ['size', 'u32'],
   ],
 });
 SCHEMA.set(UpdateUserDetails, {

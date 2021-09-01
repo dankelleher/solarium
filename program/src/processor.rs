@@ -697,6 +697,8 @@ pub fn process_instruction(
     input: &[u8],
 ) -> ProgramResult {
     let instruction = SolariumInstruction::try_from_slice(input)?;
+    
+    msg!("processing instruction {:?}", instruction);
 
     match instruction {
         SolariumInstruction::InitializeChannel { name, cek } => {

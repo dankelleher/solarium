@@ -71,7 +71,7 @@ export const createUserDetails = async (
     ownerDIDKey,
     pubkeyOf(owner),
     encryptedUserPrivateKeyData,
-    userKeyPair.userPubKey,
+    Array.from(userKeyPair.userPubKey),
     createSignedTx,
     alias,
     size,

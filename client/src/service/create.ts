@@ -110,7 +110,7 @@ export const createChannel = async (
   );
   const didKey = didToPublicKey(ownerDIDDocument.id);
 
-  const ceks = await createEncryptedCEK(ownerDIDDocument.id);
+  const cek = await createEncryptedCEK(ownerDIDDocument.id);
 
   const connection = SolanaUtil.getConnection(cluster);
 
@@ -120,7 +120,7 @@ export const createChannel = async (
     didKey,
     pubkeyOf(owner),
     name,
-    ceks,
+    cek.toChainData(),
     createSignedTx,
     cluster
   );
@@ -167,8 +167,8 @@ export const createDirectChannel = async (
 
   // create and encrypt a CEK for the new channel
   const cek = await generateCEK();
-  const ownerCEKs = await encryptCEKForDID(cek, ownerDIDDocument.id);
-  const inviteeCEKs = await encryptCEKForDID(cek, inviteeDIDDocument.id);
+  const ownerCEK = await encryptCEKForDID(cek, ownerDIDDocument.id);
+  const inviteeCEK = await encryptCEKForDID(cek, inviteeDIDDocument.id);
 
   const connection = SolanaUtil.getConnection(cluster);
 
@@ -178,8 +178,8 @@ export const createDirectChannel = async (
     didToPublicKey(ownerDIDDocument.id),
     ownerPubKey,
     didToPublicKey(inviteeDID),
-    ownerCEKs,
-    inviteeCEKs,
+    ownerCEK.toChainData(),
+    inviteeCEK.toChainData(),
     createSignedTx,
     cluster
   );

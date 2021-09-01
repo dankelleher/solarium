@@ -74,7 +74,7 @@ export const addToChannel = async (
   if (inviteeIsAlreadyMember)
     throw new Error('Invitee DID is already a member');
 
-  const inviteeCEKs = await channelForOwner.encryptCEKForDID(inviteeDID);
+  const inviteeCEK = await channelForOwner.encryptCEKForDID(inviteeDID);
 
   await SolariumTransaction.addDIDToChannel(
     pubkeyOf(payer),
@@ -82,7 +82,7 @@ export const addToChannel = async (
     ownerDIDKey,
     owner.publicKey,
     inviteeDIDKey,
-    inviteeCEKs,
+    inviteeCEK.toChainData(),
     createSignedTx,
     cluster
   );

@@ -81,10 +81,9 @@ export const updateCEKAccount = async (
   const newCEK = await channelObject.encryptCEK(foundVerificationMethod);
 
   await SolariumTransaction.addKeyToUser(
-    channel,
     didKey,
     pubkeyOf(owner),
-    newCEK,
+    newCEK.toChainData(),
     createSignedTx,
     cluster
   );

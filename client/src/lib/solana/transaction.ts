@@ -25,7 +25,7 @@ import { ChannelData } from './models/ChannelData';
 import { PROGRAM_ID } from '../constants';
 import { CEKAccountDataV2 } from './models/CEKAccountDataV2';
 import { MessageData } from './models/MessageData';
-import { UserDetailsData, UserPubKey } from './models/UserDetailsData';
+import { UserDetailsData } from './models/UserDetailsData';
 
 export class SolariumTransaction {
   static async createGroupChannel(
@@ -204,7 +204,7 @@ export class SolariumTransaction {
     did: PublicKey,
     authority: PublicKey,
     encryptedUserPrivateKeyData: EncryptedKeyData[],
-    userPubKey: UserPubKey,
+    userPubKey: Array<number>,
     signCallback: SignCallback,
     alias: string,
     size?: number,

@@ -1,6 +1,6 @@
 import { SolanaUtil } from '../../../../src/lib/solana/solanaUtil';
 import { SolariumTransaction } from '../../../../src/lib/solana/transaction';
-import { Channel } from '../../../../src';
+import {Channel, createDID} from '../../../../src';
 import { ClusterType, keyToIdentifier } from '@identity.com/sol-did-client';
 import { Keypair } from '@solana/web3.js';
 import { EncryptedKeyData } from '../../../../src/lib/solana/models/EncryptedKeyData';
@@ -17,7 +17,7 @@ const makeDummyEncryptedKeyData = (): EncryptedKeyData =>
     new Uint8Array(32),
     new Uint8Array(32),
   ).toChainData();
-ª
+
 describe('Transaction', () => {
   const connection = SolanaUtil.getConnection();
   let payer: Keypair;
@@ -40,6 +40,16 @@ describe('Transaction', () => {
       ClusterType.development()
     );
     bobDID = await keyToIdentifier(bob.publicKey, ClusterType.development());
+
+    await createDID({
+      payer: payer.secretKey,
+      owner: alice.publicKey.toBase58(),
+    });
+
+    await createDID({
+      payer: payer.secretKey,
+      owner: bob.publicKey.toBase58(),
+    });
   });
 
   describe('UserDetails', () => {

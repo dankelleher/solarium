@@ -13,9 +13,10 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
-import { EncryptedKeyData, Kid } from './models/EncryptedKeyData';
+import { EncryptedKeyData } from './models/EncryptedKeyData';
 import { MessageData } from './models/MessageData';
 import { UserPubKey } from './models/UserDetailsData';
+import { Kid } from '../UserDetails';
 
 export class InitializeChannel extends Assignable {
   name: string;

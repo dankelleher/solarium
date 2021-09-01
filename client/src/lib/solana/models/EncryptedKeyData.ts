@@ -1,18 +1,11 @@
 import { Assignable, SCHEMA } from '../solanaBorsh';
-import {
-  EphemeralPubkey,
-  KeyCiphertext,
-  KeyIV,
-  KeyTag,
-  Kid,
-} from '../../UserDetails';
 
 export class EncryptedKeyData extends Assignable {
-  kid: Kid;
-  kiv: KeyIV;
-  keyTag: KeyTag;
-  ephemeralPubkey: EphemeralPubkey;
-  keyCiphertext: KeyCiphertext;
+  kid: Array<number>;
+  kiv: Array<number>;
+  keyTag: Array<number>;
+  ephemeralPubkey: Array<number>;
+  keyCiphertext: Array<number>;
 }
 
 SCHEMA.set(EncryptedKeyData, {

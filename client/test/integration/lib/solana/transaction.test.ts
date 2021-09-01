@@ -4,20 +4,20 @@ import { Channel } from '../../../../src';
 import { ClusterType, keyToIdentifier } from '@identity.com/sol-did-client';
 import { Keypair } from '@solana/web3.js';
 import { EncryptedKeyData } from '../../../../src/lib/solana/models/EncryptedKeyData';
-import { UserPubKey } from '../../../../src/lib/solana/models/UserDetailsData';
 import { defaultSignCallback } from '../../../../src/lib/wallet';
 import { didToPublicKey } from '../../../../src/lib/util';
+import {EncryptedKey} from "../../../../src/lib/UserDetails";
 
-const makeDummyUserPubKey = (): UserPubKey => Uint8Array.of(32);
+const makeDummyUserPubKey = (): Array<number> => Array.from(new Uint8Array(32));
 const makeDummyEncryptedKeyData = (): EncryptedKeyData =>
-  new EncryptedKeyData({
-    kid: Uint8Array.of(8),
-    kiv: Uint8Array.of(24),
-    keyTag: Uint8Array.of(16),
-    ephemeralPubkey: Uint8Array.of(32),
-    keyCiphertext: Uint8Array.of(32),
-  });
-
+  new EncryptedKey(
+    new Uint8Array(8),
+    new Uint8Array(24),
+    new Uint8Array(16),
+    new Uint8Array(32),
+    new Uint8Array(32),
+  ).toChainData();
+ª
 describe('Transaction', () => {
   const connection = SolanaUtil.getConnection();
   let payer: Keypair;
@@ -26,8 +26,6 @@ describe('Transaction', () => {
 
   let aliceDID: string;
   let bobDID: string;
-
-  let channel: Channel;
 
   beforeAll(async () => {
     payer = await SolanaUtil.newWalletWithLamports(connection, 1000000000);
@@ -47,11 +45,12 @@ describe('Transaction', () => {
   describe('UserDetails', () => {
     it('should create a userDetails account', async () => {
       const dummyUserPubKey = makeDummyUserPubKey();
+      const encryptedUserPrivateKeyData = [makeDummyEncryptedKeyData(), makeDummyEncryptedKeyData()];
       await SolariumTransaction.createUserDetails(
         payer.publicKey,
         didToPublicKey(aliceDID),
         alice.publicKey,
-        [makeDummyEncryptedKeyData(), makeDummyEncryptedKeyData()],
+        encryptedUserPrivateKeyData,
         dummyUserPubKey,
         defaultSignCallback(payer, alice),
         'alice'

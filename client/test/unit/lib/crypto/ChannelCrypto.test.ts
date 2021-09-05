@@ -4,7 +4,7 @@ import {
   encryptMessage,
   decryptMessage,
   encryptCEKForVerificationMethod,
-  decryptCEK,
+  decryptKeyWrap,
   augmentDIDDocument,
 } from '../../../../src/lib/crypto/ChannelCrypto';
 import {
@@ -15,6 +15,7 @@ import {
 import { convertPublicKey } from 'ed2curve-esm';
 
 import { sampleDidDoc } from '../fixtures';
+import { VM_TYPE_X25519KEYAGREEMENTKEY2019 } from '../../../../src/lib/constants';
 
 describe('ChannelCrypto', () => {
   // Alice has two keys
@@ -46,7 +47,7 @@ describe('ChannelCrypto', () => {
     const cekData = await encryptCEKForVerificationMethod(cek, {
       id: 'key0',
       controller: 'did:dummy:alice',
-      type: 'X25519KeyAgreementKey2019',
+      type: VM_TYPE_X25519KEYAGREEMENTKEY2019,
       publicKeyBase58: bytesToBase58(
         convertPublicKey(aliceKeypair.publicKey.toBytes())
       ),
@@ -55,7 +56,7 @@ describe('ChannelCrypto', () => {
     expect(base64ToBytes(cekData.header).length).toEqual(24 + 12 + 36);
     expect(base64ToBytes(cekData.encryptedKey).length).toEqual(32);
 
-    const decCek = await decryptCEK(cekData, aliceKeypair.secretKey);
+    const decCek = await decryptKeyWrap(cekData, aliceKeypair.secretKey);
     expect(decCek).toEqual(cek);
   });
 

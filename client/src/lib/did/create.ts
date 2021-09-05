@@ -19,7 +19,7 @@ import { SolariumTransaction } from '../solana/transaction';
 import { createUserDetails } from '../solana/instruction';
 import { getDocument } from './get';
 import { pluck } from 'ramda';
-import {makeUserKeyPair, makeUserKeyPairForKeys} from "../crypto/UserAccountCrypto";
+import { makeUserKeyPairForKeys } from '../crypto/UserAccountCrypto';
 
 const makeDocumentForKeys = (
   did: string,
@@ -71,7 +71,10 @@ export const create = async (
   if (alias) {
     debug('Creating user-details for the new DID: ' + didForAuthority);
 
-    const userKeyPair = await makeUserKeyPairForKeys([pubkeyOf(owner).toBase58()]);
+    // TODO: Define ID for this Key.
+    const userKeyPair = await makeUserKeyPairForKeys([
+      { id: 'owner', pub: pubkeyOf(owner).toBase58() },
+    ]);
 
     // TODO @martin there is duplication here with service/userDetails.ts createUserDetails
     // this function bundles the DID creation with userDetails creation into a single
@@ -87,7 +90,7 @@ export const create = async (
       pubkeyOf(owner),
       alias,
       encryptedUserPrivateKeyData,
-      Array.from(userKeyPair.userPubKey),
+      Array.from(userKeyPair.userPubKey)
     );
     instructions.push(createUserDetailsInstruction);
   }

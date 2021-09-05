@@ -25,6 +25,11 @@ import {
 } from './utils';
 import { getDocument } from '../did/get';
 import { EncryptedKey } from '../UserDetails';
+import {
+  VM_TYPE_ED25519VERIFICATIONKEY2018,
+  VM_TYPE_X25519KEYAGREEMENTKEY2019,
+} from '../constants';
+import { UserPrivateKey } from './UserAccountCrypto';
 
 export type CEK = Uint8Array;
 
@@ -114,15 +119,14 @@ export const createEncryptedCEK = async (
 };
 
 // Decrypt an encrypted CEK for the with the key that was used to encrypt it
-export const decryptCEK = async (
-  encryptedCEK: EncryptedKey,
+export const decryptKeyWrap = async (
+  encryptedKey: EncryptedKey,
   key: PrivateKey
-): Promise<CEK> => {
+): Promise<CEK | UserPrivateKey> => {
   // decode information from CEKData
   // iv (24), tag (16), epk PubKey (rest)
   // TODO @martin just hacked together to get things compiling - please check
-  const { kiv: iv, keyTag: tag, ephemeralPubkey: epkPub } = encryptedCEK;
-  const encryptedKey = encryptedCEK.keyCiphertext;
+  const { kiv: iv, keyTag: tag, ephemeralPubkey: epkPub } = encryptedKey;
 
   // normalise the key into an uint array
   const ed25519Key = makeKeypair(key).secretKey;
@@ -137,7 +141,7 @@ export const decryptCEK = async (
   const curve25519Key = convertSecretKey(ed25519Key);
 
   const cek = await x25519xc20pKeyUnwrap(curve25519Key)(
-    encryptedKey,
+    encryptedKey.keyCiphertext,
     tag,
     iv,
     epkPub
@@ -164,7 +168,7 @@ export const decryptCEKWithUserKey = async (
 
   // TODO @martin just to get it to compile
   // @ts-ignore
-  return decryptCEK(encryptedCEK, key);
+  return decryptKeyWrap(encryptedCEK, key);
 };
 
 // Encrypt a message with a CEK
@@ -206,28 +210,6 @@ export const decryptMessage = async (
   return message;
 };
 
-// Given a private key, find the ID of the associated public key on the DID
-// Note, this needs to operate on the augmented DIDDocument Version
-export const findVerificationMethodForKey = (
-  didDoc: DIDDocument,
-  key: PrivateKey | PublicKey
-): VerificationMethod | undefined => {
-  const augmentedDIDDoc = augmentDIDDocument(didDoc);
-
-  if (!isPublicKey(key)) {
-    const keypair = makeKeypair(key);
-    key = keypair.publicKey;
-  }
-  // operate on x25519 curve PubKey
-  const pubkey = bytesToBase58(convertPublicKey(key.toBytes()));
-
-  const foundVerificationMethod = (
-    augmentedDIDDoc.verificationMethod || []
-  ).find(verificationMethod => verificationMethod.publicKeyBase58 === pubkey);
-
-  return foundVerificationMethod;
-};
-
 // TODO: Discuss about moving constantly into did:sol resolver code.
 // Solarium uses the x25519 ECDH protocol for e2e encryption,
 // which expects a key in the x25519 format (32-byte secret key)
@@ -254,12 +236,12 @@ export const augmentDIDDocument = (didDocument: DIDDocument): DIDDocument => {
   }
 
   const keyAgreementKeys = didDocument.verificationMethod
-    .filter(key => key.type === 'Ed25519VerificationKey2018') // only apply to Ed25519
+    .filter(key => key.type === VM_TYPE_ED25519VERIFICATIONKEY2018) // only apply to Ed25519
     .filter(key => !!key.publicKeyBase58) // we currently only support keys in base58
     .map(key => ({
       ...key,
       id: key.id + '_keyAgreement',
-      type: 'X25519KeyAgreementKey2019',
+      type: VM_TYPE_X25519KEYAGREEMENTKEY2019,
       publicKeyBase58: bytesToBase58(
         convertPublicKey(base58ToBytes(key.publicKeyBase58 as string))
       ),
@@ -275,4 +257,26 @@ export const augmentDIDDocument = (didDocument: DIDDocument): DIDDocument => {
     ],
     keyAgreement: keyAgreementKeys.map(key => key.id),
   };
+};
+
+// Given a private key, find the ID of the associated public key on the DID
+// Note, this needs to operate on the augmented DIDDocument Version
+export const findVerificationMethodForKey = (
+  didDoc: DIDDocument,
+  key: PrivateKey | PublicKey
+): VerificationMethod | undefined => {
+  const augmentedDIDDoc = augmentDIDDocument(didDoc);
+
+  if (!isPublicKey(key)) {
+    const keypair = makeKeypair(key);
+    key = keypair.publicKey;
+  }
+  // operate on x25519 curve PubKey
+  const pubkey = bytesToBase58(convertPublicKey(key.toBytes()));
+
+  const foundVerificationMethod = (
+    augmentedDIDDoc.verificationMethod || []
+  ).find(verificationMethod => verificationMethod.publicKeyBase58 === pubkey);
+
+  return foundVerificationMethod;
 };

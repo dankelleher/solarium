@@ -19,13 +19,19 @@ import {
 } from '../../src';
 import { SolanaUtil } from '../../src/lib/solana/solanaUtil';
 import { Keypair } from '@solana/web3.js';
-import { repeat } from 'ramda';
-import { DEFAULT_MAX_MESSAGE_COUNT } from '../../src/lib/constants';
+import { VM_TYPE_X25519KEYAGREEMENTKEY2019 } from '../../src/lib/constants';
 import {
   ClusterType,
   keyToIdentifier,
   PrivateKey,
 } from '@identity.com/sol-did-client';
+import {
+  decrypUserKey,
+  kidToBytes,
+} from '../../src/lib/crypto/UserAccountCrypto';
+import { augmentDIDDocument } from '../../src/lib/crypto/ChannelCrypto';
+import { VerificationMethod } from 'did-resolver';
+import { scalarMultBase } from '@stablelib/x25519';
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
@@ -88,10 +94,19 @@ describe('E2E', () => {
   // });
   //
   it('creates user details for a DID', async () => {
-    await createDID({
-      payer: payer.secretKey,
-      owner: alice.secretKey,
-    });
+    const didDoc = augmentDIDDocument(
+      await createDID({
+        payer: payer.secretKey,
+        owner: alice.secretKey,
+      })
+    );
+
+    // Get Alices X25519 VerificationMethod
+    const x25519Vm = didDoc.verificationMethod
+      ?.filter(vm => vm.type == VM_TYPE_X25519KEYAGREEMENTKEY2019)
+      ?.pop() as VerificationMethod;
+
+    expect(x25519Vm).toBeDefined();
 
     await createUserDetails({
       payer: payer.secretKey,
@@ -102,6 +117,17 @@ describe('E2E', () => {
     const aliceUserDetails = await getUserDetails({ did: aliceDID });
 
     expect(aliceUserDetails?.alias).toEqual('Alice');
+    expect(aliceUserDetails?.userPubKey).toBeDefined();
+    expect(aliceUserDetails?.encryptedUserPrivateKeyData.length).toEqual(1);
+
+    const privUserKey = await decrypUserKey(
+      aliceUserDetails?.encryptedUserPrivateKeyData || [],
+      kidToBytes(x25519Vm.id),
+      alice.secretKey
+    );
+    expect(privUserKey).toBeDefined();
+    // make sure the private UserKey matches the Public UserKey
+    expect(aliceUserDetails?.userPubKey).toEqual(scalarMultBase(privUserKey));
   });
   //
   // it('creates user details while creating a DID', async () => {

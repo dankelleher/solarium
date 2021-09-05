@@ -4,7 +4,10 @@ import {
   ClusterType,
   DecentralizedIdentifier,
 } from '@identity.com/sol-did-client';
-import { DEFAULT_CLUSTER } from './constants';
+import {
+  DEFAULT_CLUSTER,
+  VM_TYPE_ED25519VERIFICATIONKEY2018,
+} from './constants';
 import { SignCallback } from './wallet';
 import Debug from 'debug';
 import { AddressBook } from './UserDetails';
@@ -226,7 +229,7 @@ export const keyToVerificationMethod = (
   didKey: DIDKey
 ): VerificationMethod => ({
   id: did + '#' + didKey.identifier,
-  type: 'Ed25519VerificationKey2018',
+  type: VM_TYPE_ED25519VERIFICATIONKEY2018,
   controller: did,
   publicKeyBase58: didKey.key,
 });

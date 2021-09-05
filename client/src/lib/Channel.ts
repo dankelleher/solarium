@@ -4,7 +4,7 @@ import { ChannelData } from './solana/models/ChannelData';
 import { CEKAccountDataV2 } from './solana/models/CEKAccountDataV2';
 import {
   CEK,
-  decryptCEK,
+  decryptKeyWrap,
   decryptMessage,
   encryptCEKForDID,
   encryptCEKForVerificationMethod,
@@ -125,7 +125,7 @@ export class Channel {
         throw new Error(`Invalid private key for DID ${memberDIDDocument.id}`);
       // @ts-ignore // TODO @martin - I didn't make all the changes for this file yet.
       // added ts-ignore just so it compiles
-      return decryptCEK(cekAccountData.cek, verificationMethod.id, key);
+      return decryptKeyWrap(cekAccountData.cek, verificationMethod.id, key);
     };
 
     const decrypt = async (message: Message): Promise<Message> => {

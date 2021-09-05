@@ -11,6 +11,7 @@ import { AddressBook, UserDetails } from '../lib/UserDetails';
 import { SolariumCache } from '../lib/cache';
 import { makeUserKeyPair } from '../lib/crypto/UserAccountCrypto';
 import { getDocument } from '../lib/did/get';
+import { augmentDIDDocument } from '../lib/crypto/ChannelCrypto';
 
 const getUserDetailsDirect = async (
   did: string,
@@ -60,7 +61,9 @@ export const createUserDetails = async (
   const ownerDIDKey = didToPublicKey(did);
   const ownerDIDDocument = await getDocument(did);
 
-  const userKeyPair = await makeUserKeyPair(ownerDIDDocument);
+  const userKeyPair = await makeUserKeyPair(
+    augmentDIDDocument(ownerDIDDocument)
+  );
 
   const encryptedUserPrivateKeyData = userKeyPair.encryptedPrivateKeys.map(
     key => key.toChainData()

@@ -1,15 +1,20 @@
 import {DIDDocument, VerificationMethod} from "did-resolver";
-import {EncryptedKey, UserPubKey} from "../UserDetails";
+import {EncryptedKey, Kid, KID_SIZE, UserPubKey} from "../UserDetails";
 import {PublicKeyBase58} from "../util";
 import {complement, filter, isNil, pipe, pluck} from "ramda";
+import {generateKeyPair} from "@stablelib/x25519";
+import {x25519xc20pKeyWrap} from "./xc20pEncryption";
+import {base58ToBytes} from "./utils";
 
-type UserPrivateKey = Uint8Array; // TODO @martin
+type UserPrivateKey = Uint8Array;
 type UserKeyPair = { userPubKey: UserPubKey, encryptedPrivateKeys: EncryptedKey[] }
 
-// TODO @martin
+/**
+ * Solarium UserKeys are an x25519 key-pair
+ */
 const generateUserKey = ():[UserPrivateKey,UserPubKey] => {
-  // @ts-ignore
-  return [undefined, undefined]
+  const userKey = generateKeyPair();
+  return [userKey.secretKey, userKey.publicKey]
 };
 
 /**
@@ -33,18 +38,25 @@ export const makeUserKeyPair = async (didDocument: DIDDocument):Promise<UserKeyP
  * @param keys
  */
 export const makeUserKeyPairForKeys = async (keys: PublicKeyBase58[]):Promise<UserKeyPair> => {
-  // TODO @martin
-  const [userPrivateKey, userPubKey] = await generateUserKey();
+  const [userPrivateKey, userPubKey] = generateUserKey();
 
-  const encryptedPrivateKeys = keys.map(key => {
-    console.log("key", key);
-    // TODO @martin
-    // @ts-ignore
-    return new EncryptedKey(undefined, undefined, undefined, undefined, undefined);
-  })
+  const encryptedPrivateKeys = await Promise.all(keys.map(async key => {
+    const kwResult = await x25519xc20pKeyWrap(base58ToBytes(key))(userPrivateKey);
+    return new EncryptedKey(
+      kIdFromPublicKey(userPubKey),
+      kwResult.iv,
+      kwResult.tag,
+      kwResult.epPubKey,
+      kwResult.encryptedKey);
+  }))
 
   return {
     userPubKey,
     encryptedPrivateKeys: encryptedPrivateKeys || []
   }
-} 
+}
+
+/**
+ * Get KID from Public Key
+ */
+export const kIdFromPublicKey = (pub: UserPubKey): Kid => pub.subarray(0, KID_SIZE)

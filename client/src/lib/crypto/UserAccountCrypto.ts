@@ -88,7 +88,7 @@ export const decrypUserKey = async (
     k => bytesToBase64(k.kid) === bytesToBase64(kid)
   );
 
-  if (!encryptedUserKey) throw new Error(`No encrypted CEK found for key ${kid}`);
+  if (!encryptedUserKey) throw new Error(`No encrypted UserKey found for key ${kid}`);
 
   return decryptKeyWrap(encryptedUserKey, key);
 };

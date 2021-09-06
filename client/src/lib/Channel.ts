@@ -6,8 +6,7 @@ import {
   CEK,
   decryptKeyWrap,
   decryptMessage,
-  encryptCEKForDID,
-  encryptCEKForVerificationMethod,
+  encryptCEKForUserKey,
   encryptMessage,
   findVerificationMethodForKey,
 } from './crypto/ChannelCrypto';

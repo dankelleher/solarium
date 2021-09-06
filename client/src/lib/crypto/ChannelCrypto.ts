@@ -23,17 +23,16 @@ import {
   base58ToBytes,
   bytesToBase58,
 } from './utils';
-import { getDocument } from '../did/get';
-import { EncryptedKey } from '../UserDetails';
+import { EncryptedKey, UserPubKey } from '../UserDetails';
 import {
   VM_TYPE_ED25519VERIFICATIONKEY2018,
   VM_TYPE_X25519KEYAGREEMENTKEY2019,
 } from '../constants';
-import { UserPrivateKey } from './UserAccountCrypto';
+import { kidToBytes, UserPrivateKey } from './UserAccountCrypto';
 
 export type CEK = Uint8Array;
 
-const shortenKID = (kid: string): string => kid.substring(kid.indexOf('#') + 1);
+// const shortenKID = (kid: string): string => kid.substring(kid.indexOf('#') + 1);
 
 // Create a CEK for a new channel
 export const generateCEK = async (): Promise<CEK> => {
@@ -57,65 +56,43 @@ const getVerificationMethod = (
   return foundKey;
 };
 
-// Given an unecrypted channel CEK, encrypt it for a DID
-export const encryptCEKForDID = async (
+export const encryptCEKForUserKey = async (
   cek: CEK,
-  did: string
+  userkey: UserPubKey
 ): Promise<EncryptedKey> => {
-  const didDocument = await getDocument(did);
-  const augmentedDIDDocument = augmentDIDDocument(didDocument);
+  const kwResult = await x25519xc20pKeyWrap(userkey)(cek);
 
-  return encryptCEKForDIDDocument(cek, augmentedDIDDocument);
-};
-
-export const encryptCEKForVerificationMethod = async (
-  cek: CEK,
-  key: VerificationMethod
-): Promise<EncryptedKey> => {
-  if (!key.publicKeyBase58) {
-    throw Error(
-      'Currently we expect the recipient key to be encoded as base58'
-    );
-  }
-
-  const res = await x25519xc20pKeyWrap(base58ToBytes(key.publicKeyBase58))(cek);
-
-  // header.iv + header.tag + header.epk.x
-  const concatByteArray = u8a.concat([res.iv, res.tag, res.epPubKey]);
-  const header = bytesToBase64(concatByteArray);
-
-  // TODO @martin just to get it to compile
-  // @ts-ignore
-  return new EncryptedKey({
-    kid: shortenKID(key.id),
-    header,
-    encryptedKey: bytesToBase64(res.encryptedKey),
-  });
+  return new EncryptedKey(
+    kidToBytes('UserKey'), // TODO: What should be use here? last digits of did identifier?
+    kwResult.iv,
+    kwResult.tag,
+    kwResult.epPubKey,
+    kwResult.encryptedKey);
 };
 
 // Given an unencrypted channel CEK, encrypt it for a DID Document
-export const encryptCEKForDIDDocument = async (
-  cek: CEK,
-  didDocument: DIDDocument
-): Promise<EncryptedKey> => {
-  const encryptedCEKPromises = (didDocument.keyAgreement || []).map(
-    async (keyOrRef): Promise<EncryptedKey> => {
-      const verificationMethod = getVerificationMethod(keyOrRef, didDocument);
-      return encryptCEKForVerificationMethod(cek, verificationMethod);
-    }
-  );
-
-  // TODO @martin just to get it to compile
-  // @ts-ignore
-  return Promise.all(encryptedCEKPromises);
-};
+// export const encryptCEKForUserKey = async (
+//   cek: CEK,
+//   didDocument: DIDDocument
+// ): Promise<EncryptedKey> => {
+//   const encryptedCEKPromises = (didDocument.keyAgreement || []).map(
+//     async (keyOrRef): Promise<EncryptedKey> => {
+//       const verificationMethod = getVerificationMethod(keyOrRef, didDocument);
+//       return encryptCEKForVerificationMethod(cek, verificationMethod);
+//     }
+//   );
+//
+//   // TODO @martin just to get it to compile
+//   // @ts-ignore
+//   return Promise.all(encryptedCEKPromises);
+// };
 
 // Create a new CEK and encrypt it for the DID
 export const createEncryptedCEK = async (
-  did: string
+  userkey: UserPubKey
 ): Promise<EncryptedKey> => {
   const cek = await generateCEK();
-  return encryptCEKForDID(cek, did);
+  return encryptCEKForUserKey(cek, userkey);
 };
 
 // Decrypt an encrypted CEK for the with the key that was used to encrypt it
@@ -155,20 +132,10 @@ export const decryptKeyWrap = async (
 
 // Find the CEK encrypted with a particular key, and decrypt it
 export const decryptCEKWithUserKey = async (
-  encryptedCEKs: EncryptedKey[],
-  kid: string,
-  key: PrivateKey
-): Promise<EncryptedKey> => {
-  // find the encrypted CEK for the key
-  const encryptedCEK = encryptedCEKs.find(
-    k => k.kid.toString() === shortenKID(kid) || k.kid.toString() === kid
-  );
-
-  if (!encryptedCEK) throw new Error(`No encrypted CEK found for key ${kid}`);
-
-  // TODO @martin just to get it to compile
-  // @ts-ignore
-  return decryptKeyWrap(encryptedCEK, key);
+  encryptedCEK: EncryptedKey,
+  userKey: PrivateKey
+): Promise<CEK> => {
+  return decryptKeyWrap(encryptedCEK, userKey);
 };
 
 // Encrypt a message with a CEK

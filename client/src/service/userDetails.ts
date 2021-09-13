@@ -34,6 +34,19 @@ export const userDetailsCache = new SolariumCache<
 
 export const getUserDetails = userDetailsCache.load.bind(userDetailsCache);
 
+export const getUserDetailsSafe = async (
+  did: string,
+  skipCache: boolean,
+  connection: Connection
+): Promise<UserDetails> => {
+  const userDetails = await getUserDetails(did, skipCache, connection);
+
+  if (!userDetails)
+    throw new Error(`Cannot create channel: No UserDetails for ${did}.`);
+
+  return userDetails;
+};
+
 /**
  * Create a Solarium user details account for a DID
  * @param did

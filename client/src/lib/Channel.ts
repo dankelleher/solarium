@@ -16,7 +16,7 @@ import { getCekAccountAddress } from './solana/instruction';
 import { SolanaUtil } from './solana/solanaUtil';
 import { getUserDetails } from '../service/userDetails';
 import { getDocument } from './did/get';
-import { EncryptedKey } from './UserDetails';
+import { EncryptedKey, UserPubKey } from './UserDetails';
 
 export type MessageSender = {
   did: string;
@@ -77,25 +77,28 @@ export class Channel {
     return encryptMessage(message, this.cek);
   }
 
-  async encryptCEKForDID(did: string): Promise<EncryptedKey> {
+  async encryptCEKForUserKey(userkey: UserPubKey): Promise<EncryptedKey> {
     if (!this.cek) {
       throw new Error(
         'Cannot encrypt, this channel was loaded without a private key, so no CEK was available'
       );
     }
-    return encryptCEKForDID(this.cek, did);
+    return encryptCEKForUserKey(this.cek, userkey);
   }
 
-  async encryptCEK(
-    verificationMethod: VerificationMethod
-  ): Promise<EncryptedKey> {
-    if (!this.cek) {
-      throw new Error(
-        'Cannot encrypt, this channel was loaded without a private key, so no CEK was available'
-      );
-    }
-    return encryptCEKForVerificationMethod(this.cek, verificationMethod);
-  }
+  // async encryptCEK(
+  //   verificationMethod: VerificationMethod
+  // ): Promise<EncryptedKey> {
+  //   if (!this.cek) {
+  //     throw new Error(
+  //       'Cannot encrypt, this channel was loaded without a private key, so no CEK was available'
+  //     );
+  //   }
+  //   // TODO: get public key
+  //   const userkey =
+  //
+  //   return encryptCEKForUserKey(this.cek, userkey);
+  // }
 
   async hasMember(did: PublicKey): Promise<boolean> {
     const cekAccount = await getCekAccountAddress(did, this.address);

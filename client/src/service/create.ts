@@ -18,11 +18,12 @@ import {
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import {
   createEncryptedCEK,
-  encryptCEKForDID,
+  encryptCEKForUserKey,
   generateCEK,
 } from '../lib/crypto/ChannelCrypto';
 import { Channel } from '../lib/Channel';
 import { get } from './get';
+import { getUserDetailsSafe } from './userDetails';
 
 /**
  * If a DID was already registered for this owner, return its document. Else create one
@@ -110,9 +111,16 @@ export const createChannel = async (
   );
   const didKey = didToPublicKey(ownerDIDDocument.id);
 
-  const cek = await createEncryptedCEK(ownerDIDDocument.id);
-
+  // TODO: Dan please double check this.
   const connection = SolanaUtil.getConnection(cluster);
+
+  const userDetails = await getUserDetailsSafe(
+    ownerDIDDocument.id,
+    false,
+    connection
+  );
+
+  const cek = await createEncryptedCEK(userDetails.userPubKey);
 
   const channelAddress = await SolariumTransaction.createGroupChannel(
     connection,
@@ -165,12 +173,26 @@ export const createDirectChannel = async (
 
   const inviteeDIDDocument = await getDocument(inviteeDID);
 
+  const connection = SolanaUtil.getConnection(cluster);
+
   // create and encrypt a CEK for the new channel
   const cek = await generateCEK();
-  const ownerCEK = await encryptCEKForDID(cek, ownerDIDDocument.id);
-  const inviteeCEK = await encryptCEKForDID(cek, inviteeDIDDocument.id);
+  const ownerUserDetails = await getUserDetailsSafe(
+    ownerDIDDocument.id,
+    false,
+    connection
+  );
+  const inviteeUserDetails = await getUserDetailsSafe(
+    inviteeDIDDocument.id,
+    false,
+    connection
+  );
 
-  const connection = SolanaUtil.getConnection(cluster);
+  const ownerCEK = await encryptCEKForUserKey(cek, ownerUserDetails.userPubKey);
+  const inviteeCEK = await encryptCEKForUserKey(
+    cek,
+    inviteeUserDetails.userPubKey
+  );
 
   // create the channel
   const channelAddress = await SolariumTransaction.createDirectChannel(

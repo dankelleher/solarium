@@ -12,6 +12,7 @@ import { Channel } from '../lib/Channel';
 import { get } from './get';
 import { findVerificationMethodForKey } from '../lib/crypto/ChannelCrypto';
 import { getDocument } from '../lib/did/get';
+import { getUserDetailsSafe } from './userDetails';
 
 const getChannel = async (
   owner: Keypair,
@@ -45,12 +46,13 @@ const getChannel = async (
  * @param signCallback
  * @param cluster
  */
+// TODO: We can probably delete this.
 export const updateCEKAccount = async (
   ownerDID: string,
   owner: Keypair,
   payer: Keypair | PublicKey,
   channel: PublicKey,
-  newKey: PublicKey,
+  // newKey: PublicKey,
   signCallback?: SignCallback,
   cluster?: ExtendedCluster
 ): Promise<void> => {
@@ -63,13 +65,11 @@ export const updateCEKAccount = async (
   const ownerDIDDocument = await getDocument(ownerDID);
   const didKey = didToPublicKey(ownerDID);
 
-  const foundVerificationMethod = findVerificationMethodForKey(
-    ownerDIDDocument,
-    newKey
+  const ownerUserDetails = await getUserDetailsSafe(
+    ownerDIDDocument.id,
+    false,
+    connection
   );
-
-  if (!foundVerificationMethod)
-    throw new Error('New key was not found on the DID');
 
   const channelObject = await getChannel(
     owner,
@@ -78,7 +78,10 @@ export const updateCEKAccount = async (
     connection,
     cluster
   );
-  const newCEK = await channelObject.encryptCEK(foundVerificationMethod);
+
+  const newCEK = await channelObject.encryptCEKForUserKey(
+    ownerUserDetails.userPubKey
+  );
 
   await SolariumTransaction.addKeyToUser(
     didKey,

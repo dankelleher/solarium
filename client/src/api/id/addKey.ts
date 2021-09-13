@@ -57,22 +57,23 @@ export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
     request.cluster
   );
 
-  const updateChannel = (channelAddress: PublicKeyBase58): Promise<void> =>
-    updateCEKAccount(
-      did,
-      signer as Keypair,
-      payer,
-      new PublicKey(channelAddress),
-      newKey,
-      request.signCallback,
-      request.cluster
-    );
+  // TODO: This needs to update the Userkey encryption instead
+  // const updateChannel = (channelAddress: PublicKeyBase58): Promise<void> =>
+  //   updateCEKAccount(
+  //     did,
+  //     signer as Keypair,
+  //     payer,
+  //     new PublicKey(channelAddress),
+  //     newKey,
+  //     request.signCallback,
+  //     request.cluster
+  //   );
 
-  const channelUpdateResults = await Promise.allSettled(
-    request.channelsToUpdate.map(updateChannel)
-  );
-
-  debug(channelUpdateResults);
+  // const channelUpdateResults = await Promise.allSettled(
+  //   request.channelsToUpdate.map(updateChannel)
+  // );
+  //
+  // debug(channelUpdateResults);
 
   return didDocument;
 };

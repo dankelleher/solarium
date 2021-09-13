@@ -29,14 +29,15 @@ import {
   VM_TYPE_X25519KEYAGREEMENTKEY2019,
 } from '../constants';
 import { kidToBytes, UserPrivateKey } from './UserAccountCrypto';
+import { RandomSource } from '@stablelib/random/source/index';
 
 export type CEK = Uint8Array;
 
 // const shortenKID = (kid: string): string => kid.substring(kid.indexOf('#') + 1);
 
 // Create a CEK for a new channel
-export const generateCEK = async (): Promise<CEK> => {
-  const cek = randomBytes(32);
+export const generateCEK = async (prng?: RandomSource): Promise<CEK> => {
+  const cek = randomBytes(32, prng);
   return Promise.resolve(cek);
 };
 

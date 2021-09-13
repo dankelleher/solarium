@@ -6,6 +6,7 @@ import {base58ToBytes, bytesToBase64, stringToBytes} from "./utils";
 import {PrivateKey} from "../util";
 import {decryptKeyWrap} from "./ChannelCrypto";
 import {VM_TYPE_X25519KEYAGREEMENTKEY2019} from "../constants";
+import {RandomSource} from "@stablelib/random";
 
 export type UserPrivateKey = Uint8Array;
 type UserKeyPair = { userPubKey: UserPubKey, encryptedPrivateKeys: EncryptedKey[] }
@@ -13,8 +14,8 @@ type UserKeyPair = { userPubKey: UserPubKey, encryptedPrivateKeys: EncryptedKey[
 /**
  * Solarium UserKeys are an x25519 key-pair
  */
-const generateUserKey = ():[UserPrivateKey,UserPubKey] => {
-  const userKey = generateKeyPair();
+const generateUserKey = (prng?: RandomSource):[UserPrivateKey,UserPubKey] => {
+  const userKey = generateKeyPair(prng);
   return [userKey.secretKey, userKey.publicKey]
 };
 

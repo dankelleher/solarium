@@ -29,9 +29,11 @@ import {
   VM_TYPE_X25519KEYAGREEMENTKEY2019,
 } from '../constants';
 import { RandomSource } from '@stablelib/random/source/index';
-import { generateKeyPair } from '@stablelib/x25519';
+import { generateKeyPair, SECRET_KEY_LENGTH } from '@stablelib/x25519';
+import { getDocument } from '../did/get';
 
 export type CEK = Uint8Array;
+export const CEK_SIZE = 32
 
 export type UserPrivateKey = Uint8Array;
 
@@ -44,15 +46,16 @@ type UserKeyPair = {
  * Solarium CEKs are 32 byte symmetric keys
  * @param prng
  */
-export const generateCEK = async (prng?: RandomSource): Promise<CEK> => {
-  const cek = randomBytes(32, prng);
-  return Promise.resolve(cek);
+// TODO: Remove export?
+export const generateCEK = (prng?: RandomSource): CEK => {
+  return randomBytes(CEK_SIZE, prng);
 };
 
 /**
  * Solarium UserKeys are an x25519 key-pair
  */
-const generateUserKey = (prng?: RandomSource):[UserPrivateKey,UserPubKey] => {
+// TODO: Remove export?
+export const generateUserKey = (prng?: RandomSource):[UserPrivateKey,UserPubKey] => {
   const userKey = generateKeyPair(prng);
   return [userKey.secretKey, userKey.publicKey]
 };
@@ -87,12 +90,27 @@ export const encryptCEKForUserKey = async (
     kwResult.encryptedKey);
 };
 
+
+
+
 /**
  * Generates a public and private keypair for a DID, and encrypts the private key
  * with every key in the DID.
  * @param didDocument
  */
-export const makeUserKeyPair = async (didDocument: DIDDocument):Promise<UserKeyPair> => {
+export const createEncryptedUserKeyPair = async (didDocument: DIDDocument):Promise<UserKeyPair> => {
+  const [userPrivateKey, userPubKey] = generateUserKey();
+
+  const encryptedPrivateKeys = await encryptUserKeyForDidDocument(userPrivateKey, didDocument)
+
+  return {
+    userPubKey,
+    encryptedPrivateKeys: encryptedPrivateKeys || []
+  }
+
+}
+
+export const encryptUserKeyForDidDocument = async (secretKey: UserPrivateKey, didDocument: DIDDocument):Promise<EncryptedKey[]> => {
   console.log(JSON.stringify(didDocument))
 
   const getIDsAndKeys = (methods: VerificationMethod[]) => methods
@@ -103,7 +121,7 @@ export const makeUserKeyPair = async (didDocument: DIDDocument):Promise<UserKeyP
       pub: method.publicKeyBase58
     })) as {id: string, pub: string}[]
 
-  return makeUserKeyPairForKeys(getIDsAndKeys(didDocument.verificationMethod || []))
+  return encryptUserKeyForKeys(secretKey, getIDsAndKeys(didDocument.verificationMethod || []))
 }
 
 /**
@@ -111,13 +129,11 @@ export const makeUserKeyPair = async (didDocument: DIDDocument):Promise<UserKeyP
  * with every key in the DID.
  * @param keys
  */
-export const makeUserKeyPairForKeys = async (verificationMethods: {id: string, pub: string}[]):Promise<UserKeyPair> => {
-  console.log(JSON.stringify(verificationMethods))
-
-  const [userPrivateKey, userPubKey] = generateUserKey();
+export const encryptUserKeyForKeys = async (secretKey: UserPrivateKey,
+                                             verificationMethods: {id: string, pub: string}[]):Promise<EncryptedKey[]> => {
 
   const encryptedPrivateKeys = await Promise.all(verificationMethods.map(async vm => {
-    const kwResult = await x25519xc20pKeyWrap(base58ToBytes(vm.pub))(userPrivateKey);
+    const kwResult = await x25519xc20pKeyWrap(base58ToBytes(vm.pub))(secretKey);
     return new EncryptedKey(
       kidToBytes(vm.id),
       kwResult.iv,
@@ -126,16 +142,11 @@ export const makeUserKeyPairForKeys = async (verificationMethods: {id: string, p
       kwResult.encryptedKey);
   }))
 
-  console.log(JSON.stringify(encryptedPrivateKeys))
-
-  return {
-    userPubKey,
-    encryptedPrivateKeys: encryptedPrivateKeys || []
-  }
+  return encryptedPrivateKeys
 }
 
 // Find the UserKey encrypted with a particular key, and decrypt it
-export const decrypUserKey = async (
+export const decryptUserKey = async (
   encryptedUserKeys: EncryptedKey[],
   kid: Uint8Array,
   key: PrivateKey
@@ -147,46 +158,21 @@ export const decrypUserKey = async (
 
   if (!encryptedUserKey) throw new Error(`No encrypted UserKey found for key ${kid}`);
 
-  return decryptKeyWrap(encryptedUserKey, key);
+  return decryptKeyWrap(encryptedUserKey, convertToX25519SecretKey(key));
 };
-
-// Given an unencrypted channel CEK, encrypt it for a DID Document
-// export const encryptCEKForUserKey = async (
-//   cek: CEK,
-//   didDocument: DIDDocument
-// ): Promise<EncryptedKey> => {
-//   const encryptedCEKPromises = (didDocument.keyAgreement || []).map(
-//     async (keyOrRef): Promise<EncryptedKey> => {
-//       const verificationMethod = getVerificationMethod(keyOrRef, didDocument);
-//       return encryptCEKForVerificationMethod(cek, verificationMethod);
-//     }
-//   );
-//
-//   // TODO @martin just to get it to compile
-//   // @ts-ignore
-//   return Promise.all(encryptedCEKPromises);
-// };
 
 // Create a new CEK and encrypt it for the DID
 export const createEncryptedCEK = async (
   userkey: UserPubKey
 ): Promise<EncryptedKey> => {
-  const cek = await generateCEK();
+  const cek = generateCEK();
   return encryptCEKForUserKey(cek, userkey);
 };
 
-// Decrypt an encrypted CEK for the with the key that was used to encrypt it
-export const decryptKeyWrap = async (
-  encryptedKey: EncryptedKey,
-  key: PrivateKey
-): Promise<CEK | UserPrivateKey> => {
-  // decode information from CEKData
-  // iv (24), tag (16), epk PubKey (rest)
-  // TODO @martin just hacked together to get things compiling - please check
-  const { kiv: iv, keyTag: tag, ephemeralPubkey: epkPub } = encryptedKey;
 
-  // normalise the key into an uint array
-  const ed25519Key = makeKeypair(key).secretKey;
+export const convertToX25519SecretKey = (secretKey: PrivateKey): Uint8Array => {
+  // convert to universal UIntArray
+  const ed25519Key = makeKeypair(secretKey).secretKey;
 
   // The key is used both for Ed25519 signing and x25519 ECDH encryption
   // the two different protocols use the same curve (Curve25519) but
@@ -195,9 +181,24 @@ export const decryptKeyWrap = async (
   // i.e. combination of the secret and public key, whereas x25519 uses a 32 byte
   // secret key. In order to use the same key for both, we convert here
   // from Ed25519 to x25519 format.
-  const curve25519Key = convertSecretKey(ed25519Key);
+  return convertSecretKey(ed25519Key);
+}
 
-  const cek = await x25519xc20pKeyUnwrap(curve25519Key)(
+/**
+ * Decrypt an encrypted CEK for the with the key that was used to encrypt it
+ * @param encryptedKey
+ * @param key -- secret key in x25519 (32bit) format
+ */
+export const decryptKeyWrap = async (
+  encryptedKey: EncryptedKey,
+  secretKey: Uint8Array
+): Promise<CEK | UserPrivateKey> => {
+  // decode information from CEKData
+  // iv (24), tag (16), epk PubKey (rest)
+  // TODO @martin just hacked together to get things compiling - please check
+  const { kiv: iv, keyTag: tag, ephemeralPubkey: epkPub } = encryptedKey;
+
+  const cek = await x25519xc20pKeyUnwrap(secretKey)(
     encryptedKey.keyCiphertext,
     tag,
     iv,
@@ -213,7 +214,7 @@ export const decryptKeyWrap = async (
 // Find the CEK encrypted with a particular key, and decrypt it
 export const decryptCEKWithUserKey = async (
   encryptedCEK: EncryptedKey,
-  userKey: PrivateKey
+  userKey: UserPrivateKey
 ): Promise<CEK> => {
   return decryptKeyWrap(encryptedCEK, userKey);
 };

@@ -10,7 +10,7 @@ import { SolariumTransaction } from '../lib/solana/transaction';
 import { AddressBook, UserDetails } from '../lib/UserDetails';
 import { SolariumCache } from '../lib/cache';
 import { getDocument } from '../lib/did/get';
-import { augmentDIDDocument, makeUserKeyPair } from '../lib/crypto/SolariumCrypto';
+import { augmentDIDDocument, createEncryptedUserKeyPair } from '../lib/crypto/SolariumCrypto';
 
 const getUserDetailsDirect = async (
   did: string,
@@ -73,7 +73,7 @@ export const createUserDetails = async (
   const ownerDIDKey = didToPublicKey(did);
   const ownerDIDDocument = await getDocument(did);
 
-  const userKeyPair = await makeUserKeyPair(
+  const userKeyPair = await createEncryptedUserKeyPair(
     augmentDIDDocument(ownerDIDDocument)
   );
 

@@ -25,7 +25,7 @@ import {
   keyToIdentifier,
   PrivateKey,
 } from '@identity.com/sol-did-client';
-import { augmentDIDDocument, decrypUserKey } from '../../src/lib/crypto/SolariumCrypto';
+import { augmentDIDDocument, decryptUserKey } from '../../src/lib/crypto/SolariumCrypto';
 import { VerificationMethod } from 'did-resolver';
 import { scalarMultBase } from '@stablelib/x25519';
 import { kidToBytes } from '../../src/lib/UserDetails';
@@ -117,7 +117,7 @@ describe('E2E', () => {
     expect(aliceUserDetails?.userPubKey).toBeDefined();
     expect(aliceUserDetails?.encryptedUserPrivateKeyData.length).toEqual(1);
 
-    const privUserKey = await decrypUserKey(
+    const privUserKey = await decryptUserKey(
       aliceUserDetails?.encryptedUserPrivateKeyData || [],
       kidToBytes(x25519Vm.id),
       alice.secretKey

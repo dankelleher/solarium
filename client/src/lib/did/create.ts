@@ -19,7 +19,7 @@ import { SolariumTransaction } from '../solana/transaction';
 import { createUserDetails } from '../solana/instruction';
 import { getDocument } from './get';
 import { pluck } from 'ramda';
-import { makeUserKeyPairForKeys } from '../crypto/SolariumCrypto';
+import { createEncryptedUserKeyPair, encryptUserKeyForKeys, generateUserKey } from '../crypto/SolariumCrypto';
 
 const makeDocumentForKeys = (
   did: string,
@@ -71,10 +71,11 @@ export const create = async (
   if (alias) {
     debug('Creating user-details for the new DID: ' + didForAuthority);
 
-    // TODO: Daniel, where do i get the correct verification method ID for the initial DID.
-    // const userKeyPair = makeUserKeyPair(document) // Why can the document here be undefined?
+    // TODO: Daniel, how can I can the DID Doc for that new DID here? (which makes it nicer to access)
+    // const userKeyPair = createEncryptedUserKeyPair(document) // Why can the document here be undefined?
 
-    const userKeyPair = await makeUserKeyPairForKeys([
+    const [userSecretKey, userPubKey] = generateUserKey()
+    const encryptedPrivateKeys = await encryptUserKeyForKeys(userSecretKey, [
       { id: 'TODO', pub: pubkeyOf(owner).toBase58() },
     ]);
 
@@ -83,8 +84,8 @@ export const create = async (
     // TX, whereas createUserDetails is used to add a userDetails account to an existing
     // DID. So it makes sense that both exist, but perhaps we can do something about the
     // code duplication.
-    const encryptedUserPrivateKeyData = userKeyPair.encryptedPrivateKeys.map(
-      key => key.toChainData()
+    const encryptedUserPrivateKeyData = encryptedPrivateKeys.map(key =>
+      key.toChainData()
     );
     const createUserDetailsInstruction = await createUserDetails(
       pubkeyOf(payer),
@@ -92,7 +93,7 @@ export const create = async (
       pubkeyOf(owner),
       alias,
       encryptedUserPrivateKeyData,
-      Array.from(userKeyPair.userPubKey)
+      Array.from(userPubKey)
     );
     instructions.push(createUserDetailsInstruction);
   }

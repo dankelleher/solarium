@@ -176,7 +176,7 @@ export const createDirectChannel = async (
   const connection = SolanaUtil.getConnection(cluster);
 
   // create and encrypt a CEK for the new channel
-  const cek = await generateCEK();
+  const cek = generateCEK();
   const ownerUserDetails = await getUserDetailsSafe(
     ownerDIDDocument.id,
     false,

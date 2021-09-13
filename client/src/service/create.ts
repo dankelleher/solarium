@@ -20,7 +20,7 @@ import {
   createEncryptedCEK,
   encryptCEKForUserKey,
   generateCEK,
-} from '../lib/crypto/ChannelCrypto';
+} from '../lib/crypto/SolariumCrypto';
 import { Channel } from '../lib/Channel';
 import { get } from './get';
 import { getUserDetailsSafe } from './userDetails';

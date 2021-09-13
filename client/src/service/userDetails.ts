@@ -9,9 +9,8 @@ import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolariumTransaction } from '../lib/solana/transaction';
 import { AddressBook, UserDetails } from '../lib/UserDetails';
 import { SolariumCache } from '../lib/cache';
-import { makeUserKeyPair } from '../lib/crypto/UserAccountCrypto';
 import { getDocument } from '../lib/did/get';
-import { augmentDIDDocument } from '../lib/crypto/ChannelCrypto';
+import { augmentDIDDocument, makeUserKeyPair } from '../lib/crypto/SolariumCrypto';
 
 const getUserDetailsDirect = async (
   did: string,

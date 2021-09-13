@@ -9,7 +9,7 @@ import {
   encryptCEKForUserKey,
   encryptMessage,
   findVerificationMethodForKey,
-} from './crypto/ChannelCrypto';
+} from './crypto/SolariumCrypto';
 import { PublicKey } from '@solana/web3.js';
 import { VerificationMethod } from 'did-resolver';
 import { getCekAccountAddress } from './solana/instruction';

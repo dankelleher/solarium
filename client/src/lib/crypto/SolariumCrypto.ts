@@ -23,22 +23,38 @@ import {
   base58ToBytes,
   bytesToBase58,
 } from './utils';
-import { EncryptedKey, UserPubKey } from '../UserDetails';
+import { EncryptedKey, kidToBytes, UserPubKey } from '../UserDetails';
 import {
   VM_TYPE_ED25519VERIFICATIONKEY2018,
   VM_TYPE_X25519KEYAGREEMENTKEY2019,
 } from '../constants';
-import { kidToBytes, UserPrivateKey } from './UserAccountCrypto';
 import { RandomSource } from '@stablelib/random/source/index';
+import { generateKeyPair } from '@stablelib/x25519';
 
 export type CEK = Uint8Array;
 
-// const shortenKID = (kid: string): string => kid.substring(kid.indexOf('#') + 1);
+export type UserPrivateKey = Uint8Array;
 
-// Create a CEK for a new channel
+type UserKeyPair = {
+  userPubKey: UserPubKey;
+  encryptedPrivateKeys: EncryptedKey[];
+};
+
+/**
+ * Solarium CEKs are 32 byte symmetric keys
+ * @param prng
+ */
 export const generateCEK = async (prng?: RandomSource): Promise<CEK> => {
   const cek = randomBytes(32, prng);
   return Promise.resolve(cek);
+};
+
+/**
+ * Solarium UserKeys are an x25519 key-pair
+ */
+const generateUserKey = (prng?: RandomSource):[UserPrivateKey,UserPubKey] => {
+  const userKey = generateKeyPair(prng);
+  return [userKey.secretKey, userKey.publicKey]
 };
 
 // given a key or reference to a key in a DID, return the key itself
@@ -69,6 +85,69 @@ export const encryptCEKForUserKey = async (
     kwResult.tag,
     kwResult.epPubKey,
     kwResult.encryptedKey);
+};
+
+/**
+ * Generates a public and private keypair for a DID, and encrypts the private key
+ * with every key in the DID.
+ * @param didDocument
+ */
+export const makeUserKeyPair = async (didDocument: DIDDocument):Promise<UserKeyPair> => {
+  console.log(JSON.stringify(didDocument))
+
+  const getIDsAndKeys = (methods: VerificationMethod[]) => methods
+    .filter(method => method.type === VM_TYPE_X25519KEYAGREEMENTKEY2019) // only apply to X25519
+    .filter(method => !!method.publicKeyBase58) // we currently only support keys in base58
+    .map(method => ({
+      id: method.id,
+      pub: method.publicKeyBase58
+    })) as {id: string, pub: string}[]
+
+  return makeUserKeyPairForKeys(getIDsAndKeys(didDocument.verificationMethod || []))
+}
+
+/**
+ * Generates a public and private keypair for a set of keys, and encrypts the private key
+ * with every key in the DID.
+ * @param keys
+ */
+export const makeUserKeyPairForKeys = async (verificationMethods: {id: string, pub: string}[]):Promise<UserKeyPair> => {
+  console.log(JSON.stringify(verificationMethods))
+
+  const [userPrivateKey, userPubKey] = generateUserKey();
+
+  const encryptedPrivateKeys = await Promise.all(verificationMethods.map(async vm => {
+    const kwResult = await x25519xc20pKeyWrap(base58ToBytes(vm.pub))(userPrivateKey);
+    return new EncryptedKey(
+      kidToBytes(vm.id),
+      kwResult.iv,
+      kwResult.tag,
+      kwResult.epPubKey,
+      kwResult.encryptedKey);
+  }))
+
+  console.log(JSON.stringify(encryptedPrivateKeys))
+
+  return {
+    userPubKey,
+    encryptedPrivateKeys: encryptedPrivateKeys || []
+  }
+}
+
+// Find the UserKey encrypted with a particular key, and decrypt it
+export const decrypUserKey = async (
+  encryptedUserKeys: EncryptedKey[],
+  kid: Uint8Array,
+  key: PrivateKey
+): Promise<UserPrivateKey> => {
+  // find the encrypted CEK for the key
+  const encryptedUserKey = encryptedUserKeys.find(
+    k => bytesToBase64(k.kid) === bytesToBase64(kid)
+  );
+
+  if (!encryptedUserKey) throw new Error(`No encrypted UserKey found for key ${kid}`);
+
+  return decryptKeyWrap(encryptedUserKey, key);
 };
 
 // Given an unencrypted channel CEK, encrypt it for a DID Document

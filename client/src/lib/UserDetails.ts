@@ -1,6 +1,7 @@
 import { UserDetailsData } from './solana/models/UserDetailsData';
 import { ChainStorage } from './solana/solanaBorsh';
 import { EncryptedKeyData } from './solana/models/EncryptedKeyData';
+import { stringToBytes } from './crypto/utils';
 
 // A type defining the public component of a user public key
 export type UserPubKey = Uint8Array; // 32 bytes
@@ -18,10 +19,20 @@ export type KeyTag = Uint8Array; // 16 bytes
 export type EphemeralPubkey = Uint8Array; // 32 bytes
 // A type defining the wrapped encrypted key
 export type KeyCiphertext = Uint8Array; // 32 bytes
-// TODO @martin there is lots of overlap between these types
-// and the PrivateKey and PublicKeyBase58 types in client/src/lib/util.ts
-// I suggest the EncryptedKey object uses the ones in client/src/lib/util.ts
-// where appropriate
+
+/**
+ * VM ID after "#", truncated to max 8 bytes
+ * Shorter Strings also have to be at least 8 bytes long
+ * @param kid
+ */
+export const kidToBytes = (kid: string): Kid => {
+  // 0-init
+  const kidBytes = new Uint8Array(KID_SIZE);
+  kidBytes.set(
+    stringToBytes(kid.substring(kid.indexOf('#') + 1)).slice(0, KID_SIZE)
+  );
+  return kidBytes;
+};
 
 export class EncryptedKey implements ChainStorage<EncryptedKeyData> {
   constructor(

@@ -25,13 +25,10 @@ import {
   keyToIdentifier,
   PrivateKey,
 } from '@identity.com/sol-did-client';
-import {
-  decrypUserKey,
-  kidToBytes,
-} from '../../src/lib/crypto/UserAccountCrypto';
-import { augmentDIDDocument } from '../../src/lib/crypto/ChannelCrypto';
+import { augmentDIDDocument, decrypUserKey } from '../../src/lib/crypto/SolariumCrypto';
 import { VerificationMethod } from 'did-resolver';
 import { scalarMultBase } from '@stablelib/x25519';
+import { kidToBytes } from '../../src/lib/UserDetails';
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();

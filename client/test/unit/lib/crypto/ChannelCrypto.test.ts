@@ -6,7 +6,7 @@ import {
   encryptCEKForVerificationMethod,
   decryptKeyWrap,
   augmentDIDDocument,
-} from '../../../../src/lib/crypto/ChannelCrypto';
+} from '../../../../src/lib/crypto/SolariumCrypto';
 import {
   stringToBytes,
   base64ToBytes,

@@ -19,7 +19,7 @@ import { SolariumTransaction } from '../solana/transaction';
 import { createUserDetails } from '../solana/instruction';
 import { getDocument } from './get';
 import { pluck } from 'ramda';
-import { makeUserKeyPairForKeys } from '../crypto/UserAccountCrypto';
+import { makeUserKeyPairForKeys } from '../crypto/SolariumCrypto';
 
 const makeDocumentForKeys = (
   did: string,
@@ -71,9 +71,11 @@ export const create = async (
   if (alias) {
     debug('Creating user-details for the new DID: ' + didForAuthority);
 
-    // TODO: Define ID for this Key.
+    // TODO: Daniel, where do i get the correct verification method ID for the initial DID.
+    // const userKeyPair = makeUserKeyPair(document) // Why can the document here be undefined?
+
     const userKeyPair = await makeUserKeyPairForKeys([
-      { id: 'owner', pub: pubkeyOf(owner).toBase58() },
+      { id: 'TODO', pub: pubkeyOf(owner).toBase58() },
     ]);
 
     // TODO @martin there is duplication here with service/userDetails.ts createUserDetails

@@ -9,12 +9,12 @@ use solarium::state::{ChannelData, Notification};
 
 mod solarium_context;
 
-// #[tokio::test]
-// async fn create_channel() {
-//     let mut context = SolariumContext::new().await;
-//
-//     context.create_channel().await;
-// }
+#[tokio::test]
+async fn create_channel() {
+    let mut context = SolariumContext::new().await;
+
+    context.create_channel().await;
+}
 
 #[tokio::test]
 async fn add_key_to_userdetails() {

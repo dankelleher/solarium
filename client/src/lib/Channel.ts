@@ -1,5 +1,5 @@
 import { DecentralizedIdentifier } from '@identity.com/sol-did-client';
-import { currentCluster, ExtendedCluster, PrivateKey } from './util';
+import { currentCluster, ExtendedCluster } from './util';
 import { ChannelData } from './solana/models/ChannelData';
 import { CEKAccountDataV2 } from './solana/models/CEKAccountDataV2';
 import {
@@ -7,14 +7,12 @@ import {
   decryptKeyWrap,
   decryptMessage,
   encryptCEKForUserKey,
-  encryptMessage,
-  findVerificationMethodForKey,
+  encryptMessage, UserPrivateKey,
 } from './crypto/SolariumCrypto';
 import { PublicKey } from '@solana/web3.js';
 import { getCekAccountAddress } from './solana/instruction';
 import { SolanaUtil } from './solana/solanaUtil';
 import { getUserDetails } from '../service/userDetails';
-import { getDocument } from './did/get';
 import { EncryptedKey, UserPubKey } from './UserDetails';
 
 export type MessageSender = {
@@ -85,20 +83,6 @@ export class Channel {
     return encryptCEKForUserKey(this.cek, userkey);
   }
 
-  // async encryptCEK(
-  //   verificationMethod: VerificationMethod
-  // ): Promise<EncryptedKey> {
-  //   if (!this.cek) {
-  //     throw new Error(
-  //       'Cannot encrypt, this channel was loaded without a private key, so no CEK was available'
-  //     );
-  //   }
-  //   // TODO: get public key
-  //   const userkey =
-  //
-  //   return encryptCEKForUserKey(this.cek, userkey);
-  // }
-
   async hasMember(did: PublicKey): Promise<boolean> {
     const cekAccount = await getCekAccountAddress(did, this.address);
 
@@ -113,21 +97,11 @@ export class Channel {
     address: PublicKey,
     channelData: ChannelData,
     cekAccountData: CEKAccountDataV2,
-    memberDID: string,
-    memberKey?: PrivateKey,
+    userKey?: UserPrivateKey,
     cluster?: ExtendedCluster
   ): Promise<Channel> {
-    const getCEK = async (key: PrivateKey): Promise<Uint8Array> => {
-      const verificationMethod = findVerificationMethodForKey(
-        memberDIDDocument,
-        key
-      );
-      if (!verificationMethod)
-        throw new Error(`Invalid private key for DID ${memberDIDDocument.id}`);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore // TODO @martin - I didn't make all the changes for this file yet.
-      // added ts-ignore just so it compiles
-      return decryptKeyWrap(cekAccountData.cek, verificationMethod.id, key);
+    const getCEK = async (key: UserPrivateKey): Promise<Uint8Array> => {
+      return decryptKeyWrap(EncryptedKey.fromChainData(cekAccountData.cek), key);
     };
 
     const decrypt = async (message: Message): Promise<Message> => {
@@ -136,8 +110,7 @@ export class Channel {
       return message.withContent(decrypted);
     };
 
-    const memberDIDDocument = await getDocument(memberDID);
-    const cek = memberKey ? await getCEK(memberKey) : undefined;
+    const cek = userKey ? await getCEK(userKey) : undefined;
 
     const messagePromises = channelData.messages
       .map(m =>

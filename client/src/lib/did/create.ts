@@ -23,6 +23,8 @@ import {
   encryptUserKeyForKeys,
   generateUserKey,
 } from '../crypto/SolariumCrypto';
+import { convertPublicKey } from 'ed2curve-esm';
+import { bytesToBase58 } from '../crypto/utils';
 
 const makeDocumentForKeys = (
   did: string,
@@ -71,15 +73,13 @@ export const create = async (
   });
 
   const instructions = [registerInstruction];
-  if (alias) {
+  if (alias) { // TODO: This can not be optional in the future, because Userkeys are required for channel invites.
     debug('Creating user-details for the new DID: ' + didForAuthority);
-
-    // TODO: Daniel, how can I can the DID Doc for that new DID here? (which makes it nicer to access)
-    // const userKeyPair = createEncryptedUserKeyPair(document) // Why can the document here be undefined?
 
     const [userSecretKey, userPubKey] = generateUserKey();
     const encryptedPrivateKeys = await encryptUserKeyForKeys(userSecretKey, [
-      { id: 'TODO', pub: pubkeyOf(owner).toBase58() },
+      // TODO: This is a direct dependency to the did-sol resolver AND DID augmentation with x25519 keys
+      { id: 'default_keyAgreement', pub: bytesToBase58(convertPublicKey(pubkeyOf(owner).toBytes())) },
     ]);
 
     // TODO @martin there is duplication here with service/userDetails.ts createUserDetails

@@ -176,7 +176,39 @@ describe('E2E', () => {
     // create Bob's DID
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob',
+    });
+
+    await addToChannel({
+      payer: payer.secretKey,
+      decryptionKey: alice.secretKey,
+      channel: channel.address.toBase58(),
+      inviteeDID: bobDID,
+    });
+
+    // get as Bob
+    const channelForBob = await get({
+      ownerDID: bobDID,
+      channel: channel.address.toBase58(),
+      decryptionKey: bob.secretKey,
+    });
+    expect(channelForBob.address).toEqual(channel.address);
+  });
+
+  // TODO: Dan, do we still need this (e.g. createDID without alias and with PubKey as owner?)
+  it.skip('adds a user without an alias to a group channel', async () => {
+    const channelName = 'dummy channel' + Date.now();
+    channel = await create({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: channelName,
+    });
+
+    // create Bob's DID
+    await createDID({
+      payer: payer.secretKey,
+      owner: bob.publicKey.toBase58(), // note, the public key representation is not sufficient anymore with userdetails
     });
 
     await addToChannel({
@@ -206,7 +238,8 @@ describe('E2E', () => {
     // create Bob's DID
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob'
     });
 
     await addToChannel({
@@ -229,7 +262,8 @@ describe('E2E', () => {
   it('creates a DID and direct channel', async () => {
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob'
     });
 
     channel = await createDirect({
@@ -245,7 +279,8 @@ describe('E2E', () => {
     // create Bob's DID
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob'
     });
 
     // Alice creates the channel
@@ -411,7 +446,8 @@ describe('E2E', () => {
     // create bob's did
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob'
     });
 
     channel = await createDirect({

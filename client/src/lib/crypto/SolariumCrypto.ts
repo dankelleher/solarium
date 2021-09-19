@@ -190,22 +190,21 @@ export const decryptKeyWrap = async (
   encryptedKey: EncryptedKey,
   secretKey: Uint8Array
 ): Promise<CEK | UserPrivateKey> => {
-  // decode information from CEKData
+  // decode information from EncryptedKey
   // iv (24), tag (16), epk PubKey (rest)
-  // TODO @martin just hacked together to get things compiling - please check
   const { kiv: iv, keyTag: tag, ephemeralPubkey: epkPub } = encryptedKey;
 
-  const cek = await x25519xc20pKeyUnwrap(secretKey)(
+  const result = await x25519xc20pKeyUnwrap(secretKey)(
     encryptedKey.keyCiphertext,
     tag,
     iv,
     epkPub
   );
-  if (cek === null) {
-    throw Error('There was a problem decrypting the CEK');
+  if (result === null) {
+    throw Error('There was a problem decrypting the Key');
   }
 
-  return cek;
+  return result;
 };
 
 // Find the CEK encrypted with a particular key, and decrypt it

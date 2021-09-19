@@ -98,7 +98,7 @@ describe('ChannelCrypto', () => {
       id: 'alice-did',
       verificationMethod: [
         {
-          id: 'key0',
+          id: 'did:dummy:alice#default_keyAgreement',
           controller: 'did:dummy:alice',
           type: 'X25519KeyAgreementKey2019',
           publicKeyBase58: bytesToBase58(
@@ -106,7 +106,7 @@ describe('ChannelCrypto', () => {
           ),
         },
         {
-          id: 'key1',
+          id: 'did:dummy:alice#default_keyAgreement1',
           controller: 'did:dummy:alice',
           type: 'X25519KeyAgreementKey2019',
           publicKeyBase58: bytesToBase58(
@@ -123,16 +123,18 @@ describe('ChannelCrypto', () => {
     })
 
     expect(encryptedKeys.length).toEqual(2)
-    expect(encryptedKeys[0].kid).toEqual(kidToBytes('key0'));
-    expect(encryptedKeys[1].kid).toEqual(kidToBytes('key1'));
+    expect(encryptedKeys[0].kid).toEqual(kidToBytes('default_keyAgreement'));
+    expect(encryptedKeys[1].kid).toEqual(kidToBytes('default_keyAgreement1'));
+    // make kids generally don't conflict.
+    expect(kidToBytes('default_keyAgreement')).not.toEqual(kidToBytes('default_keyAgreement1'))
 
-    await expect(decryptUserKey(encryptedKeys, kidToBytes('key0'), aliceKeypair.secretKey)).resolves.toEqual(userKeyPair.secretKey)
-    await expect(decryptUserKey(encryptedKeys, kidToBytes('key1'), aliceKeypair1.secretKey)).resolves.toEqual(userKeyPair.secretKey)
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('default_keyAgreement'), aliceKeypair.secretKey)).resolves.toEqual(userKeyPair.secretKey)
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('default_keyAgreement1'), aliceKeypair1.secretKey)).resolves.toEqual(userKeyPair.secretKey)
     // wrong combination
-    await expect(decryptUserKey(encryptedKeys, kidToBytes('key1'), aliceKeypair.secretKey)).rejects.toThrow(/There was a problem decrypting the CEK/)
-    await expect(decryptUserKey(encryptedKeys, kidToBytes('key0'), aliceKeypair1.secretKey)).rejects.toThrow(/There was a problem decrypting the CEK/)
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('default_keyAgreement1'), aliceKeypair.secretKey)).rejects.toThrow(/There was a problem decrypting the CEK/)
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('default_keyAgreement'), aliceKeypair1.secretKey)).rejects.toThrow(/There was a problem decrypting the CEK/)
     // unknown key
-    await expect(decryptUserKey(encryptedKeys, kidToBytes('unknown0'), aliceKeypair1.secretKey)).rejects.toThrow(/No encrypted UserKey found for key 117,110,107,110,111,119,110,48/)
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('unknown0'), aliceKeypair1.secretKey)).rejects.toThrow(/No encrypted UserKey found for key 121,139,65,2,129,252,35,142/)
   });
 
   it('can successfully augment an did document with one or more X25519KeyAgreementKey2019 keys ', async () => {

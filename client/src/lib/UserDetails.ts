@@ -4,6 +4,10 @@ import { EncryptedKeyData } from './solana/models/EncryptedKeyData';
 import { stringToBytes } from './crypto/utils';
 import { XC20P_IV_LENGTH, XC20P_TAG_LENGTH } from './crypto/xc20pEncryption';
 import { PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@stablelib/x25519';
+import { hash as sha256 } from '@stablelib/sha256';
+import { PrivateKey } from './util';
+import { decryptUserKey, findVerificationMethodForKey } from './crypto/SolariumCrypto';
+import { DIDDocument } from 'did-resolver';
 
 // A type defining the public component of a user public key
 export type UserPubKey = Uint8Array; // 32 bytes
@@ -28,18 +32,28 @@ export type KeyCiphertext = Uint8Array; // 32 bytes
 export const KEY_CIPHER_SIZE = SECRET_KEY_LENGTH; // or CEK length (both equal)
 
 /**
- * VM ID after "#", truncated to max 8 bytes
- * Shorter Strings also have to be at least 8 bytes long
+ * VM ID after "#" with SHA256, truncated to max 8 bytes.
  * @param kid
  */
+// TODO: Evaluate the implication for truncating SHA256
 export const kidToBytes = (kid: string): Kid => {
-  // 0-init
-  const kidBytes = new Uint8Array(KID_SIZE);
-  kidBytes.set(
-    stringToBytes(kid.substring(kid.indexOf('#') + 1)).slice(0, KID_SIZE)
-  );
-  return kidBytes;
+    return sha256(stringToBytes(kid.substring(kid.indexOf('#') + 1))).slice(0, KID_SIZE)
 };
+
+export async function decryptUserKeyFromDID(memberDIDDocument: DIDDocument, memberKey: PrivateKey, userDetails: UserDetails) {
+  const verificationMethod = findVerificationMethodForKey(
+    memberDIDDocument,
+    memberKey
+  );
+  if (!verificationMethod)
+    throw new Error(`Invalid private key for DID ${memberDIDDocument.id}`);
+
+  const userPrivateKey = await decryptUserKey(
+    userDetails.encryptedUserPrivateKeyData,
+    kidToBytes(verificationMethod.id),
+    memberKey)
+  return userPrivateKey;
+}
 
 export class EncryptedKey implements ChainStorage<EncryptedKeyData> {
   constructor(

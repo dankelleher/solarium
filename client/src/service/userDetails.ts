@@ -14,6 +14,7 @@ import {
   augmentDIDDocument,
   createEncryptedUserKeyPair,
 } from '../lib/crypto/SolariumCrypto';
+import { SolanaUtil } from '../lib/solana/solanaUtil';
 
 const getUserDetailsDirect = async (
   did: string,
@@ -67,7 +68,7 @@ export const createUserDetails = async (
   size?: number,
   signCallback?: SignCallback,
   cluster?: ExtendedCluster
-): Promise<void> => {
+): Promise<UserDetails> => {
   const createSignedTx =
     signCallback ||
     (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
@@ -93,6 +94,34 @@ export const createUserDetails = async (
     createSignedTx,
     alias,
     size,
+    cluster
+  );
+
+  const connection = SolanaUtil.getConnection(cluster);
+  return getUserDetails(did, true, connection) as Promise<UserDetails>;
+};
+
+export const getOrCreateUserDetails = async (
+  did: string,
+  owner: Keypair | PublicKey,
+  payer: Keypair | PublicKey,
+  alias: string = did,
+  size?: number,
+  signCallback?: SignCallback,
+  cluster?: ExtendedCluster
+): Promise<UserDetails> => {
+  const connection = SolanaUtil.getConnection(cluster);
+  const existingUserDetails = await getUserDetails(did, false, connection);
+
+  if (existingUserDetails) return existingUserDetails;
+
+  return createUserDetails(
+    did,
+    owner,
+    payer,
+    alias,
+    size,
+    signCallback,
     cluster
   );
 };

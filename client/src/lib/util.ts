@@ -230,3 +230,12 @@ export const keyToVerificationMethod = (
   controller: did,
   publicKeyBase58: didKey.key,
 });
+
+export const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  if (Object.prototype.hasOwnProperty.call(error, 'message')) {
+    return (error as { message: string }).message;
+  } else {
+    return JSON.stringify(error, null, 1);
+  }
+};

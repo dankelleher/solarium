@@ -55,7 +55,7 @@ jobs:
         node: ['16.x']
         os: [ubuntu-latest]
         solana: ['v1.7.6']
-        rust: ['1.50']
+        rust: ['1.54']
 
     steps:
       - name: Checkout repo
@@ -65,8 +65,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.rust }}
-          override: true
-          profile: minimal
 
       - name: Cache build dependencies
         uses: actions/cache@v2

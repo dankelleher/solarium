@@ -8,7 +8,7 @@ import {
   decryptCEKWithUserKey,
   CEK_SIZE,
   encryptUserKeyForKeys,
-  decryptUserKey,
+  decryptUserKey, encryptUserKeyForDidDocument,
 } from '../../../../src/lib/crypto/SolariumCrypto';
 import {
   stringToBytes,
@@ -31,6 +31,7 @@ import {
 describe('ChannelCrypto', () => {
   // Alice has two keys
   const aliceKeypair = Keypair.generate();
+  const aliceKeypair1 = Keypair.generate();
   const cek = generateCEK();
   const cleartext = 'Really strange Testmessage';
 
@@ -65,7 +66,7 @@ describe('ChannelCrypto', () => {
     expect(decCek).toEqual(cek);
   });
 
-  it('can wrap and unwrap UserKey with DID', async () => {
+  it('can wrap and unwrap UserKey with X25519Keys', async () => {
     const userKeyPair = generateKeyPair();
 
     const encryptedKeys = await encryptUserKeyForKeys(userKeyPair.secretKey, [
@@ -88,6 +89,50 @@ describe('ChannelCrypto', () => {
       aliceKeypair.secretKey
     );
     expect(decUserKey).toEqual(userKeyPair.secretKey);
+  });
+
+  it('should encrypt and decrypt a UserKey with DID', async () => {
+    const userKeyPair = generateKeyPair();
+
+    const encryptedKeys = await encryptUserKeyForDidDocument(userKeyPair.secretKey, {
+      id: 'alice-did',
+      verificationMethod: [
+        {
+          id: 'key0',
+          controller: 'did:dummy:alice',
+          type: 'X25519KeyAgreementKey2019',
+          publicKeyBase58: bytesToBase58(
+            convertPublicKey(aliceKeypair.publicKey.toBytes())
+          ),
+        },
+        {
+          id: 'key1',
+          controller: 'did:dummy:alice',
+          type: 'X25519KeyAgreementKey2019',
+          publicKeyBase58: bytesToBase58(
+            convertPublicKey(aliceKeypair1.publicKey.toBytes())
+          ),
+        },
+        {
+          id: 'key2',
+          controller: 'did:dummy:alice',
+          type: 'UnsupportedType',
+          publicKeyBase58: 'UNSUPPORTED BYTES',
+        }
+        ]
+    })
+
+    expect(encryptedKeys.length).toEqual(2)
+    expect(encryptedKeys[0].kid).toEqual(kidToBytes('key0'));
+    expect(encryptedKeys[1].kid).toEqual(kidToBytes('key1'));
+
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('key0'), aliceKeypair.secretKey)).resolves.toEqual(userKeyPair.secretKey)
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('key1'), aliceKeypair1.secretKey)).resolves.toEqual(userKeyPair.secretKey)
+    // wrong combination
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('key1'), aliceKeypair.secretKey)).rejects.toThrow(/There was a problem decrypting the CEK/)
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('key0'), aliceKeypair1.secretKey)).rejects.toThrow(/There was a problem decrypting the CEK/)
+    // unknown key
+    await expect(decryptUserKey(encryptedKeys, kidToBytes('unknown0'), aliceKeypair1.secretKey)).rejects.toThrow(/No encrypted UserKey found for key 117,110,107,110,111,119,110,48/)
   });
 
   it('can successfully augment an did document with one or more X25519KeyAgreementKey2019 keys ', async () => {

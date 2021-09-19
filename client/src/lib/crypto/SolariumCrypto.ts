@@ -1,7 +1,7 @@
-import { VerificationMethod } from 'did-resolver/src/resolver';
-import { DIDDocument } from 'did-resolver';
+import { DIDDocument, VerificationMethod } from 'did-resolver';
 import { isPublicKey, makeKeypair, PrivateKey } from '../util';
-import { randomBytes } from '@stablelib/random';
+import { randomBytes, RandomSource } from '@stablelib/random';
+import { generateKeyPair } from '@stablelib/x25519';
 import {
   x25519xc20pKeyWrap,
   x25519xc20pKeyUnwrap,
@@ -28,12 +28,9 @@ import {
   VM_TYPE_ED25519VERIFICATIONKEY2018,
   VM_TYPE_X25519KEYAGREEMENTKEY2019,
 } from '../constants';
-import { RandomSource } from '@stablelib/random/source/index';
-import { generateKeyPair, SECRET_KEY_LENGTH } from '@stablelib/x25519';
-import { getDocument } from '../did/get';
 
 export type CEK = Uint8Array;
-export const CEK_SIZE = 32
+export const CEK_SIZE = 32;
 
 export type UserPrivateKey = Uint8Array;
 
@@ -47,33 +44,18 @@ type UserKeyPair = {
  * @param prng
  */
 // TODO: Remove export?
-export const generateCEK = (prng?: RandomSource): CEK => {
-  return randomBytes(CEK_SIZE, prng);
-};
+export const generateCEK = (prng?: RandomSource): CEK =>
+  randomBytes(CEK_SIZE, prng);
 
 /**
  * Solarium UserKeys are an x25519 key-pair
  */
 // TODO: Remove export?
-export const generateUserKey = (prng?: RandomSource):[UserPrivateKey,UserPubKey] => {
+export const generateUserKey = (
+  prng?: RandomSource
+): [UserPrivateKey, UserPubKey] => {
   const userKey = generateKeyPair(prng);
-  return [userKey.secretKey, userKey.publicKey]
-};
-
-// given a key or reference to a key in a DID, return the key itself
-const getVerificationMethod = (
-  vmOrRef: VerificationMethod | string,
-  document: DIDDocument
-): VerificationMethod => {
-  if (Object.prototype.hasOwnProperty.call(vmOrRef, 'id'))
-    return vmOrRef as VerificationMethod;
-
-  const foundKey = (document.verificationMethod || []).find(
-    key => key.id === vmOrRef
-  );
-
-  if (!foundKey) throw new Error(`Missing key ${vmOrRef}`);
-  return foundKey;
+  return [userKey.secretKey, userKey.publicKey];
 };
 
 export const encryptCEKForUserKey = async (
@@ -87,63 +69,78 @@ export const encryptCEKForUserKey = async (
     kwResult.iv,
     kwResult.tag,
     kwResult.epPubKey,
-    kwResult.encryptedKey);
+    kwResult.encryptedKey
+  );
 };
-
-
-
 
 /**
  * Generates a public and private keypair for a DID, and encrypts the private key
  * with every key in the DID.
  * @param didDocument
  */
-export const createEncryptedUserKeyPair = async (didDocument: DIDDocument):Promise<UserKeyPair> => {
+export const createEncryptedUserKeyPair = async (
+  didDocument: DIDDocument
+): Promise<UserKeyPair> => {
   const [userPrivateKey, userPubKey] = generateUserKey();
 
-  const encryptedPrivateKeys = await encryptUserKeyForDidDocument(userPrivateKey, didDocument)
+  const encryptedPrivateKeys = await encryptUserKeyForDidDocument(
+    userPrivateKey,
+    didDocument
+  );
 
   return {
     userPubKey,
-    encryptedPrivateKeys: encryptedPrivateKeys || []
-  }
+    encryptedPrivateKeys: encryptedPrivateKeys || [],
+  };
+};
 
-}
+export const encryptUserKeyForDidDocument = async (
+  secretKey: UserPrivateKey,
+  didDocument: DIDDocument
+): Promise<EncryptedKey[]> => {
+  console.log(JSON.stringify(didDocument));
 
-export const encryptUserKeyForDidDocument = async (secretKey: UserPrivateKey, didDocument: DIDDocument):Promise<EncryptedKey[]> => {
-  console.log(JSON.stringify(didDocument))
+  const getIDsAndKeys = (methods: VerificationMethod[]) =>
+    methods
+      .filter(method => method.type === VM_TYPE_X25519KEYAGREEMENTKEY2019) // only apply to X25519
+      .filter(method => !!method.publicKeyBase58) // we currently only support keys in base58
+      .map(method => ({
+        id: method.id,
+        pub: method.publicKeyBase58,
+      })) as { id: string; pub: string }[];
 
-  const getIDsAndKeys = (methods: VerificationMethod[]) => methods
-    .filter(method => method.type === VM_TYPE_X25519KEYAGREEMENTKEY2019) // only apply to X25519
-    .filter(method => !!method.publicKeyBase58) // we currently only support keys in base58
-    .map(method => ({
-      id: method.id,
-      pub: method.publicKeyBase58
-    })) as {id: string, pub: string}[]
-
-  return encryptUserKeyForKeys(secretKey, getIDsAndKeys(didDocument.verificationMethod || []))
-}
+  return encryptUserKeyForKeys(
+    secretKey,
+    getIDsAndKeys(didDocument.verificationMethod || [])
+  );
+};
 
 /**
  * Generates a public and private keypair for a set of keys, and encrypts the private key
  * with every key in the DID.
  * @param keys
  */
-export const encryptUserKeyForKeys = async (secretKey: UserPrivateKey,
-                                             verificationMethods: {id: string, pub: string}[]):Promise<EncryptedKey[]> => {
+export const encryptUserKeyForKeys = async (
+  secretKey: UserPrivateKey,
+  verificationMethods: { id: string; pub: string }[]
+): Promise<EncryptedKey[]> => {
+  const encryptedPrivateKeys = await Promise.all(
+    verificationMethods.map(async vm => {
+      const kwResult = await x25519xc20pKeyWrap(base58ToBytes(vm.pub))(
+        secretKey
+      );
+      return new EncryptedKey(
+        kidToBytes(vm.id),
+        kwResult.iv,
+        kwResult.tag,
+        kwResult.epPubKey,
+        kwResult.encryptedKey
+      );
+    })
+  );
 
-  const encryptedPrivateKeys = await Promise.all(verificationMethods.map(async vm => {
-    const kwResult = await x25519xc20pKeyWrap(base58ToBytes(vm.pub))(secretKey);
-    return new EncryptedKey(
-      kidToBytes(vm.id),
-      kwResult.iv,
-      kwResult.tag,
-      kwResult.epPubKey,
-      kwResult.encryptedKey);
-  }))
-
-  return encryptedPrivateKeys
-}
+  return encryptedPrivateKeys;
+};
 
 // Find the UserKey encrypted with a particular key, and decrypt it
 export const decryptUserKey = async (
@@ -156,7 +153,8 @@ export const decryptUserKey = async (
     k => bytesToBase64(k.kid) === bytesToBase64(kid)
   );
 
-  if (!encryptedUserKey) throw new Error(`No encrypted UserKey found for key ${kid}`);
+  if (!encryptedUserKey)
+    throw new Error(`No encrypted UserKey found for key ${kid}`);
 
   return decryptKeyWrap(encryptedUserKey, convertToX25519SecretKey(key));
 };
@@ -168,7 +166,6 @@ export const createEncryptedCEK = async (
   const cek = generateCEK();
   return encryptCEKForUserKey(cek, userkey);
 };
-
 
 export const convertToX25519SecretKey = (secretKey: PrivateKey): Uint8Array => {
   // convert to universal UIntArray
@@ -182,7 +179,7 @@ export const convertToX25519SecretKey = (secretKey: PrivateKey): Uint8Array => {
   // secret key. In order to use the same key for both, we convert here
   // from Ed25519 to x25519 format.
   return convertSecretKey(ed25519Key);
-}
+};
 
 /**
  * Decrypt an encrypted CEK for the with the key that was used to encrypt it

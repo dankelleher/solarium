@@ -10,7 +10,7 @@ import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import { Channel } from '../lib/Channel';
 import { get } from './get';
-import {getUserDetailsSafe} from "./userDetails";
+import { getUserDetailsSafe } from './userDetails';
 
 const getChannel = async (
   owner: Keypair,

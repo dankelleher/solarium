@@ -112,6 +112,6 @@ jobs:
         working-directory: client
 
       - name: Test e2e
-        run: yarn test-e2e
+        run: yarn test:e2e
         working-directory: client
 

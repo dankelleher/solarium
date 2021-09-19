@@ -25,7 +25,7 @@ export const KEY_TAG_SIZE = XC20P_TAG_LENGTH;
 export type EphemeralPubkey = Uint8Array; // 32 bytes
 // A type defining the wrapped encrypted key
 export type KeyCiphertext = Uint8Array; // 32 bytes
-export const KEY_CIPHER_SIZE = SECRET_KEY_LENGTH // or CEK length (both equal)
+export const KEY_CIPHER_SIZE = SECRET_KEY_LENGTH; // or CEK length (both equal)
 
 /**
  * VM ID after "#", truncated to max 8 bytes

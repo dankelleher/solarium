@@ -10,7 +10,6 @@ import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import { Channel } from '../lib/Channel';
 import { get } from './get';
-import { findVerificationMethodForKey } from '../lib/crypto/SolariumCrypto';
 import { getDocument } from '../lib/did/get';
 import { getUserDetailsSafe } from './userDetails';
 

@@ -11,7 +11,6 @@ import {
   findVerificationMethodForKey,
 } from './crypto/SolariumCrypto';
 import { PublicKey } from '@solana/web3.js';
-import { VerificationMethod } from 'did-resolver';
 import { getCekAccountAddress } from './solana/instruction';
 import { SolanaUtil } from './solana/solanaUtil';
 import { getUserDetails } from '../service/userDetails';
@@ -125,6 +124,7 @@ export class Channel {
       );
       if (!verificationMethod)
         throw new Error(`Invalid private key for DID ${memberDIDDocument.id}`);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore // TODO @martin - I didn't make all the changes for this file yet.
       // added ts-ignore just so it compiles
       return decryptKeyWrap(cekAccountData.cek, verificationMethod.id, key);

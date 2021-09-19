@@ -221,9 +221,6 @@ export const isPublicKey = (k: KeyMaterial): k is PublicKey =>
 export const pubkeyOf = (k: Keypair | PublicKey): PublicKey =>
   isKeypair(k) ? k.publicKey : k;
 
-export const isString = (value): value is string =>
-  typeof value === 'string' || value instanceof String;
-
 export const keyToVerificationMethod = (
   did: string,
   didKey: DIDKey

@@ -1,17 +1,14 @@
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { addKey as addKeyToDID } from '../../lib/did/addKey';
 import {
   AddKeyRequest,
   currentCluster,
-  debug,
   isKeypair,
   pubkeyOf,
-  PublicKeyBase58,
   toSolanaKeyMaterial,
 } from '../../lib/util';
 import { DIDDocument } from 'did-resolver';
 import { keyToIdentifier } from '@identity.com/sol-did-client';
-import { updateCEKAccount } from '../../service/updateCEKAccount';
 
 const didFromKey = (request: AddKeyRequest): Promise<string> => {
   if (request.signer)

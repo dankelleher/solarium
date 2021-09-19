@@ -19,7 +19,10 @@ import { SolariumTransaction } from '../solana/transaction';
 import { createUserDetails } from '../solana/instruction';
 import { getDocument } from './get';
 import { pluck } from 'ramda';
-import { createEncryptedUserKeyPair, encryptUserKeyForKeys, generateUserKey } from '../crypto/SolariumCrypto';
+import {
+  encryptUserKeyForKeys,
+  generateUserKey,
+} from '../crypto/SolariumCrypto';
 
 const makeDocumentForKeys = (
   did: string,
@@ -74,7 +77,7 @@ export const create = async (
     // TODO: Daniel, how can I can the DID Doc for that new DID here? (which makes it nicer to access)
     // const userKeyPair = createEncryptedUserKeyPair(document) // Why can the document here be undefined?
 
-    const [userSecretKey, userPubKey] = generateUserKey()
+    const [userSecretKey, userPubKey] = generateUserKey();
     const encryptedPrivateKeys = await encryptUserKeyForKeys(userSecretKey, [
       { id: 'TODO', pub: pubkeyOf(owner).toBase58() },
     ]);

@@ -12,9 +12,9 @@
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
-    "test": "tsdx test --testPathIgnorePatterns=e2e",
-    "test-e2e": "start-server-and-test start-validator http://localhost:8899/health test-e2e-pattern",
-    "test-e2e-pattern": "tsdx test --runInBand --testPathPattern=e2e",
+    "test": "tsdx test --testPathPattern=unit",
+    "test:e2e": "start-server-and-test start-validator http://localhost:8899/health test:e2e-pattern",
+    "test:e2e-pattern": "tsdx test --runInBand --testPathPattern=e2e --testPathPattern=integration",
     "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",
@@ -58,7 +58,7 @@
     "ts-node": "^9.1.1",
     "tsdx": "^0.14.1",
     "tslib": "^2.2.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.4.3"
   },
   "dependencies": {
     "@identity.com/sol-did-client": "^0.1.9",
@@ -79,7 +79,9 @@
     "uint8arrays": "^2.1.5"
   },
   "resolutions": {
-    "@types/bn.js": "5.1.0"
+    "@types/bn.js": "5.1.0",
+    "**/@typescript-eslint/eslint-plugin": "^4.1.1",
+    "**/@typescript-eslint/parser": "^4.1.1"
   },
   "jest": {
     "setupFilesAfterEnv": [

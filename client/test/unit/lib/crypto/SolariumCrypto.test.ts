@@ -3,14 +3,12 @@ import {
   generateCEK,
   encryptMessage,
   decryptMessage,
-  // encryptCEKForVerificationMethod,
-  decryptKeyWrap,
   augmentDIDDocument,
   encryptCEKForUserKey,
   decryptCEKWithUserKey,
   CEK_SIZE,
-  encryptUserKeyForDidDocument,
-  encryptUserKeyForKeys, decryptUserKey,
+  encryptUserKeyForKeys,
+  decryptUserKey,
 } from '../../../../src/lib/crypto/SolariumCrypto';
 import {
   stringToBytes,
@@ -20,7 +18,6 @@ import {
 import { convertPublicKey } from 'ed2curve-esm';
 
 import { sampleDidDoc } from '../fixtures';
-import { VM_TYPE_X25519KEYAGREEMENTKEY2019 } from '../../../../src/lib/constants';
 import { generateKeyPair } from '@stablelib/x25519';
 import {
   KEY_CIPHER_SIZE,
@@ -28,7 +25,7 @@ import {
   KEY_TAG_SIZE,
   KID_SIZE,
   kidToBytes,
-  PUBLIC_KEY_SIZE
+  PUBLIC_KEY_SIZE,
 } from '../../../../src/lib/UserDetails';
 
 describe('ChannelCrypto', () => {

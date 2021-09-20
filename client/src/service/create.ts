@@ -3,6 +3,7 @@ import {
   debug,
   didToPublicKey,
   ExtendedCluster,
+  getErrorMessage,
   isKeypair,
   pubkeyOf,
 } from '../lib/util';
@@ -18,11 +19,13 @@ import {
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import {
   createEncryptedCEK,
-  encryptCEKForDID,
+  encryptCEKForUserKey,
   generateCEK,
-} from '../lib/crypto/ChannelCrypto';
+} from '../lib/crypto/SolariumCrypto';
 import { Channel } from '../lib/Channel';
 import { get } from './get';
+import { getOrCreateUserDetails, getUserDetailsSafe } from './userDetails';
+import { User } from '../lib/User';
 
 /**
  * If a DID was already registered for this owner, return its document. Else create one
@@ -41,7 +44,7 @@ const getOrCreateDID = async (
     debug(`Looking for a DID owned by ${owner.toBase58()}`);
     return await getDID(owner, cluster);
   } catch (error) {
-    if (error.message.startsWith('No DID found')) {
+    if (getErrorMessage(error).startsWith('No DID found')) {
       debug('No DID found - creating...');
 
       return createDID(
@@ -55,6 +58,28 @@ const getOrCreateDID = async (
     }
     throw error;
   }
+};
+
+const getOrCreateUser = async (
+  owner: PublicKey,
+  payer: Keypair | PublicKey,
+  signCallback: SignCallback,
+  alias?: string,
+  userDetailsSize?: number,
+  cluster?: ExtendedCluster
+): Promise<User> => {
+  const didDocument = await getOrCreateDID(owner, payer, signCallback, cluster);
+  const userDetails = await getOrCreateUserDetails(
+    didDocument.id,
+    owner,
+    payer,
+    alias,
+    userDetailsSize,
+    signCallback,
+    cluster
+  );
+
+  return new User(didDocument, userDetails);
 };
 
 const getChannel = async (
@@ -102,17 +127,18 @@ export const createChannel = async (
       defaultSignCallbackFor(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
-  const ownerDIDDocument = await getOrCreateDID(
+  const ownerUser = await getOrCreateUser(
     pubkeyOf(owner),
     payer,
     createSignedTx,
+    undefined,
+    undefined,
     cluster
   );
-  const didKey = didToPublicKey(ownerDIDDocument.id);
-
-  const ceks = await createEncryptedCEK(ownerDIDDocument.id);
+  const didKey = didToPublicKey(ownerUser.didDocument.id);
 
   const connection = SolanaUtil.getConnection(cluster);
+  const cek = await createEncryptedCEK(ownerUser.userDetails.userPubKey);
 
   const channelAddress = await SolariumTransaction.createGroupChannel(
     connection,
@@ -120,14 +146,14 @@ export const createChannel = async (
     didKey,
     pubkeyOf(owner),
     name,
-    ceks,
+    cek.toChainData(),
     createSignedTx,
     cluster
   );
 
   return getChannel(
     owner,
-    ownerDIDDocument.id,
+    ownerUser.didDocument.id,
     channelAddress,
     connection,
     cluster
@@ -156,37 +182,52 @@ export const createDirectChannel = async (
 
   // Create the owner DID if it doesn't exist
   const ownerPubKey = pubkeyOf(owner);
-  const ownerDIDDocument = await getOrCreateDID(
+
+  const ownerUser = await getOrCreateUser(
     ownerPubKey,
     payer,
     createSignedTx,
+    undefined,
+    undefined,
     cluster
   );
 
   const inviteeDIDDocument = await getDocument(inviteeDID);
 
-  // create and encrypt a CEK for the new channel
-  const cek = await generateCEK();
-  const ownerCEKs = await encryptCEKForDID(cek, ownerDIDDocument.id);
-  const inviteeCEKs = await encryptCEKForDID(cek, inviteeDIDDocument.id);
-
   const connection = SolanaUtil.getConnection(cluster);
+
+  // create and encrypt a CEK for the new channel
+  const cek = generateCEK();
+  const inviteeUserDetails = await getUserDetailsSafe(
+    inviteeDIDDocument.id,
+    false,
+    connection
+  );
+
+  const ownerCEK = await encryptCEKForUserKey(
+    cek,
+    ownerUser.userDetails.userPubKey
+  );
+  const inviteeCEK = await encryptCEKForUserKey(
+    cek,
+    inviteeUserDetails.userPubKey
+  );
 
   // create the channel
   const channelAddress = await SolariumTransaction.createDirectChannel(
     pubkeyOf(payer),
-    didToPublicKey(ownerDIDDocument.id),
+    didToPublicKey(ownerUser.didDocument.id),
     ownerPubKey,
     didToPublicKey(inviteeDID),
-    ownerCEKs,
-    inviteeCEKs,
+    ownerCEK.toChainData(),
+    inviteeCEK.toChainData(),
     createSignedTx,
     cluster
   );
 
   return getChannel(
     owner,
-    ownerDIDDocument.id,
+    ownerUser.didDocument.id,
     channelAddress,
     connection,
     cluster

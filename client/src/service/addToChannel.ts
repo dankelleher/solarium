@@ -10,6 +10,7 @@ import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolanaUtil } from '../lib/solana/solanaUtil';
 import { Channel } from '../lib/Channel';
 import { get } from './get';
+import { getUserDetailsSafe } from './userDetails';
 
 const getChannel = async (
   owner: Keypair,
@@ -74,7 +75,14 @@ export const addToChannel = async (
   if (inviteeIsAlreadyMember)
     throw new Error('Invitee DID is already a member');
 
-  const inviteeCEKs = await channelForOwner.encryptCEKForDID(inviteeDID);
+  const inviteeUserDetails = await getUserDetailsSafe(
+    inviteeDID,
+    false,
+    connection
+  );
+  const inviteeCEK = await channelForOwner.encryptCEKForUserKey(
+    inviteeUserDetails.userPubKey
+  );
 
   await SolariumTransaction.addDIDToChannel(
     pubkeyOf(payer),
@@ -82,7 +90,7 @@ export const addToChannel = async (
     ownerDIDKey,
     owner.publicKey,
     inviteeDIDKey,
-    inviteeCEKs,
+    inviteeCEK.toChainData(),
     createSignedTx,
     cluster
   );

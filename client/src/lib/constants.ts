@@ -15,7 +15,7 @@ export const PROGRAM_ID: PublicKey =
 export const SOLANA_COMMITMENT: Commitment = 'single'; // for message channels, the focus is speed rather than safety
 
 // must match get_cek_account_address_with_seed in state.rs
-export const CEK_ACCOUNT_NONCE_SEED_STRING = 'solarium_cek_account';
+export const CEK_ACCOUNT_V2_NONCE_SEED_STRING = 'solarium_cek_account_v2';
 
 // must match get_channel_address_with_seed in state.rs
 export const CHANNEL_NONCE_SEED_STRING = 'solarium_channel';
@@ -32,3 +32,6 @@ export const MESSAGE_SIZE_BYTES = 512;
 export const DEFAULT_MAX_MESSAGE_COUNT = 8;
 
 export const DEFAULT_USER_DETAILS_SIZE = 512;
+
+export const VM_TYPE_X25519KEYAGREEMENTKEY2019 = 'X25519KeyAgreementKey2019';
+export const VM_TYPE_ED25519VERIFICATIONKEY2018 = 'Ed25519VerificationKey2018';

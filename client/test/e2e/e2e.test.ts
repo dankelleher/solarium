@@ -14,18 +14,28 @@ import {
   updateUserDetails,
   createUserDetails,
   getUserDetails,
-  getDID,
   createDID,
+  getDID,
 } from '../../src';
 import { SolanaUtil } from '../../src/lib/solana/solanaUtil';
 import { Keypair } from '@solana/web3.js';
-import { repeat } from 'ramda';
-import { DEFAULT_MAX_MESSAGE_COUNT } from '../../src/lib/constants';
+import {
+  DEFAULT_MAX_MESSAGE_COUNT,
+  VM_TYPE_X25519KEYAGREEMENTKEY2019,
+} from '../../src/lib/constants';
 import {
   ClusterType,
   keyToIdentifier,
   PrivateKey,
 } from '@identity.com/sol-did-client';
+import {
+  augmentDIDDocument,
+  decryptUserKey,
+} from '../../src/lib/crypto/SolariumCrypto';
+import { VerificationMethod } from 'did-resolver';
+import { scalarMultBase } from '@stablelib/x25519';
+import { kidToBytes } from '../../src/lib/UserDetails';
+import { repeat } from 'ramda';
 
 describe('E2E', () => {
   const connection = SolanaUtil.getConnection();
@@ -84,10 +94,19 @@ describe('E2E', () => {
   });
 
   it('creates user details for a DID', async () => {
-    await createDID({
-      payer: payer.secretKey,
-      owner: alice.secretKey,
-    });
+    const didDoc = augmentDIDDocument(
+      await createDID({
+        payer: payer.secretKey,
+        owner: alice.secretKey,
+      })
+    );
+
+    // Get Alices X25519 VerificationMethod
+    const x25519Vm = didDoc.verificationMethod
+      ?.filter(vm => vm.type === VM_TYPE_X25519KEYAGREEMENTKEY2019)
+      ?.pop() as VerificationMethod;
+
+    expect(x25519Vm).toBeDefined();
 
     await createUserDetails({
       payer: payer.secretKey,
@@ -98,6 +117,17 @@ describe('E2E', () => {
     const aliceUserDetails = await getUserDetails({ did: aliceDID });
 
     expect(aliceUserDetails?.alias).toEqual('Alice');
+    expect(aliceUserDetails?.userPubKey).toBeDefined();
+    expect(aliceUserDetails?.encryptedUserPrivateKeyData.length).toEqual(1);
+
+    const privUserKey = await decryptUserKey(
+      aliceUserDetails?.encryptedUserPrivateKeyData || [],
+      kidToBytes(x25519Vm.id),
+      alice.secretKey
+    );
+    expect(privUserKey).toBeDefined();
+    // make sure the private UserKey matches the Public UserKey
+    expect(aliceUserDetails?.userPubKey).toEqual(scalarMultBase(privUserKey));
   });
 
   it('creates user details while creating a DID', async () => {
@@ -146,7 +176,39 @@ describe('E2E', () => {
     // create Bob's DID
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob',
+    });
+
+    await addToChannel({
+      payer: payer.secretKey,
+      decryptionKey: alice.secretKey,
+      channel: channel.address.toBase58(),
+      inviteeDID: bobDID,
+    });
+
+    // get as Bob
+    const channelForBob = await get({
+      ownerDID: bobDID,
+      channel: channel.address.toBase58(),
+      decryptionKey: bob.secretKey,
+    });
+    expect(channelForBob.address).toEqual(channel.address);
+  });
+
+  // TODO: Dan, do we still need this (e.g. createDID without alias and with PubKey as owner?)
+  it.skip('adds a user without an alias to a group channel', async () => {
+    const channelName = 'dummy channel' + Date.now();
+    channel = await create({
+      payer: payer.secretKey,
+      owner: alice.secretKey,
+      name: channelName,
+    });
+
+    // create Bob's DID
+    await createDID({
+      payer: payer.secretKey,
+      owner: bob.publicKey.toBase58(), // note, the public key representation is not sufficient anymore with userdetails
     });
 
     await addToChannel({
@@ -176,7 +238,8 @@ describe('E2E', () => {
     // create Bob's DID
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob'
     });
 
     await addToChannel({
@@ -199,7 +262,8 @@ describe('E2E', () => {
   it('creates a DID and direct channel', async () => {
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob'
     });
 
     channel = await createDirect({
@@ -215,7 +279,8 @@ describe('E2E', () => {
     // create Bob's DID
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob'
     });
 
     // Alice creates the channel
@@ -381,7 +446,8 @@ describe('E2E', () => {
     // create bob's did
     await createDID({
       payer: payer.secretKey,
-      owner: bob.publicKey.toBase58(),
+      owner: bob.secretKey,
+      alias: 'bob'
     });
 
     channel = await createDirect({

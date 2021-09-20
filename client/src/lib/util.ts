@@ -4,7 +4,10 @@ import {
   ClusterType,
   DecentralizedIdentifier,
 } from '@identity.com/sol-did-client';
-import { DEFAULT_CLUSTER } from './constants';
+import {
+  DEFAULT_CLUSTER,
+  VM_TYPE_ED25519VERIFICATIONKEY2018,
+} from './constants';
 import { SignCallback } from './wallet';
 import Debug from 'debug';
 import { AddressBook } from './UserDetails';
@@ -218,15 +221,21 @@ export const isPublicKey = (k: KeyMaterial): k is PublicKey =>
 export const pubkeyOf = (k: Keypair | PublicKey): PublicKey =>
   isKeypair(k) ? k.publicKey : k;
 
-export const isString = (value): value is string =>
-  typeof value === 'string' || value instanceof String;
-
 export const keyToVerificationMethod = (
   did: string,
   didKey: DIDKey
 ): VerificationMethod => ({
   id: did + '#' + didKey.identifier,
-  type: 'Ed25519VerificationKey2018',
+  type: VM_TYPE_ED25519VERIFICATIONKEY2018,
   controller: did,
   publicKeyBase58: didKey.key,
 });
+
+export const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  if (Object.prototype.hasOwnProperty.call(error, 'message')) {
+    return (error as { message: string }).message;
+  } else {
+    return JSON.stringify(error, null, 1);
+  }
+};

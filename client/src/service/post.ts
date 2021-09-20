@@ -3,7 +3,7 @@ import { arrayOf, didToPublicKey, ExtendedCluster } from '../lib/util';
 import { SolariumTransaction } from '../lib/solana/transaction';
 import { MESSAGE_SIZE_BYTES } from '../lib/constants';
 import { defaultSignCallback, SignCallback } from '../lib/wallet';
-import { getDirectChannelAccountKey } from '../lib/solana/instruction';
+import { getDirectChannelAccountAddress } from '../lib/solana/instruction';
 import { get } from './get';
 
 const postToChannel = async (
@@ -101,7 +101,7 @@ export const postDirect = async (
 ): Promise<void> => {
   const recipientDIDKey = didToPublicKey(recipientDID);
   const senderDIDKey = didToPublicKey(senderDID);
-  const channelAddress = await getDirectChannelAccountKey(
+  const channelAddress = await getDirectChannelAccountAddress(
     senderDIDKey,
     recipientDIDKey
   );

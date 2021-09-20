@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types */
 import { BinaryReader, BorshError, Schema, serialize } from 'borsh';
 import { PublicKey } from '@solana/web3.js';
 import { bytesToBase58 } from '../crypto/utils';

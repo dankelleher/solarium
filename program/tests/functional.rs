@@ -17,31 +17,37 @@ async fn create_channel() {
 }
 
 #[tokio::test]
-async fn add_cek() {
+async fn add_key_to_userdetails() {
     let kid = "key2";
     let mut context = SolariumContext::new().await;
 
-    context.create_channel().await;
+    context.create_user_details().await;
     context
-        .add_cek(SolariumContext::make_dummy_cekdata(kid))
+        .add_key(SolariumContext::make_dummy_keydata(kid))
         .await;
 
-    let cek_account = context.get_cek_account(context.alice_cek.unwrap()).await;
-    let found = cek_account.ceks.iter().any(|cek| cek.kid == kid);
+    let user_details_account = context.get_user_details().await;
+    let found = user_details_account
+        .encrypted_user_private_key_data
+        .iter()
+        .any(|key| key.kid == SolariumContext::kid_to_bytes(kid));
 
     assert!(found);
 }
 
 #[tokio::test]
-async fn remove_cek() {
+async fn remove_key_from_userdetails() {
     let kid = "key1";
     let mut context = SolariumContext::new().await;
 
-    context.create_channel().await;
-    context.remove_cek(kid).await;
+    context.create_user_details().await;
+    context.remove_key(kid).await;
 
-    let cek_account = context.get_cek_account(context.alice_cek.unwrap()).await;
-    let found = cek_account.ceks.iter().any(|cek| cek.kid == kid);
+    let user_details_account = context.get_user_details().await;
+    let found = user_details_account
+        .encrypted_user_private_key_data
+        .iter()
+        .any(|key| key.kid == SolariumContext::kid_to_bytes(kid));
 
     assert!(!found);
 }

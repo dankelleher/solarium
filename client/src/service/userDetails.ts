@@ -9,6 +9,12 @@ import { defaultSignCallback, SignCallback } from '../lib/wallet';
 import { SolariumTransaction } from '../lib/solana/transaction';
 import { AddressBook, UserDetails } from '../lib/UserDetails';
 import { SolariumCache } from '../lib/cache';
+import { getDocument } from '../lib/did/get';
+import {
+  augmentDIDDocument,
+  createEncryptedUserKeyPair,
+} from '../lib/crypto/SolariumCrypto';
+import { SolanaUtil } from '../lib/solana/solanaUtil';
 
 const getUserDetailsDirect = async (
   did: string,
@@ -31,6 +37,19 @@ export const userDetailsCache = new SolariumCache<
 
 export const getUserDetails = userDetailsCache.load.bind(userDetailsCache);
 
+export const getUserDetailsSafe = async (
+  did: string,
+  skipCache: boolean,
+  connection: Connection
+): Promise<UserDetails> => {
+  const userDetails = await getUserDetails(did, skipCache, connection);
+
+  if (!userDetails)
+    throw new Error(`Cannot create channel: No UserDetails for ${did}.`);
+
+  return userDetails;
+};
+
 /**
  * Create a Solarium user details account for a DID
  * @param did
@@ -49,21 +68,60 @@ export const createUserDetails = async (
   size?: number,
   signCallback?: SignCallback,
   cluster?: ExtendedCluster
-): Promise<void> => {
+): Promise<UserDetails> => {
   const createSignedTx =
     signCallback ||
     (isKeypair(payer) && isKeypair(owner) && defaultSignCallback(payer, owner));
   if (!createSignedTx) throw new Error('No payer or sign callback specified');
 
   const ownerDIDKey = didToPublicKey(did);
+  const ownerDIDDocument = await getDocument(did);
+
+  const userKeyPair = await createEncryptedUserKeyPair(
+    augmentDIDDocument(ownerDIDDocument)
+  );
+
+  const encryptedUserPrivateKeyData = userKeyPair.encryptedPrivateKeys.map(
+    key => key.toChainData()
+  );
 
   await SolariumTransaction.createUserDetails(
     pubkeyOf(payer),
     ownerDIDKey,
     pubkeyOf(owner),
+    encryptedUserPrivateKeyData,
+    Array.from(userKeyPair.userPubKey),
     createSignedTx,
     alias,
     size,
+    cluster
+  );
+
+  const connection = SolanaUtil.getConnection(cluster);
+  return getUserDetails(did, true, connection) as Promise<UserDetails>;
+};
+
+export const getOrCreateUserDetails = async (
+  did: string,
+  owner: Keypair | PublicKey,
+  payer: Keypair | PublicKey,
+  alias: string = did,
+  size?: number,
+  signCallback?: SignCallback,
+  cluster?: ExtendedCluster
+): Promise<UserDetails> => {
+  const connection = SolanaUtil.getConnection(cluster);
+  const existingUserDetails = await getUserDetails(did, false, connection);
+
+  if (existingUserDetails) return existingUserDetails;
+
+  return createUserDetails(
+    did,
+    owner,
+    payer,
+    alias,
+    size,
+    signCallback,
     cluster
   );
 };

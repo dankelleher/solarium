@@ -19,6 +19,12 @@ import { SolariumTransaction } from '../solana/transaction';
 import { createUserDetails } from '../solana/instruction';
 import { getDocument } from './get';
 import { pluck } from 'ramda';
+import {
+  encryptUserKeyForKeys,
+  generateUserKey,
+} from '../crypto/SolariumCrypto';
+import { convertPublicKey } from 'ed2curve-esm';
+import { bytesToBase58 } from '../crypto/utils';
 
 const makeDocumentForKeys = (
   did: string,
@@ -67,13 +73,30 @@ export const create = async (
   });
 
   const instructions = [registerInstruction];
-  if (alias) {
+  if (alias) { // TODO: This can not be optional in the future, because Userkeys are required for channel invites.
     debug('Creating user-details for the new DID: ' + didForAuthority);
+
+    const [userSecretKey, userPubKey] = generateUserKey();
+    const encryptedPrivateKeys = await encryptUserKeyForKeys(userSecretKey, [
+      // TODO: This is a direct dependency to the did-sol resolver AND DID augmentation with x25519 keys
+      { id: 'default_keyAgreement', pub: bytesToBase58(convertPublicKey(pubkeyOf(owner).toBytes())) },
+    ]);
+
+    // TODO @martin there is duplication here with service/userDetails.ts createUserDetails
+    // this function bundles the DID creation with userDetails creation into a single
+    // TX, whereas createUserDetails is used to add a userDetails account to an existing
+    // DID. So it makes sense that both exist, but perhaps we can do something about the
+    // code duplication.
+    const encryptedUserPrivateKeyData = encryptedPrivateKeys.map(key =>
+      key.toChainData()
+    );
     const createUserDetailsInstruction = await createUserDetails(
       pubkeyOf(payer),
       didKey,
       pubkeyOf(owner),
-      alias
+      alias,
+      encryptedUserPrivateKeyData,
+      Array.from(userPubKey)
     );
     instructions.push(createUserDetailsInstruction);
   }

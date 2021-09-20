@@ -10,7 +10,7 @@ import { SolanaUtil } from '../lib/solana/solanaUtil';
 import { keyToIdentifier } from '@identity.com/sol-did-client';
 import { PublicKey } from '@solana/web3.js';
 import { Channel } from '../lib/Channel';
-import { getDirectChannelAccountKey } from '../lib/solana/instruction';
+import { getDirectChannelAccountAddress } from '../lib/solana/instruction';
 
 const didFromKey = (
   request: GetRequest | GetDirectRequest
@@ -60,7 +60,10 @@ export const getDirect = async (
 
   const ownerDIDKey = didToPublicKey(ownerDID);
   const partnerDIDKey = didToPublicKey(request.partnerDID);
-  const channel = await getDirectChannelAccountKey(ownerDIDKey, partnerDIDKey);
+  const channel = await getDirectChannelAccountAddress(
+    ownerDIDKey,
+    partnerDIDKey
+  );
 
   return service.get(
     channel,

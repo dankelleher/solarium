@@ -1,17 +1,14 @@
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { addKey as addKeyToDID } from '../../lib/did/addKey';
 import {
   AddKeyRequest,
   currentCluster,
-  debug,
   isKeypair,
   pubkeyOf,
-  PublicKeyBase58,
   toSolanaKeyMaterial,
 } from '../../lib/util';
 import { DIDDocument } from 'did-resolver';
 import { keyToIdentifier } from '@identity.com/sol-did-client';
-import { updateCEKAccount } from '../../service/updateCEKAccount';
 
 const didFromKey = (request: AddKeyRequest): Promise<string> => {
   if (request.signer)
@@ -57,22 +54,23 @@ export const addKey = async (request: AddKeyRequest): Promise<DIDDocument> => {
     request.cluster
   );
 
-  const updateChannel = (channelAddress: PublicKeyBase58): Promise<void> =>
-    updateCEKAccount(
-      did,
-      signer as Keypair,
-      payer,
-      new PublicKey(channelAddress),
-      newKey,
-      request.signCallback,
-      request.cluster
-    );
+  // TODO: This needs to update the Userkey encryption instead
+  // const updateChannel = (channelAddress: PublicKeyBase58): Promise<void> =>
+  //   updateCEKAccount(
+  //     did,
+  //     signer as Keypair,
+  //     payer,
+  //     new PublicKey(channelAddress),
+  //     newKey,
+  //     request.signCallback,
+  //     request.cluster
+  //   );
 
-  const channelUpdateResults = await Promise.allSettled(
-    request.channelsToUpdate.map(updateChannel)
-  );
-
-  debug(channelUpdateResults);
+  // const channelUpdateResults = await Promise.allSettled(
+  //   request.channelsToUpdate.map(updateChannel)
+  // );
+  //
+  // debug(channelUpdateResults);
 
   return didDocument;
 };

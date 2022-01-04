@@ -12,6 +12,10 @@ export default class AddKey extends Command {
       char: "n",
       description: "the key name (e.g. mobileDevice)",
     }),
+    id_file: flags.string({
+      char: "f",
+      description: "Use this ID file",
+    })
   };
 
   static args = [
@@ -21,7 +25,7 @@ export default class AddKey extends Command {
   async run(): Promise<void> {
     const { args, flags } = this.parse(AddKey);
 
-    await service.addKey(flags.name, args.publicKey);
+    await service.addKey(flags.name, args.publicKey, flags.id_file);
 
     console.log("Added key");
   }

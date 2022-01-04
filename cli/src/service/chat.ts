@@ -32,9 +32,10 @@ async function getOrCreateDirectChannel(
 
 export const chat = async (
   withDID: string,
-  incomingMessages: Observable<string>
+  incomingMessages: Observable<string>,
+  id_file?: String
 ): Promise<Observable<Message>> => {
-  const wallet = await getWallet();
+  const wallet = await getWallet(id_file);
   const channel = await getOrCreateDirectChannel(wallet, withDID);
 
   const channelAddress = channel.address.toBase58();

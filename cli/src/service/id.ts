@@ -8,14 +8,24 @@ import {
 } from "solarium-js";
 import { DIDDocument } from "did-resolver";
 import { getWallet } from "../lib/config";
+import {debug} from '../lib/util';
+import {
+  ClusterType,
+  keyToIdentifier,
+  PrivateKey,
+} from '@identity.com/sol-did-client';
 
 export type ExtendedId = {
   document: DIDDocument;
   userDetails?: UserDetails;
 };
 
-export const getId = async (): Promise<ExtendedId | null> => {
-  const wallet = await getWallet();
+export const getId = async (id_file? : String): Promise<ExtendedId | null> => {
+  const wallet = await getWallet(id_file);
+
+  const identifier = await keyToIdentifier(wallet.publicKey, ClusterType.development())
+
+  debug(`getId wallet.publicKey=${wallet.publicKey.toBase58()}, identifier=${identifier}`)
 
   let document;
   try {
@@ -23,6 +33,7 @@ export const getId = async (): Promise<ExtendedId | null> => {
       owner: wallet.publicKey.toBase58(),
     });
   } catch (error) {
+    debug(`getId error=${error}`)
     // TODO this assumes the error was "did not found"
     return null;
   }
@@ -35,8 +46,8 @@ export const getId = async (): Promise<ExtendedId | null> => {
   };
 };
 
-export const createId = async (alias?: string): Promise<ExtendedId> => {
-  const wallet = await getWallet();
+export const createId = async (alias?: string, id_file?: string): Promise<ExtendedId> => {
+  const wallet = await getWallet(id_file);
 
   const document = await createDID({
     payer: wallet.secretKey,
@@ -51,10 +62,10 @@ export const createId = async (alias?: string): Promise<ExtendedId> => {
   };
 };
 
-export const updateId = async (alias: string): Promise<void> => {
-  const wallet = await getWallet();
+export const updateId = async (alias: string, id_file?: string): Promise<void> => {
+  const wallet = await getWallet(id_file);
 
-  const extendedId = await getId();
+  const extendedId = await getId(id_file);
 
   if (!extendedId)
     throw new Error("User has no DID - create it first with solarium id -c");

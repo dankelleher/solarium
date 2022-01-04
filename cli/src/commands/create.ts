@@ -6,14 +6,18 @@ export default class Create extends Command {
 
   static flags = {
     help: flags.help({ char: "h" }),
+    id_file: flags.string({
+      char: "f",
+      description: "Use this ID file",
+    })
   };
 
   static args = [{ name: "name", required: true }];
 
   async run(): Promise<void> {
-    const { args } = this.parse(Create);
+    const { args, flags } = this.parse(Create);
 
-    const channel = await service.create(args.name);
+    const channel = await service.create(args.name, flags.id_file);
 
     console.log(`Created channel ${args.name}: ${channel.address.toBase58()}`);
   }

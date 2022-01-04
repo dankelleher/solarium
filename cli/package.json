@@ -8,15 +8,19 @@
   },
   "bugs": "https://github.com/dankelleher/solarium/issues",
   "dependencies": {
+    "@identity.com/sol-did-client": "^1.0.0-beta",
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
     "@oclif/plugin-help": "^3.2.2",
     "@solana/web3.js": "^1.10.0",
+    "base-58": "^0.0.1",
     "debug": "^4.3.1",
     "did-resolver": "^3.1.0",
+    "dotenv": "^10.0.0",
     "rxjs": "^7.0.0",
     "rxjs-stream": "^3.2.1",
-    "solarium-js": "^0.1.26",
+    "solarium-js": "file:../client",
+    "start-server-and-test": "^1.14.0",
     "tslib": "^1"
   },
   "devDependencies": {
@@ -36,6 +40,7 @@
     "eslint-plugin-prettier": "^3.4.0",
     "globby": "^10",
     "mocha": "^5",
+    "nock": "^13.2.1",
     "nyc": "^14",
     "prettier": "^2.3.2",
     "ts-node": "^9.1.1",
@@ -72,9 +77,11 @@
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "yarn build && oclif-dev manifest",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "test-with-validator": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\" -r dotenv/config",
     "version": "oclif-dev readme && git add README.md",
-    "lint": "eslint src/ test/"
+    "lint": "eslint src/ test/",
+    "test": "start-server-and-test start-validator http://localhost:8899/health test-with-validator",
+    "start-validator": "solana-test-validator --bpf-program dbo6b6DDmWTWpLcZM5SoVEf9X8DSJYPjVfD3Ptz6hod ./test/solarium.so  --bpf-program ide3Y2TubNMLLhiG1kDL6to4a8SjxD18YWCYC5BZqNV ./test/sol_did.so --reset"
   },
   "types": "lib/index.d.ts"
 }

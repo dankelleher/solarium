@@ -7,6 +7,10 @@ export default class Invite extends Command {
 
   static flags = {
     help: flags.help({ char: "h" }),
+    id_file: flags.string({
+      char: "f",
+      description: "Use this ID file",
+    })
   };
 
   static args = [
@@ -15,9 +19,9 @@ export default class Invite extends Command {
   ];
 
   async run(): Promise<void> {
-    const { args } = this.parse(Invite);
+    const { args, flags } = this.parse(Invite);
 
-    await service.invite(args.invitee, args.channel);
+    await service.invite(args.invitee, args.channel, flags.id_file);
 
     console.log(`Added ${args.invitee} to channel ${args.channel}`);
   }

@@ -3,9 +3,10 @@ import * as solarium from "solarium-js";
 
 export const invite = async (
   inviteeDID: string,
-  channelAddress: string
+  channelAddress: string,
+  id_file?: String
 ): Promise<void> => {
-  const wallet = await getWallet();
+  const wallet = await getWallet(id_file);
 
   return solarium.addToChannel({
     payer: wallet.secretKey,

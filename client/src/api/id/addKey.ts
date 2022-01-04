@@ -15,10 +15,12 @@ import { updateCEKAccount } from '../../service/updateCEKAccount';
 
 const didFromKey = (request: AddKeyRequest): Promise<string> => {
   if (request.signer)
+  {
     return keyToIdentifier(
-      new PublicKey(request.signer),
+      pubkeyOf(toSolanaKeyMaterial(request.signer)),
       currentCluster(request.cluster)
     );
+  }
   return keyToIdentifier(
     pubkeyOf(toSolanaKeyMaterial(request.payer)),
     currentCluster(request.cluster)

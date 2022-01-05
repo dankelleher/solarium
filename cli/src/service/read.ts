@@ -5,7 +5,10 @@ import { Keypair } from "@solana/web3.js";
 import { switchMap } from "rxjs/operators";
 import { from, Observable } from "rxjs";
 
-export const read = async (channelAddress: string, id_file?: String): Promise<Message[]> => {
+export const read = async (
+  channelAddress: string,
+  id_file?: string
+): Promise<Message[]> => {
   const wallet = await getWallet(id_file);
 
   return solarium.read({
@@ -14,7 +17,10 @@ export const read = async (channelAddress: string, id_file?: String): Promise<Me
   });
 };
 
-export const readStream = (channelAddress: string, id_file?: String): Observable<Message> => {
+export const readStream = (
+  channelAddress: string,
+  id_file?: string
+): Observable<Message> => {
   const wallet$ = from(getWallet(id_file));
 
   return wallet$.pipe(

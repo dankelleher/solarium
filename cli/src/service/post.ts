@@ -4,7 +4,7 @@ import * as solarium from "solarium-js";
 export const post = async (
   message: string,
   toChannel: string,
-  id_file?: String
+  id_file?: string
 ): Promise<void> => {
   const wallet = await getWallet(id_file);
 

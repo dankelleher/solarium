@@ -9,7 +9,7 @@ export default class Create extends Command {
     id_file: flags.string({
       char: "f",
       description: "Use this ID file",
-    })
+    }),
   };
 
   static args = [{ name: "name", required: true }];

@@ -4,7 +4,7 @@ import * as solarium from "solarium-js";
 export const invite = async (
   inviteeDID: string,
   channelAddress: string,
-  id_file?: String
+  id_file?: string
 ): Promise<void> => {
   const wallet = await getWallet(id_file);
 

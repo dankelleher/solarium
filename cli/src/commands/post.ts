@@ -17,7 +17,7 @@ export default class Post extends Command {
     id_file: flags.string({
       char: "f",
       description: "Use this ID file",
-    })
+    }),
   };
 
   static args = [{ name: "message" }];

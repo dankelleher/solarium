@@ -15,7 +15,7 @@ export default class AddKey extends Command {
     id_file: flags.string({
       char: "f",
       description: "Use this ID file",
-    })
+    }),
   };
 
   static args = [

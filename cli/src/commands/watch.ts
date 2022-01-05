@@ -10,7 +10,7 @@ export default class Watch extends Command {
     id_file: flags.string({
       char: "f",
       description: "Use this ID file",
-    })
+    }),
   };
 
   static args = [{ name: "channel" }];

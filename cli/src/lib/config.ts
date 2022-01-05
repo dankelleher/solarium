@@ -42,7 +42,7 @@ export const getDefaultSolanaWallet = (): Keypair => {
   });
   const parsedConfig = parseConfig(solanaConfig.toString("utf-8"));
 
-  debug(`getDefaultSolanaWallet parsedConfig=${solanaConfig}`)
+  debug(`getDefaultSolanaWallet parsedConfig=${solanaConfig}`);
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const secretKey = require(parsedConfig.keypairPath);
@@ -51,26 +51,21 @@ export const getDefaultSolanaWallet = (): Keypair => {
 };
 
 // If the user has a wallet in their .solarium folder, use that
-export const getSolariumWallet = (id_file?: String): Keypair => {
+export const getSolariumWallet = (id_file?: string): Keypair => {
+  const path = (id_file || DEFAULT_KEYPAIR_FILE) as string;
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const path = (id_file || DEFAULT_KEYPAIR_FILE) as string
   const secretKey = require(path);
 
-  const keypair = Keypair.fromSecretKey(Buffer.from(secretKey))
-
-  const Base58 = require("base-58")
+  const keypair = Keypair.fromSecretKey(Buffer.from(secretKey));
 
   debug(`Using keypair in ${path} publicKey=${keypair.publicKey}`);
 
   return keypair;
 };
 
-export const getWallet = async (id_file?: String): Promise<Keypair> => {
-
+export const getWallet = async (id_file?: string): Promise<Keypair> => {
   if (id_file) {
-    debug(
-      `getWallet using ${id_file}`
-    );
+    debug(`getWallet using ${id_file}`);
     return getSolariumWallet(id_file);
   }
 

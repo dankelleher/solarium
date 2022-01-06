@@ -7,14 +7,18 @@ export default class Watch extends Command {
 
   static flags = {
     help: flags.help({ char: "h" }),
+    id_file: flags.string({
+      char: "f",
+      description: "Use this ID file",
+    }),
   };
 
   static args = [{ name: "channel" }];
 
   async run(): Promise<void> {
-    const { args } = this.parse(Watch);
+    const { args, flags } = this.parse(Watch);
 
-    const messages = await service.readStream(args.channel);
+    const messages = await service.readStream(args.channel, flags.id_file);
 
     messages.subscribe((message: Message) => {
       console.log(`From: ${message.sender}: ${message.content}`);

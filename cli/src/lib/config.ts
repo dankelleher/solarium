@@ -42,6 +42,8 @@ export const getDefaultSolanaWallet = (): Keypair => {
   });
   const parsedConfig = parseConfig(solanaConfig.toString("utf-8"));
 
+  debug(`getDefaultSolanaWallet parsedConfig=${solanaConfig}`);
+
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const secretKey = require(parsedConfig.keypairPath);
 
@@ -49,19 +51,27 @@ export const getDefaultSolanaWallet = (): Keypair => {
 };
 
 // If the user has a wallet in their .solarium folder, use that
-export const getSolariumWallet = (): Keypair => {
+export const getSolariumWallet = (id_file?: string): Keypair => {
+  const path = (id_file || DEFAULT_KEYPAIR_FILE) as string;
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const secretKey = require(DEFAULT_KEYPAIR_FILE);
+  const secretKey = require(path);
 
-  debug("Using keypair in $HOME/.solarium");
+  const keypair = Keypair.fromSecretKey(Buffer.from(secretKey));
 
-  return Keypair.fromSecretKey(Buffer.from(secretKey));
+  debug(`Using keypair in ${path} publicKey=${keypair.publicKey}`);
+
+  return keypair;
 };
 
-export const getWallet = async (): Promise<Keypair> => {
+export const getWallet = async (id_file?: string): Promise<Keypair> => {
+  if (id_file) {
+    debug(`getWallet using ${id_file}`);
+    return getSolariumWallet(id_file);
+  }
+
   try {
     return getDefaultSolanaWallet();
-  } catch (defaultSolanaError) {
+  } catch (defaultSolanaError: any) {
     if (defaultSolanaError.message.indexOf("command not found")) {
       debug(
         "Solana CLI not found on path - looking for a keypair in $HOME/.solarium"
@@ -69,7 +79,7 @@ export const getWallet = async (): Promise<Keypair> => {
 
       try {
         return getSolariumWallet();
-      } catch (solariumWalletError) {
+      } catch (solariumWalletError: any) {
         if (solariumWalletError.code === "MODULE_NOT_FOUND") {
           debug("No keypair found in $HOME/.solarium - creating...");
           const generatedKeypair = await createWallet();

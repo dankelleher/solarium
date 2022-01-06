@@ -2,8 +2,11 @@ import { getWallet } from "../lib/config";
 import * as solarium from "solarium-js";
 import { Channel } from "solarium-js";
 
-export const create = async (name: string): Promise<Channel> => {
-  const wallet = await getWallet();
+export const create = async (
+  name: string,
+  id_file?: string
+): Promise<Channel> => {
+  const wallet = await getWallet(id_file);
 
   return solarium.create({
     payer: wallet.secretKey,

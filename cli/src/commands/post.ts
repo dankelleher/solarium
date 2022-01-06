@@ -14,6 +14,10 @@ export default class Post extends Command {
     }),
     // -i, --from-stdin
     "from-stdin": flags.boolean({ char: "i" }),
+    id_file: flags.string({
+      char: "f",
+      description: "Use this ID file",
+    }),
   };
 
   static args = [{ name: "message" }];
@@ -23,10 +27,10 @@ export default class Post extends Command {
 
     if (flags["from-stdin"]) {
       process.stdin.on("data", async (data: string) => {
-        await service.post(data, flags.channel);
+        await service.post(data, flags.channel, flags.id_file);
       });
     } else {
-      await service.post(args.message, flags.channel);
+      await service.post(args.message, flags.channel, flags.id_file);
     }
   }
 }

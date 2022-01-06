@@ -34,21 +34,25 @@ export default class Id extends Command {
       char: "v",
       description: "Show the entire DID document",
     }),
+    id_file: flags.string({
+      char: "f",
+      description: "Use this ID file",
+    }),
   };
 
   async run(): Promise<void> {
     const { flags } = this.parse(Id);
 
     if (flags.create) {
-      const extendedId = await service.createId(flags.alias);
+      const extendedId = await service.createId(flags.alias, flags.id_file);
       report(extendedId, flags.verbose);
     } else if (flags.update) {
       if (!flags.alias)
         throw new Error("Missing alias. Try: solarium id -u -a <NEW ALIAS>");
-      await service.updateId(flags.alias);
+      await service.updateId(flags.alias, flags.id_file);
       console.log("Updated");
     } else {
-      const extendedId = await service.getId();
+      const extendedId = await service.getId(flags.id_file);
       if (!extendedId) {
         console.log("You have no DID - create one with: solarium id -c");
       } else {

@@ -19,7 +19,7 @@ $ npm install -g solarium-cli
 $ solarium COMMAND
 running command...
 $ solarium (-v|--version|version)
-solarium-cli/0.1.11 darwin-x64 node-v16.0.0
+solarium-cli/0.1.11 darwin-x64 node-v14.18.2
 $ solarium --help [COMMAND]
 USAGE
   $ solarium COMMAND
@@ -50,8 +50,9 @@ ARGUMENTS
   PUBLICKEY  A public key in base-58 encoding
 
 OPTIONS
-  -h, --help       show CLI help
-  -n, --name=name  (required) the key name (e.g. mobileDevice)
+  -f, --id_file=id_file  Use this ID file
+  -h, --help             show CLI help
+  -n, --name=name        (required) the key name (e.g. mobileDevice)
 ```
 
 _See code: [src/commands/add-key.ts](https://github.com/dankelleher/solarium/blob/v0.1.11/src/commands/add-key.ts)_
@@ -68,8 +69,9 @@ ARGUMENTS
   WITH  The DID to chat with
 
 OPTIONS
-  -h, --help  show CLI help
-  -m, --mute  non-verbose input
+  -f, --id_file=id_file  Use this ID file
+  -h, --help             show CLI help
+  -m, --mute             non-verbose input
 
 ALIASES
   $ solarium
@@ -86,7 +88,8 @@ USAGE
   $ solarium create NAME
 
 OPTIONS
-  -h, --help  show CLI help
+  -f, --id_file=id_file  Use this ID file
+  -h, --help             show CLI help
 ```
 
 _See code: [src/commands/create.ts](https://github.com/dankelleher/solarium/blob/v0.1.11/src/commands/create.ts)_
@@ -117,11 +120,12 @@ USAGE
   $ solarium id
 
 OPTIONS
-  -a, --alias=alias  Set this ID's public alias
-  -c, --create       Create a DID if missing
-  -h, --help         show CLI help
-  -u, --update       Update a DID's user details
-  -v, --verbose      Show the entire DID document
+  -a, --alias=alias      Set this ID's public alias
+  -c, --create           Create a DID if missing
+  -f, --id_file=id_file  Use this ID file
+  -h, --help             show CLI help
+  -u, --update           Update a DID's user details
+  -v, --verbose          Show the entire DID document
 ```
 
 _See code: [src/commands/id.ts](https://github.com/dankelleher/solarium/blob/v0.1.11/src/commands/id.ts)_
@@ -139,7 +143,8 @@ ARGUMENTS
   CHANNEL  The channel address
 
 OPTIONS
-  -h, --help  show CLI help
+  -f, --id_file=id_file  Use this ID file
+  -h, --help             show CLI help
 
 EXAMPLE
   solarium invite did:sol:<INVITEE> <CHANNEL_ADDRESS>
@@ -157,6 +162,7 @@ USAGE
 
 OPTIONS
   -c, --channel=channel  (required) Channel address
+  -f, --id_file=id_file  Use this ID file
   -h, --help             show CLI help
   -i, --from-stdin
 ```
@@ -172,7 +178,8 @@ USAGE
   $ solarium read CHANNEL
 
 OPTIONS
-  -h, --help  show CLI help
+  -f, --id_file=id_file  Use this ID file
+  -h, --help             show CLI help
 
 ALIASES
   $ solarium get
@@ -189,7 +196,8 @@ USAGE
   $ solarium watch [CHANNEL]
 
 OPTIONS
-  -h, --help  show CLI help
+  -f, --id_file=id_file  Use this ID file
+  -h, --help             show CLI help
 ```
 
 _See code: [src/commands/watch.ts](https://github.com/dankelleher/solarium/blob/v0.1.11/src/commands/watch.ts)_

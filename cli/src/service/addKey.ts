@@ -3,9 +3,10 @@ import * as solarium from "solarium-js";
 
 export const addKey = async (
   keyIdentifier: string,
-  newKey: string
+  newKey: string,
+  id_file?: string
 ): Promise<void> => {
-  const wallet = await getWallet();
+  const wallet = await getWallet(id_file);
 
   await solarium.addKey({
     payer: wallet.secretKey,

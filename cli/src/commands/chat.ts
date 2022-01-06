@@ -9,6 +9,10 @@ export default class Chat extends Command {
   static flags = {
     help: flags.help({ char: "h" }),
     mute: flags.boolean({ char: "m", description: "non-verbose input" }),
+    id_file: flags.string({
+      char: "f",
+      description: "Use this ID file",
+    }),
   };
 
   static args = [
@@ -21,7 +25,11 @@ export default class Chat extends Command {
 
     const incomingMessages = streamToStringRx(process.stdin);
 
-    const messages = await service.chat(args.with, incomingMessages);
+    const messages = await service.chat(
+      args.with,
+      incomingMessages,
+      flags.id_file
+    );
 
     messages.subscribe((message) => {
       if (flags.mute) {

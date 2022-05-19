@@ -52,7 +52,7 @@ const getVerificationMethod = (
   return foundKey;
 };
 
-// Given an unecrypted channel CEK, encrypt it for a DID
+// Given an unencrypted channel CEK, encrypt it for a DID
 export const encryptCEKForDID = async (
   cek: CEK,
   did: string
